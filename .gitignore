@@ -1,0 +1,34 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+.coverage.*
+htmlcov/
+build/
+dist/
+
+# Environments and local configuration
+.env
+.env.*
+!.env.example
+.venv/
+venv/
+
+# Notebooks, editors, and operating systems
+.ipynb_checkpoints/
+.DS_Store
+*.log
+
+# Generated documentation
+site/
+
+# Local project material
+paper/
+presentation/
+implementation_plan.md
+IMPLEMENTATION_PLAN.md
+archive/

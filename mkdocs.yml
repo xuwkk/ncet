@@ -1,0 +1,67 @@
+site_name: NCET
+site_description: Neural-network Constraint Embedding Toolkit documentation
+site_url: https://xuwkk.github.io/ncet/
+repo_url: https://github.com/xuwkk/ncet
+repo_name: xuwkk/ncet
+edit_uri: edit/main/docs/
+
+theme:
+  name: material
+  language: en
+  features:
+    - navigation.sections
+    - navigation.top
+    - search.highlight
+    - content.code.copy
+  palette:
+    - media: "(prefers-color-scheme: light)"
+      scheme: default
+      toggle:
+        icon: material/brightness-7
+        name: Switch to dark mode
+    - media: "(prefers-color-scheme: dark)"
+      scheme: slate
+      toggle:
+        icon: material/brightness-4
+        name: Switch to light mode
+
+nav:
+  - Home: index.md
+  - User guide:
+      - form_milp interface: user_interface.md
+      - Examples: examples.md
+  - Capability boundary:
+      - Supported operators: supported_operators.md
+      - PyTorch-to-GraphIR mapping: pytorch_to_ir_operator_mapping.md
+      - Exactness contract: exactness_contract.md
+  - Mathematical background:
+      - Overview: knowledge/index.md
+      - Interval bound propagation: knowledge/bound_propagation.md
+      - Exact encoding: knowledge/exact_encoding.md
+      - Conv2d: knowledge/conv2d_exact_encoding.md
+      - AvgPool2d: knowledge/avgpool2d_exact_encoding.md
+      - MaxPool2d: knowledge/maxpool2d_exact_encoding.md
+  - Developer reference: developer_note.md
+
+markdown_extensions:
+  - admonition
+  - attr_list
+  - md_in_html
+  - tables
+  - toc:
+      permalink: true
+  - pymdownx.details
+  - pymdownx.highlight:
+      anchor_linenums: true
+      line_spans: __span
+      pygments_lang_class: true
+  - pymdownx.inlinehilite
+  - pymdownx.superfences
+  - pymdownx.arithmatex:
+      generic: true
+
+extra_javascript:
+  - javascripts/mathjax.js
+  - https://unpkg.com/mathjax@3/es5/tex-mml-chtml.js
+
+strict: true
