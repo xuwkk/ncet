@@ -1,0 +1,1433 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="Neural-network Constraint Embedding Toolkit documentation">
+      
+      
+      
+        <link rel="canonical" href="https://xuwkk.github.io/ncet/knowledge/exact_encoding/">
+      
+      
+        <link rel="prev" href="../bound_propagation/">
+      
+      
+        <link rel="next" href="../conv2d_exact_encoding/">
+      
+      
+        
+      
+      
+      <link rel="icon" href="../../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.7">
+    
+    
+      
+        <title>Exact encoding - NCET</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/stylesheets/main.ec1eaa64.min.css">
+      
+        
+        <link rel="stylesheet" href="../../assets/stylesheets/palette.ab4e12ef.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+    <script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#exact-encoding-in-ncet" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href="../.." title="NCET" class="md-header__button md-logo" aria-label="NCET" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            NCET
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Exact encoding
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="(prefers-color-scheme: light)" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo"  aria-label="Switch to dark mode"  type="radio" name="__palette" id="__palette_0">
+    
+      <label class="md-header__button md-icon" title="Switch to dark mode" for="__palette_1" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a4 4 0 0 0-4 4 4 4 0 0 0 4 4 4 4 0 0 0 4-4 4 4 0 0 0-4-4m0 10a6 6 0 0 1-6-6 6 6 0 0 1 6-6 6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="(prefers-color-scheme: dark)" data-md-color-scheme="slate" data-md-color-primary="indigo" data-md-color-accent="indigo"  aria-label="Switch to light mode"  type="radio" name="__palette" id="__palette_1">
+    
+      <label class="md-header__button md-icon" title="Switch to light mode" for="__palette_0" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 18c-.89 0-1.74-.2-2.5-.55C11.56 16.5 13 14.42 13 12s-1.44-4.5-3.5-5.45C10.26 6.2 11.11 6 12 6a6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/xuwkk/ncet" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    xuwkk/ncet
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../.." title="NCET" class="md-nav__button md-logo" aria-label="NCET" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    NCET
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/xuwkk/ncet" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    xuwkk/ncet
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../.." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Home
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2" >
+        
+          
+          <label class="md-nav__link" for="__nav_2" id="__nav_2_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    User guide
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    User guide
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../user_interface/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    form_milp interface
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../examples/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Examples
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" >
+        
+          
+          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Capability boundary
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Capability boundary
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../supported_operators/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Supported operators
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../pytorch_to_ir_operator_mapping/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    PyTorch-to-GraphIR mapping
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../exactness_contract/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Exactness contract
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Mathematical background
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_4">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Mathematical background
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Overview
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../bound_propagation/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Interval bound propagation
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Exact encoding
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Exact encoding
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#1-tensor-variables-and-input-bounds" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1. Tensor variables and input bounds
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#2-lp-compatible-operator-constraints" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2. LP-compatible operator constraints
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="2. LP-compatible operator constraints">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#linear" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Linear
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#conv2d" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Conv2d
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#averagepool2d" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        AveragePool2d
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#add-and-sub" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Add and Sub
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#concat" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Concat
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#shape-axis-and-index-operations" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Shape, axis, and index operations
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#3-exact-relu-encoding" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3. Exact ReLU encoding
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#4-exact-maxpool2d-encoding" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4. Exact MaxPool2d encoding
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#5-when-the-result-is-an-lp-or-milp" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5. When the result is an LP or MILP
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#6-meaning-of-exactness" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        6. Meaning of exactness
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#related-knowledge" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Related knowledge
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../conv2d_exact_encoding/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Conv2d
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../avgpool2d_exact_encoding/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    AvgPool2d
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../maxpool2d_exact_encoding/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    MaxPool2d
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../developer_note/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Developer reference
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#1-tensor-variables-and-input-bounds" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1. Tensor variables and input bounds
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#2-lp-compatible-operator-constraints" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2. LP-compatible operator constraints
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="2. LP-compatible operator constraints">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#linear" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Linear
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#conv2d" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Conv2d
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#averagepool2d" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        AveragePool2d
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#add-and-sub" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Add and Sub
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#concat" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Concat
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#shape-axis-and-index-operations" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Shape, axis, and index operations
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#3-exact-relu-encoding" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3. Exact ReLU encoding
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#4-exact-maxpool2d-encoding" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4. Exact MaxPool2d encoding
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#5-when-the-result-is-an-lp-or-milp" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5. When the result is an LP or MILP
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#6-meaning-of-exactness" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        6. Meaning of exactness
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#related-knowledge" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Related knowledge
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+  
+  
+
+
+<h1 id="exact-encoding-in-ncet">Exact Encoding in NCET<a class="headerlink" href="#exact-encoding-in-ncet" title="Permanent link">&para;</a></h1>
+<p>NCET converts a bounded <code>GraphIR</code> into a system of CVXPY constraints. The
+result is a linear constraint system when the graph contains
+only continuous linear operators, and an MILP when exact ReLU or MaxPool2d
+formulations introduce binary variables.</p>
+<p>NCET creates constraints but does not choose an optimization objective. A user
+can combine the returned constraints and neural-network variables with a
+larger optimization model and its objective.</p>
+<h2 id="1-tensor-variables-and-input-bounds">1. Tensor variables and input bounds<a class="headerlink" href="#1-tensor-variables-and-input-bounds" title="Permanent link">&para;</a></h2>
+<p>For every entry in <code>graph.tensors</code>, NCET creates one continuous CVXPY variable
+with the same per-sample shape:</p>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="n">variables</span><span class="p">[</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">cp</span><span class="o">.</span><span class="n">Variable</span><span class="p">(</span><span class="n">spec</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+</span></code></pre></div>
+<p>This includes graph inputs, intermediate tensors, and final output tensors.
+Weights, biases, and other fixed arrays in <code>graph.constants</code> remain constants
+and do not create decision variables.</p>
+<p>For each graph input <span class="arithmatex">\(X\)</span>, the supplied box bounds become linear constraints:</p>
+<div class="arithmatex">\[
+L_X \leq X \leq U_X.
+\]</div>
+<p>The <code>Output</code> IR node is only a graph boundary. It introduces no new variable;
+<code>encoding.outputs</code> returns the existing variables named by <code>graph.outputs</code>.</p>
+<h2 id="2-lp-compatible-operator-constraints">2. LP-compatible operator constraints<a class="headerlink" href="#2-lp-compatible-operator-constraints" title="Permanent link">&para;</a></h2>
+<p>All affine and structural operators below are represented by linear
+equalities and require no binary variables.</p>
+<h3 id="linear">Linear<a class="headerlink" href="#linear" title="Permanent link">&para;</a></h3>
+<p>For a Linear layer with fixed weight <span class="arithmatex">\(W\)</span> and bias <span class="arithmatex">\(b\)</span>:</p>
+<div class="arithmatex">\[
+Y=XW^\mathsf{T}+b.
+\]</div>
+<p>PyTorch Linear acts on the last input dimension. NCET temporarily reshapes all
+preceding dimensions into rows, applies this equality, and preserves the
+original output shape.</p>
+<h3 id="conv2d">Conv2d<a class="headerlink" href="#conv2d" title="Permanent link">&para;</a></h3>
+<p>NCET constructs a sparse matrix <span class="arithmatex">\(A_{\mathrm{conv}}\)</span> containing every valid
+kernel-to-input connection. Using C-order vectorization:</p>
+<div class="arithmatex">\[
+\operatorname{vec}_C(Y)
+=A_{\mathrm{conv}}\operatorname{vec}_C(X)+\bar b.
+\]</div>
+<p><span class="arithmatex">\(\bar b\)</span> repeats each output-channel bias across its spatial positions.
+Kernel positions lying in zero padding are omitted from the sparse matrix.</p>
+<p>More details can be found in <a href="../conv2d_exact_encoding/">conv2d_exact_encoding.md</a>.</p>
+<h3 id="averagepool2d">AveragePool2d<a class="headerlink" href="#averagepool2d" title="Permanent link">&para;</a></h3>
+<p>AveragePool2d is a fixed linear map. NCET builds a sparse averaging matrix
+<span class="arithmatex">\(A_{\mathrm{avg}}\)</span> and enforces:</p>
+<div class="arithmatex">\[
+\operatorname{vec}_C(Y)
+=A_{\mathrm{avg}}\operatorname{vec}_C(X).
+\]</div>
+<p>Its coefficients reflect the kernel, stride, padding, and
+<code>count_include_pad</code> semantics of the canonical operator.</p>
+<h3 id="add-and-sub">Add and Sub<a class="headerlink" href="#add-and-sub" title="Permanent link">&para;</a></h3>
+<p>For two input tensors:</p>
+<div class="arithmatex">\[
+Y=X_1+X_2
+\]</div>
+<p>or</p>
+<div class="arithmatex">\[
+Y=X_1-X_2.
+\]</div>
+<p>These equalities directly preserve residual and other branch connections.</p>
+<h3 id="concat">Concat<a class="headerlink" href="#concat" title="Permanent link">&para;</a></h3>
+<p>For concatenation along dimension <span class="arithmatex">\(d\)</span>, NCET maps each input to its contiguous
+slice in the output:</p>
+<div class="arithmatex">\[
+Y[s_k]=X_k,
+\]</div>
+<p>where <span class="arithmatex">\(s_k\)</span> is the output slice assigned to input <span class="arithmatex">\(X_k\)</span> along dimension <span class="arithmatex">\(d\)</span>.</p>
+<h3 id="shape-axis-and-index-operations">Shape, axis, and index operations<a class="headerlink" href="#shape-axis-and-index-operations" title="Permanent link">&para;</a></h3>
+<p>Flatten and Reshape preserve C-order element positions:</p>
+<div class="arithmatex">\[
+\operatorname{vec}_C(Y)=\operatorname{vec}_C(X).
+\]</div>
+<p>Permute and Transpose enforce the corresponding axis reordering:</p>
+<div class="arithmatex">\[
+Y=\operatorname{permute}(X).
+\]</div>
+<p>Static GetItem and Slice operations directly select the recorded index:</p>
+<div class="arithmatex">\[
+Y=X[\mathrm{index}].
+\]</div>
+<p>If a network contains only these operators, its encoding consists entirely of
+continuous variables and linear constraints. Combined with a linear
+objective, it is an LP.</p>
+<h2 id="3-exact-relu-encoding">3. Exact ReLU encoding<a class="headerlink" href="#3-exact-relu-encoding" title="Permanent link">&para;</a></h2>
+<p>For one ReLU element</p>
+<div class="arithmatex">\[
+y=\max(0,x), \qquad L\leq x\leq U,
+\]</div>
+<p>IBP determines one of three cases.</p>
+<p>If <span class="arithmatex">\(L\geq0\)</span>, the ReLU is always active:</p>
+<div class="arithmatex">\[
+y=x.
+\]</div>
+<p>If <span class="arithmatex">\(U\leq0\)</span>, it is always inactive:</p>
+<div class="arithmatex">\[
+y=0.
+\]</div>
+<p>If <span class="arithmatex">\(L&lt;0&lt;U\)</span>, it is unstable. NCET introduces <span class="arithmatex">\(z\in\{0,1\}\)</span> and adds:</p>
+<div class="arithmatex">\[
+y\geq x,
+\]</div>
+<div class="arithmatex">\[
+y\geq0,
+\]</div>
+<div class="arithmatex">\[
+y\leq x-L(1-z),
+\]</div>
+<div class="arithmatex">\[
+y\leq Uz.
+\]</div>
+<p>These constraints describe exactly the graph of ReLU over <span class="arithmatex">\([L,U]\)</span>.</p>
+<p>In <code>relu_binary_mode="reduced"</code>, stable elements use the direct equalities and
+only unstable elements receive binaries. In <code>"full"</code> mode, every ReLU element
+uses the binary formulation. Both modes are exact, but reduced mode normally
+produces a smaller MILP and is considered as default.</p>
+<h2 id="4-exact-maxpool2d-encoding">4. Exact MaxPool2d encoding<a class="headerlink" href="#4-exact-maxpool2d-encoding" title="Permanent link">&para;</a></h2>
+<p>For one output position <span class="arithmatex">\(p\)</span>, let <span class="arithmatex">\(\mathcal V(p)\)</span> contain its valid input
+candidates. MaxPool2d requires:</p>
+<div class="arithmatex">\[
+y_p=\max_{q\in\mathcal V(p)}x_q.
+\]</div>
+<p>IBP provides sound output bounds <span class="arithmatex">\(L_{y,p}\)</span> and <span class="arithmatex">\(U_{y,p}\)</span>. NCET explicitly
+enforces them:</p>
+<div class="arithmatex">\[
+L_{y,p}\leq y_p\leq U_{y,p}.
+\]</div>
+<p>NCET creates one binary selector <span class="arithmatex">\(z_{pq}\)</span> for every valid candidate
+connection <span class="arithmatex">\(q\rightarrow p\)</span> and imposes:</p>
+<div class="arithmatex">\[
+y_p\geq x_q,
+\qquad \forall q\in\mathcal V(p),
+\]</div>
+<div class="arithmatex">\[
+y_p\leq x_q+
+(U_{y,p}-L_{x,q})(1-z_{pq}),
+\qquad \forall q\in\mathcal V(p),
+\]</div>
+<div class="arithmatex">\[
+\sum_{q\in\mathcal V(p)}z_{pq}=1,
+\]</div>
+<div class="arithmatex">\[
+z_{pq}\in\{0,1\}.
+\]</div>
+<p>The selected candidate has <span class="arithmatex">\(z_{pq}=1\)</span>, forcing <span class="arithmatex">\(y_p\leq x_q\)</span>. Together with
+<span class="arithmatex">\(y_p\geq x_q\)</span> for every candidate, this makes the output equal to a maximum.
+Ties remain valid because any tied maximum may be selected. The current
+MaxPool2d formulation always uses the full set of candidate binaries. The
+explicit output bounds do not change the exact feasible set; they strengthen
+the MILP relaxation.</p>
+<h2 id="5-when-the-result-is-an-lp-or-milp">5. When the result is an LP or MILP<a class="headerlink" href="#5-when-the-result-is-an-lp-or-milp" title="Permanent link">&para;</a></h2>
+<p>The encoding is continuous and LP-compatible when it contains no binary
+variables. Binary variables arise from:</p>
+<ul>
+<li>every ReLU element in <code>"full"</code> mode;</li>
+<li>unstable ReLU elements in <code>"reduced"</code> mode;</li>
+<li>every valid MaxPool2d candidate connection.</li>
+</ul>
+<p>Consequently, a graph with only affine and structural operators is an LP
+constraint system. A reduced-mode graph whose ReLUs are all stable also
+remains continuous. A graph with unstable ReLUs or MaxPool2d is encoded as an
+MILP.</p>
+<h2 id="6-meaning-of-exactness">6. Meaning of exactness<a class="headerlink" href="#6-meaning-of-exactness" title="Permanent link">&para;</a></h2>
+<p>Over the supplied input box, the feasible solutions of the NCET constraints
+project onto exactly the input, intermediate, and output values permitted by
+the supported PyTorch graph. The encoding does not approximate ReLU or
+MaxPool2d.</p>
+<p>The propagated bounds used in big-M coefficients must be finite and sound.
+Loose bounds do not change mathematical exactness, but they weaken the MILP
+relaxation and can make the optimization problem substantially slower.</p>
+<h2 id="related-knowledge">Related knowledge<a class="headerlink" href="#related-knowledge" title="Permanent link">&para;</a></h2>
+<ul>
+<li><a href="../">Knowledge notes index</a></li>
+<li><a href="../bound_propagation/">Interval Bound Propagation</a></li>
+<li><a href="../conv2d_exact_encoding/">Exact Conv2d encoding</a></li>
+<li><a href="../avgpool2d_exact_encoding/">Exact AvgPool2d encoding</a></li>
+<li><a href="../maxpool2d_exact_encoding/">Exact MaxPool2d encoding</a></li>
+</ul>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"/></svg>
+  Back to top
+</button>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["navigation.sections", "navigation.top", "search.highlight", "content.code.copy"], "search": "../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+    
+    
+      <script src="../../assets/javascripts/bundle.d7400e89.min.js"></script>
+      
+        <script src="../../javascripts/mathjax.js"></script>
+      
+        <script src="https://unpkg.com/mathjax@3/es5/tex-mml-chtml.js"></script>
+      
+    
+  </body>
+</html>

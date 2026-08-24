@@ -1,0 +1,1540 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="Neural-network Constraint Embedding Toolkit documentation">
+      
+      
+      
+        <link rel="canonical" href="https://xuwkk.github.io/ncet/knowledge/avgpool2d_exact_encoding/">
+      
+      
+        <link rel="prev" href="../conv2d_exact_encoding/">
+      
+      
+        <link rel="next" href="../maxpool2d_exact_encoding/">
+      
+      
+        
+      
+      
+      <link rel="icon" href="../../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.7">
+    
+    
+      
+        <title>AvgPool2d - NCET</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/stylesheets/main.ec1eaa64.min.css">
+      
+        
+        <link rel="stylesheet" href="../../assets/stylesheets/palette.ab4e12ef.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+    <script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#exact-avgpool2d-encoding-in-ncet" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href="../.." title="NCET" class="md-header__button md-logo" aria-label="NCET" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            NCET
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              AvgPool2d
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="(prefers-color-scheme: light)" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo"  aria-label="Switch to dark mode"  type="radio" name="__palette" id="__palette_0">
+    
+      <label class="md-header__button md-icon" title="Switch to dark mode" for="__palette_1" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a4 4 0 0 0-4 4 4 4 0 0 0 4 4 4 4 0 0 0 4-4 4 4 0 0 0-4-4m0 10a6 6 0 0 1-6-6 6 6 0 0 1 6-6 6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="(prefers-color-scheme: dark)" data-md-color-scheme="slate" data-md-color-primary="indigo" data-md-color-accent="indigo"  aria-label="Switch to light mode"  type="radio" name="__palette" id="__palette_1">
+    
+      <label class="md-header__button md-icon" title="Switch to light mode" for="__palette_0" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 18c-.89 0-1.74-.2-2.5-.55C11.56 16.5 13 14.42 13 12s-1.44-4.5-3.5-5.45C10.26 6.2 11.11 6 12 6a6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/xuwkk/ncet" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    xuwkk/ncet
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../.." title="NCET" class="md-nav__button md-logo" aria-label="NCET" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    NCET
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/xuwkk/ncet" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    xuwkk/ncet
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../.." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Home
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2" >
+        
+          
+          <label class="md-nav__link" for="__nav_2" id="__nav_2_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    User guide
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    User guide
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../user_interface/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    form_milp interface
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../examples/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Examples
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" >
+        
+          
+          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Capability boundary
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Capability boundary
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../supported_operators/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Supported operators
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../pytorch_to_ir_operator_mapping/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    PyTorch-to-GraphIR mapping
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../exactness_contract/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Exactness contract
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Mathematical background
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_4">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Mathematical background
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Overview
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../bound_propagation/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Interval bound propagation
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../exact_encoding/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Exact encoding
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../conv2d_exact_encoding/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Conv2d
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    AvgPool2d
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    AvgPool2d
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#1-main-idea" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1. Main idea
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#2-tensor-shapes" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2. Tensor shapes
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#3-pooling-window-coordinates" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3. Pooling-window coordinates
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#4-scalar-avgpool2d-formula" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4. Scalar AvgPool2d formula
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#5-c-order-flattening" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5. C-order flattening
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#6-constructing-the-sparse-matrix" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        6. Constructing the sparse matrix
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#7-small-example-without-padding" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        7. Small example without padding
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#8-effect-of-padding-on-the-denominator" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        8. Effect of padding on the denominator
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#9-interval-bound-propagation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        9. Interval bound propagation
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#10-exact-optimization-constraint" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        10. Exact optimization constraint
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#11-current-ncet-support-boundary" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        11. Current NCET support boundary
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#related-knowledge" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Related knowledge
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../maxpool2d_exact_encoding/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    MaxPool2d
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../developer_note/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Developer reference
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#1-main-idea" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1. Main idea
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#2-tensor-shapes" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2. Tensor shapes
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#3-pooling-window-coordinates" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3. Pooling-window coordinates
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#4-scalar-avgpool2d-formula" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4. Scalar AvgPool2d formula
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#5-c-order-flattening" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5. C-order flattening
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#6-constructing-the-sparse-matrix" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        6. Constructing the sparse matrix
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#7-small-example-without-padding" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        7. Small example without padding
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#8-effect-of-padding-on-the-denominator" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        8. Effect of padding on the denominator
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#9-interval-bound-propagation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        9. Interval bound propagation
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#10-exact-optimization-constraint" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        10. Exact optimization constraint
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#11-current-ncet-support-boundary" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        11. Current NCET support boundary
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#related-knowledge" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Related knowledge
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+  
+  
+
+
+<h1 id="exact-avgpool2d-encoding-in-ncet">Exact AvgPool2d encoding in NCET<a class="headerlink" href="#exact-avgpool2d-encoding-in-ncet" title="Permanent link">&para;</a></h1>
+<p>This note explains how NCET can represent a fixed PyTorch <code>AvgPool2d</code>
+operation as an exact sparse linear equality and propagate interval bounds
+through it.</p>
+<p><strong>Logic</strong>:
+1. Output index: <span class="arithmatex">\((c_o,i,j)\)</span>
+2. Kernel position: <span class="arithmatex">\((r,t)\)</span>
+3. 1 and 2 together determine the corresponding input index to be weighted: <span class="arithmatex">\((c_i, h, w)\)</span> with <span class="arithmatex">\(h=iS_h+r-P_h\)</span> and <span class="arithmatex">\(w=jS_w+t-P_w\)</span>. Note that <span class="arithmatex">\(c_o = c_i\)</span>.
+4. Meanwhile, <span class="arithmatex">\(h\)</span> and <span class="arithmatex">\(w\)</span> must satisfy <span class="arithmatex">\(0\le h&lt;H_{\mathrm{in}}\)</span> and <span class="arithmatex">\(0\le w&lt;W_{\mathrm{in}}\)</span>; <span class="arithmatex">\(r\)</span> and <span class="arithmatex">\(t\)</span> must satisfy <span class="arithmatex">\(0\le r&lt;K_h\)</span> and <span class="arithmatex">\(0\le t&lt;K_w\)</span>.
+5. Then for all valid input indices by varying <span class="arithmatex">\(r\)</span> and <span class="arithmatex">\(t\)</span> belong to the output position <span class="arithmatex">\((i,j)\)</span>, the coefficient is <span class="arithmatex">\(\frac{1}{D_{i,j}}\)</span>.
+6. Transform the output and input indices into the position of the vectorized output and input tensors, which are also the row and column indices of the sparse matrix <span class="arithmatex">\(A\)</span>.</p>
+<h2 id="1-main-idea">1. Main idea<a class="headerlink" href="#1-main-idea" title="Permanent link">&para;</a></h2>
+<p>Average pooling computes a weighted sum of the input elements in each pooling
+window. The weights are fixed, nonnegative averaging coefficients. Therefore,
+<code>AvgPool2d</code> is a linear operator:</p>
+<div class="arithmatex">\[
+\operatorname{vec}_C(Y)=A\operatorname{vec}_C(X).
+\]</div>
+<p>Here:</p>
+<ul>
+<li><span class="arithmatex">\(X\)</span> and <span class="arithmatex">\(Y\)</span> are the input and output tensors;</li>
+<li><span class="arithmatex">\(A\)</span> is a sparse matrix containing the pooling connections and averaging
+  coefficients;</li>
+<li><span class="arithmatex">\(\operatorname{vec}_C\)</span> flattens a tensor in C-order: channel, row, and then
+  column.</li>
+</ul>
+<p>This equality is exact. <code>AvgPool2d</code> requires continuous output variables but
+no binary variables.</p>
+<h2 id="2-tensor-shapes">2. Tensor shapes<a class="headerlink" href="#2-tensor-shapes" title="Permanent link">&para;</a></h2>
+<p>NCET represents one sample without a batch dimension:</p>
+<div class="arithmatex">\[
+X\in\mathbb{R}^{C\times H_{\mathrm{in}}\times W_{\mathrm{in}}},
+\]</div>
+<div class="arithmatex">\[
+Y\in\mathbb{R}^{C\times H_{\mathrm{out}}\times W_{\mathrm{out}}}.
+\]</div>
+<p>Average pooling operates independently on every channel. It changes the
+spatial dimensions but does not mix channels.</p>
+<p>Let:</p>
+<ul>
+<li><span class="arithmatex">\((K_h,K_w)\)</span> be the kernel size;</li>
+<li><span class="arithmatex">\((S_h,S_w)\)</span> be the stride;</li>
+<li><span class="arithmatex">\((P_h,P_w)\)</span> be the padding.</li>
+</ul>
+<p>For <code>ceil_mode=False</code>, the output dimensions are</p>
+<div class="arithmatex">\[
+H_{\mathrm{out}}
+=
+\left\lfloor
+\frac{H_{\mathrm{in}}+2P_h-K_h}{S_h}
+\right\rfloor+1,
+\]</div>
+<div class="arithmatex">\[
+W_{\mathrm{out}}
+=
+\left\lfloor
+\frac{W_{\mathrm{in}}+2P_w-K_w}{S_w}
+\right\rfloor+1.
+\]</div>
+<p>PyTorch FX shape propagation determines these shapes before GraphIR and the
+optimization backend are constructed.</p>
+<h2 id="3-pooling-window-coordinates">3. Pooling-window coordinates<a class="headerlink" href="#3-pooling-window-coordinates" title="Permanent link">&para;</a></h2>
+<p>Consider output element <span class="arithmatex">\(Y_{c,i,j}\)</span>. For kernel position <span class="arithmatex">\((r,t)\)</span>, the
+corresponding coordinate in the original, unpadded input is</p>
+<div class="arithmatex">\[
+h=iS_h+r-P_h,
+\]</div>
+<div class="arithmatex">\[
+w=jS_w+t-P_w,
+\]</div>
+<p>where</p>
+<div class="arithmatex">\[
+0\le r&lt;K_h,\qquad 0\le t&lt;K_w.
+\]</div>
+<p>Only coordinates satisfying</p>
+<div class="arithmatex">\[
+0\le h&lt;H_{\mathrm{in}},\qquad
+0\le w&lt;W_{\mathrm{in}}
+\]</div>
+<p>refer to input tensor elements. Coordinates outside this range are padding
+positions whose values are fixed to zero.</p>
+<p>Define the valid kernel positions for output location <span class="arithmatex">\((i,j)\)</span> as</p>
+<div class="arithmatex">\[
+\mathcal V_{i,j}
+=
+\left\{
+(r,t)\ \middle|\
+\begin{aligned}
+&amp;0\le r&lt;K_h,\quad 0\le t&lt;K_w,\\
+&amp;0\le iS_h+r-P_h&lt;H_{\mathrm{in}},\\
+&amp;0\le jS_w+t-P_w&lt;W_{\mathrm{in}}
+\end{aligned}
+\right\}.
+\]</div>
+<h2 id="4-scalar-avgpool2d-formula">4. Scalar AvgPool2d formula<a class="headerlink" href="#4-scalar-avgpool2d-formula" title="Permanent link">&para;</a></h2>
+<p>When <code>count_include_pad=True</code>, padding zeros are included in the denominator:</p>
+<div class="arithmatex">\[
+Y_{c,i,j}
+=
+\frac{1}{K_hK_w}
+\sum_{(r,t)\in\mathcal V_{i,j}}
+X_{c,\,iS_h+r-P_h,\,jS_w+t-P_w}.
+\]</div>
+<p>The padding terms do not appear in the sum because their values are zero, but
+they are still counted by the denominator <span class="arithmatex">\(K_hK_w\)</span>.</p>
+<p>When <code>count_include_pad=False</code>, only valid input elements are counted:</p>
+<div class="arithmatex">\[
+Y_{c,i,j}
+=
+\frac{1}{|\mathcal V_{i,j}|}
+\sum_{(r,t)\in\mathcal V_{i,j}}
+X_{c,\,iS_h+r-P_h,\,jS_w+t-P_w}.
+\]</div>
+<p>It is convenient to define</p>
+<div class="arithmatex">\[
+D_{i,j}
+=
+\begin{cases}
+K_hK_w,
+&amp;\text{if `count\_include\_pad=True`},\\
+|\mathcal V_{i,j}|,
+&amp;\text{if `count\_include\_pad=False`}.
+\end{cases}
+\]</div>
+<p>Then both cases share the formula</p>
+<div class="arithmatex">\[
+Y_{c,i,j}
+=
+\frac{1}{D_{i,j}}
+\sum_{(r,t)\in\mathcal V_{i,j}}
+X_{c,\,iS_h+r-P_h,\,jS_w+t-P_w}.
+\]</div>
+<h2 id="5-c-order-flattening">5. C-order flattening<a class="headerlink" href="#5-c-order-flattening" title="Permanent link">&para;</a></h2>
+<p>The input element <span class="arithmatex">\((c,h,w)\)</span> becomes column index</p>
+<div class="arithmatex">\[
+\operatorname{col}(c,h,w)
+=
+(cH_{\mathrm{in}}+h)W_{\mathrm{in}}+w.
+\]</div>
+<p>The output element <span class="arithmatex">\((c,i,j)\)</span> becomes row index</p>
+<div class="arithmatex">\[
+\operatorname{row}(c,i,j)
+=
+(cH_{\mathrm{out}}+i)W_{\mathrm{out}}+j.
+\]</div>
+<p>Therefore,</p>
+<div class="arithmatex">\[
+x=\operatorname{vec}_C(X)
+\in\mathbb{R}^{CH_{\mathrm{in}}W_{\mathrm{in}}},
+\]</div>
+<div class="arithmatex">\[
+y=\operatorname{vec}_C(Y)
+\in\mathbb{R}^{CH_{\mathrm{out}}W_{\mathrm{out}}}.
+\]</div>
+<h2 id="6-constructing-the-sparse-matrix">6. Constructing the sparse matrix<a class="headerlink" href="#6-constructing-the-sparse-matrix" title="Permanent link">&para;</a></h2>
+<p>The pooling matrix has shape</p>
+<div class="arithmatex">\[
+A\in
+\mathbb{R}^{
+(CH_{\mathrm{out}}W_{\mathrm{out}})
+\times
+(CH_{\mathrm{in}}W_{\mathrm{in}})
+}.
+\]</div>
+<p>To state each coefficient precisely, use <span class="arithmatex">\(c_o\)</span> for an output channel and
+<span class="arithmatex">\(c_i\)</span> for an input channel. Matrix entries are defined only for valid output
+and input tensor coordinates:</p>
+<div class="arithmatex">\[
+0\le c_o&lt;C,\qquad 0\le i&lt;H_{\mathrm{out}},\qquad
+0\le j&lt;W_{\mathrm{out}},
+\]</div>
+<div class="arithmatex">\[
+0\le c_i&lt;C,\qquad 0\le h&lt;H_{\mathrm{in}},\qquad
+0\le w&lt;W_{\mathrm{in}}.
+\]</div>
+<p>Within these coordinate domains, each coefficient is</p>
+<div class="arithmatex">\[
+A_{
+\operatorname{row}(c_o,i,j),
+\operatorname{col}(c_i,h,w)
+}
+=
+\begin{cases}
+\dfrac{1}{D_{i,j}},
+&amp;
+\begin{aligned}
+&amp;c_i=c_o,\\
+&amp;0\le h&lt;H_{\mathrm{in}},\\
+&amp;0\le w&lt;W_{\mathrm{in}},\\
+&amp;0\le h-(iS_h-P_h)&lt;K_h,\\
+&amp;0\le w-(jS_w-P_w)&lt;K_w,
+\end{aligned}
+\\[6pt]
+0,
+&amp;\text{otherwise}.
+\end{cases}
+\]</div>
+<p>The two window-membership conditions are equivalent to</p>
+<div class="arithmatex">\[
+iS_h-P_h\le h&lt;iS_h-P_h+K_h,
+\]</div>
+<div class="arithmatex">\[
+jS_w-P_w\le w&lt;jS_w-P_w+K_w.
+\]</div>
+<p>They test whether input position <span class="arithmatex">\((h,w)\)</span> belongs to the pooling window for
+output position <span class="arithmatex">\((i,j)\)</span>. The condition <span class="arithmatex">\(c_i=c_o\)</span> expresses that average
+pooling does not mix channels. The explicit input-size restrictions exclude
+padding coordinates: padding positions have fixed value zero and therefore do
+not receive columns in <span class="arithmatex">\(A\)</span>. When <code>count_include_pad=True</code>, those omitted zero
+positions still contribute to <span class="arithmatex">\(D_{i,j}\)</span>; when it is <code>False</code>, they contribute
+to neither the matrix nor the divisor.</p>
+<p>The scalar and matrix forms are connected by</p>
+<div class="arithmatex">\[
+Y_{c,i,j}
+=
+\sum_{h=0}^{H_{\mathrm{in}}-1}
+\sum_{w=0}^{W_{\mathrm{in}}-1}
+A_{
+\operatorname{row}(c,i,j),
+\operatorname{col}(c,h,w)
+}
+X_{c,h,w}.
+\]</div>
+<p>Each row of <span class="arithmatex">\(A\)</span> therefore represents one output element. Its nonzero columns
+identify the valid input elements in that element's pooling window.</p>
+<h2 id="7-small-example-without-padding">7. Small example without padding<a class="headerlink" href="#7-small-example-without-padding" title="Permanent link">&para;</a></h2>
+<p>Suppose <code>X.shape == (1, 3, 3)</code>, the kernel is <code>2 x 2</code>, stride is one, padding
+is zero, and <code>count_include_pad=True</code>. The flattened input and output are</p>
+<div class="arithmatex">\[
+x=
+[x_{00},x_{01},x_{02},x_{10},x_{11},x_{12},x_{20},x_{21},x_{22}]^\top,
+\]</div>
+<div class="arithmatex">\[
+y=[y_{00},y_{01},y_{10},y_{11}]^\top.
+\]</div>
+<p>The matrix is</p>
+<div class="arithmatex">\[
+A=
+\frac{1}{4}
+\begin{bmatrix}
+1&amp;1&amp;0&amp;1&amp;1&amp;0&amp;0&amp;0&amp;0\\
+0&amp;1&amp;1&amp;0&amp;1&amp;1&amp;0&amp;0&amp;0\\
+0&amp;0&amp;0&amp;1&amp;1&amp;0&amp;1&amp;1&amp;0\\
+0&amp;0&amp;0&amp;0&amp;1&amp;1&amp;0&amp;1&amp;1
+\end{bmatrix}.
+\]</div>
+<p>For example, the first row gives</p>
+<div class="arithmatex">\[
+y_{00}=\frac{x_{00}+x_{01}+x_{10}+x_{11}}{4}.
+\]</div>
+<h2 id="8-effect-of-padding-on-the-denominator">8. Effect of padding on the denominator<a class="headerlink" href="#8-effect-of-padding-on-the-denominator" title="Permanent link">&para;</a></h2>
+<p>Consider a <code>2 x 2</code> kernel at a boundary where its window contains one valid
+input value <span class="arithmatex">\(x\)</span> and three padding zeros.</p>
+<p>For <code>count_include_pad=True</code>,</p>
+<div class="arithmatex">\[
+y=\frac{x+0+0+0}{4}=\frac{x}{4}.
+\]</div>
+<p>For <code>count_include_pad=False</code>,</p>
+<div class="arithmatex">\[
+y=\frac{x}{1}=x.
+\]</div>
+<p>Thus, padding coordinates never become optimization variables. They only
+affect the denominator when padding is included in the average.</p>
+<h2 id="9-interval-bound-propagation">9. Interval bound propagation<a class="headerlink" href="#9-interval-bound-propagation" title="Permanent link">&para;</a></h2>
+<p>All entries of <span class="arithmatex">\(A\)</span> are nonnegative:</p>
+<div class="arithmatex">\[
+A_{pq}\ge 0.
+\]</div>
+<p>Consequently, AvgPool2d is monotone in every input element. Given input
+bounds</p>
+<div class="arithmatex">\[
+\underline x\le x\le\overline x,
+\]</div>
+<p>the exact interval propagation rule is</p>
+<div class="arithmatex">\[
+\underline y=A\underline x,
+\]</div>
+<div class="arithmatex">\[
+\overline y=A\overline x.
+\]</div>
+<p>Equivalently, the same AvgPool2d operation can be applied independently to the
+lower and upper tensors:</p>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="n">output_lower</span> <span class="o">=</span> <span class="n">avg_pool2d</span><span class="p">(</span><span class="n">input_lower</span><span class="p">)</span>
+</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="n">output_upper</span> <span class="o">=</span> <span class="n">avg_pool2d</span><span class="p">(</span><span class="n">input_upper</span><span class="p">)</span>
+</span></code></pre></div>
+<p>Unlike a general affine operator with negative coefficients, there is no need
+to split the matrix into positive and negative parts.</p>
+<h2 id="10-exact-optimization-constraint">10. Exact optimization constraint<a class="headerlink" href="#10-exact-optimization-constraint" title="Permanent link">&para;</a></h2>
+<p>The backend flattens the three-dimensional CVXPY expressions only for applying
+the sparse matrix:</p>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="n">input_vector</span> <span class="o">=</span> <span class="n">cp</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">input_value</span><span class="p">,</span> <span class="p">(</span><span class="n">input_value</span><span class="o">.</span><span class="n">size</span><span class="p">,),</span> <span class="n">order</span><span class="o">=</span><span class="s2">&quot;C&quot;</span><span class="p">)</span>
+</span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a><span class="n">output_vector</span> <span class="o">=</span> <span class="n">cp</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">output_value</span><span class="p">,</span> <span class="p">(</span><span class="n">output_value</span><span class="o">.</span><span class="n">size</span><span class="p">,),</span> <span class="n">order</span><span class="o">=</span><span class="s2">&quot;C&quot;</span><span class="p">)</span>
+</span><span id="__span-1-3"><a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a>
+</span><span id="__span-1-4"><a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a><span class="n">constraint</span> <span class="o">=</span> <span class="n">output_vector</span> <span class="o">==</span> <span class="n">matrix</span> <span class="o">@</span> <span class="n">input_vector</span>
+</span></code></pre></div>
+<p>This adds the exact equality</p>
+<div class="arithmatex">\[
+\operatorname{vec}_C(Y)=A\operatorname{vec}_C(X).
+\]</div>
+<p>The reshape operations create views of existing expressions, not additional
+decision variables. AvgPool2d introduces one continuous output tensor and no
+binary variables.</p>
+<h2 id="11-current-ncet-support-boundary">11. Current NCET support boundary<a class="headerlink" href="#11-current-ncet-support-boundary" title="Permanent link">&para;</a></h2>
+<p>The exact formulation supports:</p>
+<ul>
+<li>per-sample tensors with shape <code>(C, H, W)</code>;</li>
+<li>integer or two-dimensional kernel size, stride, and padding;</li>
+<li><code>ceil_mode=False</code>;</li>
+<li>both values of <code>count_include_pad</code>;</li>
+<li><code>divisor_override=None</code>.</li>
+</ul>
+<p>Supporting <code>ceil_mode=True</code> requires matching PyTorch's additional boundary
+window rules. A non-<code>None</code> <code>divisor_override</code> changes <span class="arithmatex">\(D_{i,j}\)</span> to the supplied
+constant. The frontend explicitly rejects these two cases.</p>
+<h2 id="related-knowledge">Related knowledge<a class="headerlink" href="#related-knowledge" title="Permanent link">&para;</a></h2>
+<ul>
+<li><a href="../">Knowledge notes index</a></li>
+<li><a href="../bound_propagation/">Interval Bound Propagation</a></li>
+<li><a href="../exact_encoding/">Exact Encoding</a></li>
+</ul>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"/></svg>
+  Back to top
+</button>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["navigation.sections", "navigation.top", "search.highlight", "content.code.copy"], "search": "../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+    
+    
+      <script src="../../assets/javascripts/bundle.d7400e89.min.js"></script>
+      
+        <script src="../../javascripts/mathjax.js"></script>
+      
+        <script src="https://unpkg.com/mathjax@3/es5/tex-mml-chtml.js"></script>
+      
+    
+  </body>
+</html>
