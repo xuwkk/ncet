@@ -76,6 +76,8 @@ recorded by FX.
 | `torch.concatenate((x, y), dim)` | `call_function` | `torch.concatenate` | `Concat` |
 | `torch.flatten(x, ...)` | `call_function` | `torch.flatten` | `Flatten` |
 | `torch.reshape(x, shape)` | `call_function` | `torch.reshape` | `Reshape` |
+| `torch.squeeze(x, dim)` | `call_function` | `torch.squeeze` | `Reshape` |
+| `torch.unsqueeze(x, dim)` | `call_function` | `torch.unsqueeze` | `Reshape` |
 | `torch.permute(x, dims)` | `call_function` | `torch.permute` | `Permute` |
 | `torch.transpose(x, dim0, dim1)` | `call_function` | `torch.transpose` | `Transpose` |
 | `x[index]` | `call_function` | `operator.getitem` | `GetItem` or `Slice` |
@@ -94,6 +96,8 @@ first tensor argument.
 | `x.flatten(...)` | `call_method` | `"flatten"` | `Flatten` |
 | `x.reshape(...)` | `call_method` | `"reshape"` | `Reshape` |
 | `x.view(...)` | `call_method` | `"view"` | `Reshape` |
+| `x.squeeze(dim)` | `call_method` | `"squeeze"` | `Reshape` |
+| `x.unsqueeze(dim)` | `call_method` | `"unsqueeze"` | `Reshape` |
 | `x.permute(...)` | `call_method` | `"permute"` | `Permute` |
 | `x.transpose(...)` | `call_method` | `"transpose"` | `Transpose` |
 
@@ -122,7 +126,8 @@ x + y, torch.add(x, y), x.add(y) -> Add
 ```
 
 ```text
-torch.reshape(x, shape), x.reshape(shape), x.view(shape) -> Reshape
+torch.reshape(x, shape), x.reshape(shape), x.view(shape),
+torch.squeeze(x, dim), x.unsqueeze(dim) -> Reshape
 ```
 
 Container modules such as `nn.Sequential` and user-defined residual blocks do
@@ -140,6 +145,8 @@ every parameterization of that operation is supported.
   are rejected before GraphIR normalization.
 - Dropout is accepted only when its static `training` argument is `False`;
   stochastic training-mode Dropout is rejected.
+- Squeeze requires explicit static dimensions that exclude tracing batch axis
+  0. Unsqueeze cannot insert a new dimension before tracing batch axis 0.
 - `F.linear()` and `F.conv2d()` are not currently mapped; use `nn.Linear` and
   `nn.Conv2d`.
 - `F.batch_norm()` is not currently mapped; use `nn.BatchNorm1d` or

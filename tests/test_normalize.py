@@ -93,6 +93,21 @@ class BatchIndexing(nn.Module):
         return x[0]
 
 
+class BatchSqueeze(nn.Module):
+    def forward(self, x: torch.Tensor) -> torch.Tensor:
+        return x.squeeze(0)
+
+
+class ImplicitSqueeze(nn.Module):
+    def forward(self, x: torch.Tensor) -> torch.Tensor:
+        return x.squeeze()
+
+
+class BatchUnsqueeze(nn.Module):
+    def forward(self, x: torch.Tensor) -> torch.Tensor:
+        return x.unsqueeze(0)
+
+
 class DynamicIndexing(nn.Module):
     def forward(self, x: torch.Tensor, index: torch.Tensor) -> torch.Tensor:
         return x[index]
@@ -287,6 +302,12 @@ def test_normalize_static_indexing() -> None:
 def test_normalize_rejects_batch_indexing() -> None:
     with pytest.raises(UnsupportedOperatorError, match="batch dimension 0"):
         _normalize(BatchIndexing(), torch.zeros(1, 4, 5, 6))
+
+
+def test_normalize_rejects_shape_ops_that_change_batch_axis() -> None:
+    for model in (BatchSqueeze(), ImplicitSqueeze(), BatchUnsqueeze()):
+        with pytest.raises(UnsupportedOperatorError, match="batch dimension"):
+            _normalize(model, torch.zeros(1, 2, 1, 3))
 
 
 def test_normalize_rejects_dynamic_index() -> None:

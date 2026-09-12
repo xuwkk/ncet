@@ -367,7 +367,7 @@ such as `linear`, `linear_1`, and `linear_2`.
 | `Add`, `Sub` | `alpha=1` |
 | `Concat` | `dim` |
 | `Flatten` | `start_dim`, `end_dim` |
-| `Reshape` | resolved output `shape` |
+| `Reshape` | resolved output `shape`; also represents View and batch-preserving Squeeze/Unsqueeze |
 | `Permute` | complete `dims` permutation |
 | `Transpose` | `dim0`, `dim1` |
 | `GetItem`, `Slice` | canonical `index` |

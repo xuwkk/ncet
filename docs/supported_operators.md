@@ -42,7 +42,7 @@ below is outside the current exact boundary.
 | Arithmetic | `Add`, `Sub` | Linear equality | Exactly two tensor operands; `alpha=1`; scalar or constant operands are not canonicalized |
 | Composition | `Concat` | Exact output-slice equalities | Static tensor inputs and dimension; tracing batch axis cannot be concatenated; `out` must be absent or `None` |
 | Shape | `Flatten` | C-order element-preserving equality | Static `start_dim` and `end_dim`; flattened range cannot include the tracing batch axis |
-| Shape | `Reshape` | C-order element-preserving equality | Statically resolved output shape; leading singleton tracing batch axis must remain present |
+| Shape | `Reshape` | C-order element-preserving equality | Reshape, View, and batch-preserving Squeeze/Unsqueeze spellings; statically resolved output shape; Squeeze requires explicit dimensions; tracing batch axis must remain first |
 | Shape | `Permute` | Native N-D axis permutation equality | Complete static permutation; tracing batch axis remains first |
 | Shape | `Transpose` | Native N-D axis permutation equality | Static dimensions; tracing batch axis cannot be exchanged |
 | Indexing | `GetItem`, `Slice` | Exact static index selection | Static integer/slice/ellipsis/new-axis syntax; positive slice steps; tracing batch axis remains unchanged |

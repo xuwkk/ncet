@@ -245,7 +245,8 @@ L_Y=\operatorname{concat}(L_{X_1},\ldots,L_{X_k}), \qquad
 U_Y=\operatorname{concat}(U_{X_1},\ldots,U_{X_k}).
 $$
 
-For Identity, Flatten, Reshape, Permute, Transpose, GetItem, and Slice,
+For Identity, Flatten, Reshape/View/Squeeze/Unsqueeze, Permute, Transpose,
+GetItem, and Slice,
 
 $$
 L_Y=g(L_X), \qquad U_Y=g(U_X),

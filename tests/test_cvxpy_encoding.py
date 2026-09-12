@@ -121,6 +121,14 @@ class FlattenReshape(nn.Module):
         return value.reshape(1, 2, 4)
 
 
+class SqueezeUnsqueeze(nn.Module):
+    def forward(self, x: torch.Tensor) -> torch.Tensor:
+        value = x.squeeze(2)
+        value = torch.unsqueeze(value, 2)
+        value = torch.squeeze(value, 2)
+        return value.unsqueeze(-1)
+
+
 class PermuteTranspose(nn.Module):
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         value = x.permute(0, 2, 3, 1)
@@ -483,6 +491,41 @@ def test_flatten_reshape_encoding_preserves_c_order() -> None:
     assert encoding.values["flatten"].expression.shape == (8,)
     assert encoding.outputs[0].shape == (2, 4)
     np.testing.assert_allclose(encoding.outputs[0].value, expected, atol=1e-6)
+
+
+def test_squeeze_unsqueeze_encoding_preserves_values() -> None:
+    model = SqueezeUnsqueeze().eval()
+    shape = (2, 1, 3)
+    encoding = form_milp(
+        model,
+        Bounds(
+            lower=np.full(shape, -1.0, dtype=np.float32),
+            upper=np.full(shape, 1.0, dtype=np.float32),
+        ),
+    )
+    sample = np.linspace(-0.8, 0.7, np.prod(shape), dtype=np.float32).reshape(
+        shape
+    )
+    problem = cp.Problem(
+        cp.Minimize(0),
+        [*encoding.constraints, encoding.inputs["x"] == sample],
+    )
+    problem.solve(solver=cp.SCIPY)
+
+    with torch.no_grad():
+        expected = model(torch.from_numpy(sample).unsqueeze(0)).squeeze(0)
+
+    assert problem.status == cp.OPTIMAL
+    assert [node.op_type for node in encoding.graph.nodes] == [
+        "Input",
+        "Reshape",
+        "Reshape",
+        "Reshape",
+        "Reshape",
+        "Output",
+    ]
+    assert encoding.outputs[0].shape == (2, 3, 1)
+    np.testing.assert_allclose(encoding.outputs[0].value, expected.numpy())
 
 
 def test_permute_transpose_encoding_matches_pytorch() -> None:

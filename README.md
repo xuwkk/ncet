@@ -81,8 +81,8 @@ NCET captures static PyTorch FX graphs and normalizes the supported operations
 into a canonical graph intermediate representation (IR). The current operator
 set is Linear, Conv2d, BatchNorm1d/2d, AdaptiveAvgPool2d, AvgPool2d,
 MaxPool2d, ReLU, Add, Sub, Concat, Flatten,
-Reshape/View, Permute, Transpose, Identity/evaluation-mode Dropout, and static
-GetItem/Slice. Graph-based interval
+Reshape/View/Squeeze/Unsqueeze, Permute, Transpose, Identity/evaluation-mode
+Dropout, and static GetItem/Slice. Graph-based interval
 bound propagation and the CVXPY/MILP encoder support this operator set. See the
 [current operator boundary](https://xuwkk.github.io/ncet/supported_operators/)
 for the accepted semantics and restrictions of each operator.

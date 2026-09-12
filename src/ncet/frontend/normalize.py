@@ -191,6 +191,10 @@ def _canonical_operation(
             return "Flatten", _flatten_call_attrs(node)
         if node.target is torch.reshape:
             return "Reshape", _reshape_attrs(node)
+        if node.target is torch.squeeze:
+            return "Reshape", _squeeze_attrs(node)
+        if node.target is torch.unsqueeze:
+            return "Reshape", _unsqueeze_attrs(node)
         if node.target is torch.permute:
             return "Permute", _permute_attrs(node)
         if node.target is torch.transpose:
@@ -210,6 +214,10 @@ def _canonical_operation(
             return "Flatten", _flatten_call_attrs(node)
         if node.target in {"reshape", "view"}:
             return "Reshape", _reshape_attrs(node)
+        if node.target == "squeeze":
+            return "Reshape", _squeeze_attrs(node)
+        if node.target == "unsqueeze":
+            return "Reshape", _unsqueeze_attrs(node)
         if node.target == "permute":
             return "Permute", _permute_attrs(node)
         if node.target == "transpose":
@@ -502,6 +510,43 @@ def _reshape_attrs(node: fx.Node) -> dict[str, tuple[int, ...]]:
     return {"shape": _sample_shape(node)}
 
 
+def _squeeze_attrs(node: fx.Node) -> dict[str, tuple[int, ...]]:
+    """Map an explicit sample-axis Squeeze to canonical Reshape."""
+    dim = node.args[1] if len(node.args) > 1 else node.kwargs.get("dim")
+    if dim is None:
+        raise UnsupportedOperatorError(
+            f"unsupported Squeeze at node '{node.name}': "
+            "dim must be explicit to preserve batch dimension 0"
+        )
+
+    dims = dim if isinstance(dim, tuple) else (dim,)
+    rank = _input_rank(node)
+    canonical_dims = tuple(
+        _canonical_dim(node, item, rank, "Squeeze") for item in dims
+    )
+    if 0 in canonical_dims:
+        raise UnsupportedOperatorError(
+            f"unsupported Squeeze at node '{node.name}': "
+            "batch dimension 0 must remain unchanged"
+        )
+    # convert the Squeeze to a Reshape based on the input and output shape
+    # we can determine the transformation
+    return _reshape_attrs(node)
+
+
+def _unsqueeze_attrs(node: fx.Node) -> dict[str, tuple[int, ...]]:
+    """Map a sample-axis Unsqueeze to canonical Reshape."""
+    dim = node.args[1] if len(node.args) > 1 else node.kwargs.get("dim")
+    rank = _input_rank(node)
+    canonical_dim = _canonical_insert_dim(node, dim, rank, "Unsqueeze")
+    if canonical_dim == 0:
+        raise UnsupportedOperatorError(
+            f"unsupported Unsqueeze at node '{node.name}': "
+            "cannot insert before batch dimension 0"
+        )
+    return _reshape_attrs(node)
+
+
 def _permute_attrs(node: fx.Node) -> dict[str, tuple[int, ...]]:
     """Read and validate a complete permutation of the input dimensions."""
     # The first argument is the input tensor. Tensor.permute may record each
@@ -773,6 +818,28 @@ def _canonical_dim(
 
     canonical = dim + rank if dim < 0 else dim
     if canonical < 0 or canonical >= rank:
+        raise UnsupportedOperatorError(
+            f"unsupported {operation} dimension at node '{node.name}': "
+            f"{dim} for rank {rank}"
+        )
+    return canonical
+
+
+def _canonical_insert_dim(
+    node: fx.Node,
+    dim: Any,
+    rank: int,
+    operation: str,
+) -> int:
+    """Resolve a static dimension that inserts into a rank-plus-one result."""
+    if type(dim) is not int:
+        raise UnsupportedOperatorError(
+            f"unsupported {operation} dimension at node '{node.name}': {dim!r}"
+        )
+    
+    # plus 1 means new dimension is added
+    canonical = dim + rank + 1 if dim < 0 else dim
+    if canonical < 0 or canonical > rank:
         raise UnsupportedOperatorError(
             f"unsupported {operation} dimension at node '{node.name}': "
             f"{dim} for rank {rank}"

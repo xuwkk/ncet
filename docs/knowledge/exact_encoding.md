@@ -143,7 +143,8 @@ where $s_k$ is the output slice assigned to input $X_k$ along dimension $d$.
 
 ### Shape, axis, and index operations
 
-Flatten and Reshape preserve C-order element positions:
+Flatten and Reshape preserve C-order element positions. View, Squeeze, and
+Unsqueeze are normalized to the same Reshape semantics:
 
 $$
 \operatorname{vec}_C(Y)=\operatorname{vec}_C(X).
