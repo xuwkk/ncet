@@ -33,6 +33,7 @@ below is outside the current exact boundary.
 | Graph | `Output` | Reference to existing graph tensor variables | One or more tensor outputs; creates no new tensor or variable |
 | Affine | `Linear` | Linear equality | Fixed `nn.Linear` parameters; acts on the last tensor dimension; bias may be present or absent |
 | Affine | `Conv2d` | Sparse affine equality | Per-sample shape `(C,H,W)`; fixed `nn.Conv2d`; `groups=1`; `dilation=(1,1)`; numeric padding with `padding_mode="zeros"`; bias optional |
+| Affine | `BatchNorm` | Per-channel affine equality | `nn.BatchNorm1d` on `(C,)` or `(C,L)` and `nn.BatchNorm2d` on `(C,H,W)`; evaluation mode; fixed running statistics; affine or non-affine modules |
 | Pooling | `AvgPool2d` | Sparse linear equality | Per-sample shape `(C,H,W)`; scalar or 2-D kernel, stride, and padding; `stride=None` uses the kernel size; `ceil_mode=False`; `divisor_override=None`; either value of `count_include_pad` |
 | Pooling | `MaxPool2d` | Full exact one-hot formulation | Per-sample shape `(C,H,W)`; scalar or 2-D kernel, stride, and padding; `stride=None` uses the kernel size; `dilation=(1,1)`; `ceil_mode=False`; `return_indices=False` |
 | Activation | `ReLU` | Exact big-M or stable equality | Elementwise ReLU; `relu_binary_mode` may be `"full"` or `"reduced"`; in-place forms are unsupported |
@@ -50,10 +51,10 @@ operation currently produces one tensor.
 
 ## Outside the current boundary
 
-Standalone `Constant` and `Identity` operators, BatchNorm, constant arithmetic,
-and other canonical operators not shown above are not currently supported.
-Linear and Conv2d parameters are lifted into `GraphIR.constants`, but this does
-not create standalone Constant operators.
+Standalone `Constant` and `Identity` operators, constant arithmetic, and other
+canonical operators not shown above are not currently supported. Linear,
+Conv2d, and BatchNorm fixed arrays are lifted into `GraphIR.constants`, but
+this does not create standalone Constant operators.
 
 Planned operators and formulations remain outside this published capability
 boundary; appearing in a development roadmap does not imply current support.

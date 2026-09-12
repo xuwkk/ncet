@@ -49,6 +49,21 @@ class ProjectionResidualCNN(nn.Module):
         return main + self.shortcut(x)
 
 
+class BatchNormResidualCNN(nn.Module):
+    """A Conv-BatchNorm branch with a projected residual shortcut."""
+
+    def __init__(self) -> None:
+        super().__init__()
+        self.conv = nn.Conv2d(1, 2, kernel_size=1)
+        self.batch_norm = nn.BatchNorm2d(2)
+        self.shortcut = nn.Conv2d(1, 2, kernel_size=1)
+        self.relu = nn.ReLU()
+
+    def forward(self, x: torch.Tensor) -> torch.Tensor:
+        main = self.batch_norm(self.conv(x))
+        return self.relu(main + self.shortcut(x))
+
+
 class BranchConcatCNN(nn.Module):
     """Two convolutional branches concatenated along the channel axis."""
 
@@ -117,6 +132,16 @@ def make_identity_residual_cnn() -> IdentityResidualCNN:
 
 def make_projection_residual_cnn() -> ProjectionResidualCNN:
     return _initialize(ProjectionResidualCNN())
+
+
+def make_batchnorm_residual_cnn() -> BatchNormResidualCNN:
+    model = _initialize(BatchNormResidualCNN())
+    with torch.no_grad():
+        model.batch_norm.weight.copy_(torch.tensor([1.5, -0.75]))
+        model.batch_norm.bias.copy_(torch.tensor([0.2, -0.1]))
+        model.batch_norm.running_mean.copy_(torch.tensor([0.3, -0.4]))
+        model.batch_norm.running_var.copy_(torch.tensor([0.25, 1.0]))
+    return model.eval()
 
 
 def make_branch_concat_cnn() -> BranchConcatCNN:

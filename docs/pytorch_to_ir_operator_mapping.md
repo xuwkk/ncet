@@ -31,6 +31,8 @@ uses its concrete type to choose the canonical operator.
 |---|---|---|---|
 | `nn.Linear` | `call_module` | `"block.linear"` | `Linear` |
 | `nn.Conv2d` | `call_module` | `"features.conv"` | `Conv2d` |
+| `nn.BatchNorm1d` | `call_module` | `"features.batch_norm"` | `BatchNorm` |
+| `nn.BatchNorm2d` | `call_module` | `"features.batch_norm"` | `BatchNorm` |
 | `nn.AvgPool2d` | `call_module` | `"avg_pool"` | `AvgPool2d` |
 | `nn.MaxPool2d` | `call_module` | `"max_pool"` | `MaxPool2d` |
 | `nn.ReLU` | `call_module` | `"relu"` | `ReLU` |
@@ -133,9 +135,11 @@ every parameterization of that operation is supported.
   are rejected before GraphIR normalization.
 - `F.linear()` and `F.conv2d()` are not currently mapped; use `nn.Linear` and
   `nn.Conv2d`.
+- `F.batch_norm()` is not currently mapped; use `nn.BatchNorm1d` or
+  `nn.BatchNorm2d` in evaluation mode with fixed running statistics.
 - Direct FX `get_attr` nodes are not canonicalized as standalone operators.
-  State belonging to supported Linear and Conv2d modules is instead lifted
-  into `GraphIR.constants` during normalization.
+  State belonging to supported Linear, Conv2d, and BatchNorm modules is instead
+  lifted into `GraphIR.constants` during normalization.
 - Any FX operation spelling not listed above raises
   `UnsupportedOperatorError`.
 

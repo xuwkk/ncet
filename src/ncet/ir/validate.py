@@ -59,10 +59,16 @@ def validate_ir(graph: GraphIR) -> None:
 
 
 def _validate_constants(graph: GraphIR, node: IRNode) -> None:
-    if node.op_type not in {"Linear", "Conv2d"}:
+    constant_attributes = {
+        "Linear": ("weight", "bias"),
+        "Conv2d": ("weight", "bias"),
+        "BatchNorm": ("scale", "shift"),
+    }
+    attributes = constant_attributes.get(node.op_type)
+    if attributes is None:
         return
 
-    for attribute in ("weight", "bias"):
+    for attribute in attributes:
         constant_name = node.attrs.get(attribute)
         # The node constants are stored separately from the graph.tensors
         if constant_name not in graph.constants:

@@ -5,7 +5,10 @@ import torch
 from torch import nn
 from torch.nn import functional as F
 
-from tests.fixtures.models import make_branch_concat_cnn
+from tests.fixtures.models import (
+    make_batchnorm_residual_cnn,
+    make_branch_concat_cnn,
+)
 from ncet import Bounds, form_milp
 
 
@@ -302,6 +305,43 @@ def test_residual_conv_relu_encoding_matches_pytorch() -> None:
         atol=1e-6,
     )
     np.testing.assert_allclose(encoding.outputs[0].value, expected, atol=1e-6)
+
+
+def test_batchnorm_residual_encoding_matches_pytorch() -> None:
+    model = make_batchnorm_residual_cnn()
+    shape = (1, 3, 3)
+    encoding = form_milp(
+        model,
+        Bounds(
+            lower=np.full(shape, -1.0, dtype=np.float32),
+            upper=np.full(shape, 1.0, dtype=np.float32),
+        ),
+    )
+    sample = np.linspace(
+        -0.8,
+        0.7,
+        np.prod(shape),
+        dtype=np.float32,
+    ).reshape(shape)
+    problem = cp.Problem(
+        cp.Minimize(0),
+        [*encoding.constraints, encoding.inputs["x"] == sample],
+    )
+    problem.solve(solver=cp.SCIPY)
+
+    with torch.no_grad():
+        sample_tensor = torch.from_numpy(sample).unsqueeze(0)
+        expected_batch_norm = model.batch_norm(model.conv(sample_tensor))
+        expected = model(sample_tensor).squeeze(0).numpy()
+
+    assert problem.status == cp.OPTIMAL
+    np.testing.assert_allclose(
+        encoding.values["batch_norm"].expression.value,
+        expected_batch_norm.squeeze(0).numpy(),
+        atol=1e-5,
+    )
+    np.testing.assert_allclose(encoding.outputs[0].value, expected, atol=1e-5)
+    assert "batch_norm" not in encoding.binaries
 
 
 def test_branch_concat_encoding_matches_pytorch() -> None:

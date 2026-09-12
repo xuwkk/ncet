@@ -37,7 +37,7 @@ from torch import nn
 
 from ncet import Bounds, form_milp
 
-
+# Define a simple residual MLP
 class ResidualMLP(nn.Module):
     def __init__(self) -> None:
         super().__init__()
@@ -53,14 +53,16 @@ class ResidualMLP(nn.Module):
 
 
 model = ResidualMLP().eval()
-# Bounds describe one sample; do not include a batch dimension.
+# Define the bounds of the input. Bounds describe one sample; do not include a batch dimension.
 bounds = Bounds(
     lower=np.array([-1.0, -1.0]),
     upper=np.array([1.0, 1.0]),
 )
 
+# Convert the model to a MILP encoding
 encoding = form_milp(model, bounds, relu_binary_mode="reduced")
 
+# Connect the encoding to a CVXPY problem
 x = encoding.inputs["x"]
 y = encoding.outputs[0]
 problem = cp.Problem(cp.Maximize(y[0]), encoding.constraints)
@@ -77,7 +79,8 @@ for all arguments, accepted bound forms, return fields, and public exceptions.
 
 NCET captures static PyTorch FX graphs and normalizes the supported operations
 into a canonical graph intermediate representation (IR). The current operator
-set is Linear, Conv2d, AvgPool2d, MaxPool2d, ReLU, Add, Sub, Concat, Flatten,
+set is Linear, Conv2d, BatchNorm1d/2d, AvgPool2d, MaxPool2d, ReLU, Add, Sub,
+Concat, Flatten,
 Reshape/View, Permute, Transpose, and static GetItem/Slice. Graph-based interval
 bound propagation and the CVXPY/MILP encoder support this operator set. See the
 [current operator boundary](https://xuwkk.github.io/ncet/supported_operators/)

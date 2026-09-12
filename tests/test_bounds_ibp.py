@@ -3,7 +3,10 @@ import pytest
 import torch
 from torch import nn
 
-from tests.fixtures.models import make_identity_residual_cnn
+from tests.fixtures.models import (
+    make_batchnorm_residual_cnn,
+    make_identity_residual_cnn,
+)
 from ncet.errors import InvalidBoundsError
 from ncet.frontend import capture_graph, normalize_graph, propagate_shapes
 from ncet.ir import GraphIR
@@ -148,3 +151,35 @@ def test_conv_relu_residual_bounds_contain_sampled_outputs() -> None:
     assert output_bounds.upper.shape == (1, 4, 4)
     assert np.all(outputs >= output_bounds.lower - 1e-6)
     assert np.all(outputs <= output_bounds.upper + 1e-6)
+
+
+def test_batchnorm_bounds_handle_negative_scale() -> None:
+    model = make_batchnorm_residual_cnn()
+    traced = capture_graph(model)
+    propagate_shapes(traced, torch.zeros(1, 1, 3, 3))
+    graph = normalize_graph(traced)
+    input_bounds = Bounds(
+        lower=np.full((1, 3, 3), -1.0, dtype=np.float32),
+        upper=np.full((1, 3, 3), 2.0, dtype=np.float32),
+    )
+    bounds = propagate_bounds(graph, {graph.inputs[0]: input_bounds})
+
+    node = next(node for node in graph.nodes if node.op_type == "BatchNorm")
+    source = bounds[node.inputs[0]]
+    result = bounds[node.outputs[0]]
+    scale = graph.constants[node.attrs["scale"]].reshape(2, 1, 1)
+    shift = graph.constants[node.attrs["shift"]].reshape(2, 1, 1)
+    expected_lower = np.where(
+        scale >= 0,
+        scale * source.lower,
+        scale * source.upper,
+    ) + shift
+    expected_upper = np.where(
+        scale >= 0,
+        scale * source.upper,
+        scale * source.lower,
+    ) + shift
+
+    assert scale[1, 0, 0] < 0
+    np.testing.assert_allclose(result.lower, expected_lower)
+    np.testing.assert_allclose(result.upper, expected_upper)

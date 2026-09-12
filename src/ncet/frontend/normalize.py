@@ -104,6 +104,13 @@ def _canonical_operation(
                 module,
                 constants,
             )
+        if isinstance(module, (nn.BatchNorm1d, nn.BatchNorm2d)):
+            return "BatchNorm", _batchnorm_attrs(
+                node,
+                str(node.target),
+                module,
+                constants,
+            )
         if isinstance(module, nn.AvgPool2d):
             return "AvgPool2d", _avgpool2d_attrs(
                 node.name,
@@ -766,6 +773,56 @@ def _conv2d_attrs(
         groups=module.groups,
     )
     return attrs
+
+
+def _batchnorm_attrs(
+    node: fx.Node,
+    module_path: str,
+    module: nn.BatchNorm1d | nn.BatchNorm2d,
+    constants: dict[str, np.ndarray],
+) -> dict[str, str]:
+    """Convert evaluation-mode BatchNorm into fixed scale and shift constants."""
+    if module.training:
+        raise UnsupportedOperatorError(
+            f"BatchNorm node '{node.name}' must be in evaluation mode"
+        )
+    if (
+        not module.track_running_stats
+        or module.running_mean is None
+        or module.running_var is None
+    ):
+        raise UnsupportedOperatorError(
+            f"BatchNorm node '{node.name}' requires fixed running statistics"
+        )
+
+    input_shape = _sample_shape(node.all_input_nodes[0])
+    expected_ranks = (1, 2) if isinstance(module, nn.BatchNorm1d) else (3,)
+    if (
+        len(input_shape) not in expected_ranks
+        or input_shape[0] != module.num_features  # num_features is the channel dimension
+    ):
+        raise UnsupportedOperatorError(
+            f"unsupported BatchNorm input shape at node '{node.name}': "
+            f"shape={input_shape}, num_features={module.num_features}"
+        )
+
+    scale_name = f"{module_path}.scale"
+    shift_name = f"{module_path}.shift"
+    if scale_name not in constants:
+        mean = module.running_mean
+        variance = module.running_var
+        weight = (
+            module.weight
+            if module.weight is not None
+            else torch.ones_like(mean)
+        )
+        bias = module.bias if module.bias is not None else torch.zeros_like(mean)
+        scale = weight / torch.sqrt(variance + module.eps)
+        shift = bias - scale * mean
+        constants[scale_name] = _readonly_numpy(scale)
+        constants[shift_name] = _readonly_numpy(shift)
+
+    return {"scale": scale_name, "shift": shift_name}
 
 
 def _weight_bias_attrs(

@@ -14,6 +14,7 @@ frontend and GraphIR design details are documented elsewhere under `docs/`.
 3. The operator notes derive the sparse matrices or exact formulations used by
    the backend:
    - [Conv2d](conv2d_exact_encoding.md)
+   - [BatchNorm](batchnorm_exact_encoding.md)
    - [AvgPool2d](avgpool2d_exact_encoding.md)
    - [MaxPool2d](maxpool2d_exact_encoding.md)
 
@@ -24,5 +25,6 @@ frontend and GraphIR design details are documented elsewhere under `docs/`.
 | [Interval Bound Propagation](bound_propagation.md) | Bound rules for affine, monotone, arithmetic, and structural operators |
 | [Exact Encoding](exact_encoding.md) | Graph-wide LP/MILP variables, constraints, and exactness |
 | [Conv2d](conv2d_exact_encoding.md) | Sparse affine matrix for convolution |
+| [BatchNorm](batchnorm_exact_encoding.md) | Inference-mode per-channel affine map |
 | [AvgPool2d](avgpool2d_exact_encoding.md) | Sparse averaging matrix and pooling divisor |
 | [MaxPool2d](maxpool2d_exact_encoding.md) | Full one-hot exact maximum formulation |

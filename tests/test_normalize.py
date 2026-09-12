@@ -8,6 +8,7 @@ from torch.nn import functional as F
 
 from tests.fixtures.models import (
     CNN_INPUT_SHAPE,
+    make_batchnorm_residual_cnn,
     make_branch_concat_cnn,
     make_multiple_input_output,
     make_residual_mlp,
@@ -41,6 +42,15 @@ class NoBiasLinear(nn.Module):
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         return self.linear(x)
+
+
+class NoRunningStatsBatchNorm(nn.Module):
+    def __init__(self) -> None:
+        super().__init__()
+        self.batch_norm = nn.BatchNorm1d(3, track_running_stats=False)
+
+    def forward(self, x: torch.Tensor) -> torch.Tensor:
+        return self.batch_norm(x)
 
 
 class ScaledAdd(nn.Module):
@@ -150,6 +160,38 @@ def test_normalize_creates_zero_bias() -> None:
     np.testing.assert_array_equal(bias, np.zeros(3, dtype=np.float32))
     assert bias.dtype == graph.constants[linear.attrs["weight"]].dtype
     assert not bias.flags.writeable
+
+
+def test_normalize_batchnorm_to_scale_and_shift() -> None:
+    model = make_batchnorm_residual_cnn()
+    graph = _normalize(model, torch.zeros(1, 1, 3, 3))
+    node = next(node for node in graph.nodes if node.op_type == "BatchNorm")
+
+    scale = graph.constants[node.attrs["scale"]]
+    shift = graph.constants[node.attrs["shift"]]
+    expected_scale_tensor = (
+        model.batch_norm.weight
+        / torch.sqrt(model.batch_norm.running_var + model.batch_norm.eps)
+    )
+    expected_shift = (
+        model.batch_norm.bias
+        - expected_scale_tensor * model.batch_norm.running_mean
+    ).detach().numpy()
+    expected_scale = expected_scale_tensor.detach().numpy()
+
+    assert node.attrs == {
+        "scale": "batch_norm.scale",
+        "shift": "batch_norm.shift",
+    }
+    np.testing.assert_allclose(scale, expected_scale)
+    np.testing.assert_allclose(shift, expected_shift)
+    assert not scale.flags.writeable
+    assert not shift.flags.writeable
+
+
+def test_capture_rejects_batchnorm_without_running_statistics() -> None:
+    with pytest.raises(UnsupportedOperatorError, match="fixed running statistics"):
+        capture_graph(NoRunningStatsBatchNorm().eval())
 
 
 def test_normalize_conv2d_and_concat_branches() -> None:

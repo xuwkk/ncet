@@ -11,8 +11,8 @@ elements or graph branches.
 
 ## 1. Signed affine propagation
 
-Linear and Conv2d may contain both positive and negative fixed coefficients,
-so their bounds require a positive/negative coefficient split.
+Linear, Conv2d, and BatchNorm may contain both positive and negative fixed
+coefficients, so their bounds require a positive/negative coefficient split.
 
 ### Linear layer
 
@@ -91,6 +91,38 @@ treated as uncertain inputs.
 
 See [Exact Conv2d encoding in NCET](conv2d_exact_encoding.md) for the
 corresponding optimization constraint and sparse-matrix construction.
+
+### BatchNorm layer
+
+In evaluation mode, BatchNorm is a fixed per-channel affine map:
+
+$$
+Y_{c,\ldots}=a_cX_{c,\ldots}+d_c,
+$$
+
+where
+
+$$
+a_c=\frac{\gamma_c}{\sqrt{\sigma_c^2+\epsilon}},
+\qquad
+d_c=\beta_c-a_c\mu_c.
+$$
+
+Here, $\mu_c$ and $\sigma_c^2$ are the stored running statistics. For a
+non-affine module, $\gamma_c=1$ and $\beta_c=0$. Define
+$a_c^+=\max(a_c,0)$ and $a_c^-=\min(a_c,0)$. The propagated bounds are
+
+$$
+L_Y=a^+\odot L_X+a^-\odot U_X+d,
+$$
+
+$$
+U_Y=a^+\odot U_X+a^-\odot L_X+d,
+$$
+
+with the channel vectors broadcast over spatial or sequence dimensions. See
+[Exact BatchNorm encoding in NCET](batchnorm_exact_encoding.md) for the
+normalization and exact equality.
 
 ## 2. Order-preserving unary operations
 
@@ -213,5 +245,6 @@ additional interval relaxation.
 - [Knowledge notes index](index.md)
 - [Exact Encoding](exact_encoding.md)
 - [Exact Conv2d encoding](conv2d_exact_encoding.md)
+- [Exact BatchNorm encoding](batchnorm_exact_encoding.md)
 - [Exact AvgPool2d encoding](avgpool2d_exact_encoding.md)
 - [Exact MaxPool2d encoding](maxpool2d_exact_encoding.md)

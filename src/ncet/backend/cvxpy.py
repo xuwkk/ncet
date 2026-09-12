@@ -17,6 +17,7 @@ _SUPPORTED_OPS = frozenset(
         "Input",
         "Linear",
         "Conv2d",
+        "BatchNorm",
         "AvgPool2d",
         "MaxPool2d",
         "ReLU",
@@ -144,6 +145,8 @@ def encode_cvxpy(
             constraints.append(_linear_constraint(graph, node, variables))
         elif node.op_type == "Conv2d":
             constraints.append(_conv2d_constraint(graph, node, variables))
+        elif node.op_type == "BatchNorm":
+            constraints.append(_batchnorm_constraint(graph, node, variables))
         elif node.op_type == "AvgPool2d":
             constraints.append(_avgpool2d_constraint(node, variables))
         elif node.op_type == "MaxPool2d":
@@ -248,6 +251,22 @@ def _conv2d_constraint(
     output_vector = cp.reshape(output_value, (output_value.size,), order="C")
     bias_vector = np.repeat(bias, output_value.shape[1] * output_value.shape[2]) # Same bias are shared by one output channel
     return output_vector == matrix @ input_vector + bias_vector
+
+
+def _batchnorm_constraint(
+    graph: GraphIR,
+    node: IRNode,
+    variables: dict[str, cp.Variable],
+) -> cp.Constraint:
+    """Encode evaluation-mode BatchNorm as a per-channel affine equality."""
+    input_value = variables[node.inputs[0]]
+    output_value = variables[node.outputs[0]]
+    scale = graph.constants[node.attrs["scale"]]
+    shift = graph.constants[node.attrs["shift"]]
+    broadcast_shape = (scale.size,) + (1,) * (len(input_value.shape) - 1)
+    scale = np.broadcast_to(scale.reshape(broadcast_shape), input_value.shape) # e.g., from (C,) to (C, 1, 1) to (C, H, W)
+    shift = np.broadcast_to(shift.reshape(broadcast_shape), input_value.shape)
+    return output_value == cp.multiply(scale, input_value) + shift
 
 
 def _conv2d_affine_matrix(

@@ -63,6 +63,19 @@ Kernel positions lying in zero padding are omitted from the sparse matrix.
 
 More details can be found in [conv2d_exact_encoding.md](conv2d_exact_encoding.md).
 
+### BatchNorm
+
+Evaluation-mode BatchNorm is normalized into fixed per-channel scale and shift
+vectors $a$ and $d$. NCET broadcasts them to the input shape and enforces
+
+$$
+Y=a\odot X+d.
+$$
+
+This is an exact affine equality and introduces no binary variables. See
+[batchnorm_exact_encoding.md](batchnorm_exact_encoding.md) for the derivation
+and supported shapes.
+
 ### AveragePool2d
 
 AveragePool2d is a fixed linear map. NCET builds a sparse averaging matrix
@@ -249,5 +262,6 @@ relaxation and can make the optimization problem substantially slower.
 - [Knowledge notes index](index.md)
 - [Interval Bound Propagation](bound_propagation.md)
 - [Exact Conv2d encoding](conv2d_exact_encoding.md)
+- [Exact BatchNorm encoding](batchnorm_exact_encoding.md)
 - [Exact AvgPool2d encoding](avgpool2d_exact_encoding.md)
 - [Exact MaxPool2d encoding](maxpool2d_exact_encoding.md)

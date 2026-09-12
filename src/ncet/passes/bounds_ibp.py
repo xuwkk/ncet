@@ -16,6 +16,7 @@ _SUPPORTED_OPS = frozenset(
         "Input",
         "Linear",
         "Conv2d",
+        "BatchNorm",
         "AvgPool2d",
         "MaxPool2d",
         "ReLU",
@@ -110,6 +111,9 @@ def _propagate_node(
 
     if node.op_type == "Conv2d":
         return _conv2d_bounds(graph, node, inputs[0])
+
+    if node.op_type == "BatchNorm":
+        return _batchnorm_bounds(graph, node, inputs[0])
 
     if node.op_type == "AvgPool2d":
         return _avgpool2d_bounds(node, inputs[0])
@@ -209,6 +213,35 @@ def _conv2d_bounds(
             F.conv2d(upper, positive, bias=bias, **options)
             + F.conv2d(lower, negative, **options)
         ).squeeze(0).numpy(),
+    )
+
+
+def _batchnorm_bounds(
+    graph: GraphIR,
+    node: IRNode,
+    input_bounds: Bounds,
+) -> Bounds:
+    """Propagate bounds through a fixed per-channel affine transform."""
+    scale = graph.constants[node.attrs["scale"]]
+    shift = graph.constants[node.attrs["shift"]]
+    # scale.size is the channel dimension, so we need to broadcast it to the input shape
+    # with all 1s for the remaining dimensions
+    broadcast_shape = (scale.size,) + (1,) * (input_bounds.lower.ndim - 1)
+    scale = scale.reshape(broadcast_shape)
+    shift = shift.reshape(broadcast_shape)
+    positive = np.maximum(scale, 0)
+    negative = np.minimum(scale, 0)
+    return Bounds(
+        lower=(
+            positive * input_bounds.lower
+            + negative * input_bounds.upper
+            + shift
+        ),
+        upper=(
+            positive * input_bounds.upper
+            + negative * input_bounds.lower
+            + shift
+        ),
     )
 
 

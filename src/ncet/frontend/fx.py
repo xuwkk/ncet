@@ -7,7 +7,7 @@ import torch
 from torch import fx, nn
 from torch.fx.passes.shape_prop import ShapeProp
 
-from ..errors import GraphCaptureError
+from ..errors import GraphCaptureError, UnsupportedOperatorError
 
 
 @dataclass(frozen=True)
@@ -30,6 +30,7 @@ def capture_graph(model: nn.Module) -> fx.GraphModule:
     """Capture an evaluation-mode model as an executable FX graph."""
     if model.training:
         raise GraphCaptureError("model must be in evaluation mode")
+    _validate_batchnorm_modules(model)
 
     try:
         graph_module = fx.symbolic_trace(model)
@@ -40,6 +41,27 @@ def capture_graph(model: nn.Module) -> fx.GraphModule:
 
     validate_graph(graph_module) # reject graph operations that mutate tensor values in place
     return graph_module
+
+
+def _validate_batchnorm_modules(model: nn.Module) -> None:
+    """Require fixed running statistics for exact BatchNorm encoding."""
+    supported = (nn.BatchNorm1d, nn.BatchNorm2d)
+    for path, module in model.named_modules():
+        if not isinstance(module, supported):
+            continue
+        name = path or type(module).__name__
+        if module.training:
+            raise UnsupportedOperatorError(
+                f"BatchNorm module '{name}' must be in evaluation mode"
+            )
+        if (
+            not module.track_running_stats
+            or module.running_mean is None
+            or module.running_var is None
+        ):
+            raise UnsupportedOperatorError(
+                f"BatchNorm module '{name}' requires fixed running statistics"
+            )
 
 
 def validate_graph(graph_module: fx.GraphModule) -> None:

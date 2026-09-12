@@ -211,8 +211,8 @@ The graph should have approximately these nodes:
 
 > This table describes the general FX node categories, not NCET's supported
 operator set. In particular, the current normalizer does not canonicalize an
-arbitrary standalone `get_attr` node. Supported `call_module` state such as
-Linear and Conv2d weights is lifted directly into `GraphIR.constants`.
+arbitrary standalone `get_attr` node. Supported `call_module` state for
+Linear, Conv2d, and BatchNorm are lifted directly into `GraphIR.constants`.
 
 > The raw `nn_module_stack` can contain several nested modules. NCET's `FXNodeInfo.module_path` keeps only its innermost module path. Provenance is optional, so `module_path` can be `None`.
 
@@ -358,6 +358,7 @@ such as `linear`, `linear_1`, and `linear_2`.
 | `Input` | `{}` |
 | `Linear` | `weight`, `bias`: names in `graph.constants` |
 | `Conv2d` | `weight`, `bias`, `stride`, `padding`, `dilation`, `groups` |
+| `BatchNorm` | `scale`, `shift`: names in `graph.constants` |
 | `AvgPool2d` | `kernel_size`, `stride`, `padding`, `ceil_mode`, `count_include_pad`, `divisor_override` |
 | `MaxPool2d` | `kernel_size`, `stride`, `padding`, `dilation`, `ceil_mode`, `return_indices` |
 | `ReLU` | `{}` |
@@ -392,8 +393,9 @@ Canonical index actions are:
 
 ### 3.6 Constants and shared module state
 
-Linear and Conv2d nodes do not copy parameter arrays into `IRNode.attrs`.
-Instead, attrs contain names that refer into the graph-level constant table:
+Linear, Conv2d, and BatchNorm nodes do not copy fixed arrays into
+`IRNode.attrs`. Instead, attrs contain names that refer into the graph-level
+constant table:
 
 ```text
 IRNode.attrs["weight"]
@@ -409,11 +411,12 @@ read-only NumPy array
 ```
 
 Normalization copies direct parameters and buffers from the targeted PyTorch
-module into read-only NumPy arrays. When a shared module is called more than
-once, several IR nodes refer to the same constant names, so its parameters are
-stored once. If a supported Linear or Conv2d module has no bias, normalization
-creates one fixed zero-bias array so later passes can use a uniform affine
-formulation.
+module into read-only NumPy arrays. BatchNorm running statistics and affine
+parameters are first combined into per-channel `scale` and `shift` arrays.
+When a shared module is called more than once, several IR nodes refer to the
+same constant names, so its parameters are stored once. If a supported Linear
+or Conv2d module has no bias, normalization creates one fixed zero-bias array
+so later passes can use a uniform affine formulation.
 
 Constants are not included in `graph.tensors`, do not receive propagated
 `Bounds`, and do not create CVXPY decision variables.
@@ -450,7 +453,8 @@ high-risk structural invariants:
 - a tensor has at most one producer;
 - every produced tensor has a `TensorSpec` with a static non-negative shape;
 - graph input/output boundaries reference available tensors;
-- Linear and Conv2d weight/bias references exist in `graph.constants`.
+- Linear and Conv2d weight/bias references and BatchNorm scale/shift references
+  exist in `graph.constants`.
 
 `analyze_capabilities(graph, supported_ops)` is a separate consumer-specific
 check. It counts canonical operators and returns the nodes that a particular
@@ -950,6 +954,7 @@ consumer capability before a complete `MILPEncoding` is returned.
 - [`supported_operators.md`](supported_operators.md): authoritative current operator and parameter boundary;
 - [`knowledge/index.md`](knowledge/index.md): mathematical knowledge notes and recommended reading order;
 - [`knowledge/conv2d_exact_encoding.md`](knowledge/conv2d_exact_encoding.md): sparse Conv2d affine formulation;
+- [`knowledge/batchnorm_exact_encoding.md`](knowledge/batchnorm_exact_encoding.md): inference-mode BatchNorm normalization and encoding;
 - [`knowledge/avgpool2d_exact_encoding.md`](knowledge/avgpool2d_exact_encoding.md): AvgPool2d matrix formulation;
 - [`knowledge/maxpool2d_exact_encoding.md`](knowledge/maxpool2d_exact_encoding.md): exact MaxPool2d selection formulation;
 - [Representative operator notebook](https://github.com/xuwkk/ncet/blob/main/examples/artificial_test_on_operators.ipynb): executable graph and exact-encoding walkthrough.
