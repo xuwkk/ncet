@@ -102,6 +102,27 @@ for the accepted semantics and restrictions of each operator.
   [full exact formulation](https://xuwkk.github.io/ncet/knowledge/maxpool2d_exact_encoding/),
   with one binary selector for every valid candidate in each pooling window.
 
+## Comparison with OMLT
+
+[OMLT](https://github.com/cog-imperial/omlt) is a broader Pyomo-based package
+for embedding trained machine-learning models in optimization problems. NCET
+focuses on direct, graph-preserving encoding of supported PyTorch networks as
+exact CVXPY LP/MILP constraints.
+
+| Aspect | NCET | OMLT |
+|---|---|---|
+| Model input | PyTorch module via FX | Primarily ONNX or Keras model import |
+| Optimization interface | CVXPY variables and constraints | Pyomo blocks and formulations |
+| Network connectivity | Preserves branches, fan-out, and residual/skip connections, including supported `Add` and `Concat` merges | Stores network graphs, but built-in neural formulations primarily expect one predecessor per layer and do not provide general tensor `Add`/`Concat` merge layers |
+| Built-in neural operators | Broader coverage of common PyTorch graph operations, including normalization, average/adaptive pooling, arithmetic, concatenation, reduction, shape, axis, and static indexing operations | Core neural layers include dense, convolution, max pooling, and GNN layers; also provides smooth activation formulations not currently covered by NCET |
+| Main scope | Exact LP/MILP encoding of supported affine, piecewise-linear, pooling, reduction, and tensor-shape operations | Neural networks plus gradient-boosted trees, linear trees, and graph neural networks; also includes nonlinear activation formulations |
+| ReLU handling | Exact big-M encoding with full or stable-unit-reduced binaries | Multiple formulations, including big-M, complementarity, and partition-based formulations |
+| Best fit | PyTorch models with modern graph connectivity used in CVXPY optimization | Broader model/formulation choices in Pyomo workflows |
+
+The packages are therefore complementary: choose NCET when direct PyTorch and
+graph-preserving CVXPY encoding are central, and consider OMLT when Pyomo or
+its broader formulation ecosystem is the priority.
+
 ## Requirements
 
 NCET requires Python 3.10+, CVXPY 1.7.5+, NumPy 1.26+, SciPy 1.13+, and
