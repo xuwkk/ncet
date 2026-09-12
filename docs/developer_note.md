@@ -359,6 +359,7 @@ such as `linear`, `linear_1`, and `linear_2`.
 | `Linear` | `weight`, `bias`: names in `graph.constants` |
 | `Conv2d` | `weight`, `bias`, `stride`, `padding`, `dilation`, `groups` |
 | `BatchNorm` | `scale`, `shift`: names in `graph.constants` |
+| `AdaptiveAvgPool2d` | resolved per-sample `output_size` |
 | `AvgPool2d` | `kernel_size`, `stride`, `padding`, `ceil_mode`, `count_include_pad`, `divisor_override` |
 | `MaxPool2d` | `kernel_size`, `stride`, `padding`, `dilation`, `ceil_mode`, `return_indices` |
 | `ReLU` | `{}` |
@@ -955,6 +956,7 @@ consumer capability before a complete `MILPEncoding` is returned.
 - [`knowledge/index.md`](knowledge/index.md): mathematical knowledge notes and recommended reading order;
 - [`knowledge/conv2d_exact_encoding.md`](knowledge/conv2d_exact_encoding.md): sparse Conv2d affine formulation;
 - [`knowledge/batchnorm_exact_encoding.md`](knowledge/batchnorm_exact_encoding.md): inference-mode BatchNorm normalization and encoding;
+- [`knowledge/adaptive_avgpool2d_exact_encoding.md`](knowledge/adaptive_avgpool2d_exact_encoding.md): adaptive pooling windows and sparse formulation;
 - [`knowledge/avgpool2d_exact_encoding.md`](knowledge/avgpool2d_exact_encoding.md): AvgPool2d matrix formulation;
 - [`knowledge/maxpool2d_exact_encoding.md`](knowledge/maxpool2d_exact_encoding.md): exact MaxPool2d selection formulation;
 - [Representative operator notebook](https://github.com/xuwkk/ncet/blob/main/examples/artificial_test_on_operators.ipynb): executable graph and exact-encoding walkthrough.

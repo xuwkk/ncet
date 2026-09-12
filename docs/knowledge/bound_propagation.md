@@ -126,8 +126,8 @@ normalization and exact equality.
 
 ## 2. Order-preserving unary operations
 
-ReLU, AveragePool2d, and MaxPool2d are order-preserving unary operations. Let
-$f$ denote any one of them. Given
+ReLU, AvgPool2d, AdaptiveAvgPool2d, and MaxPool2d are order-preserving unary
+operations. Let $f$ denote any one of them. Given
 
 $$
 L_X \leq X \leq U_X,
@@ -171,6 +171,21 @@ NCET uses the original kernel size, stride, padding, and
 
 See [Exact AveragePool2d encoding in NCET](avgpool2d_exact_encoding.md) for
 the corresponding averaging-matrix construction.
+
+### AdaptiveAvgPool2d layer
+
+AdaptiveAvgPool2d also averages with nonnegative coefficients, but computes
+each pooling window from the input shape and requested output shape. Its bounds
+are therefore
+
+$$
+L_Y=\operatorname{adaptive\_avgpool2d}(L_X),
+\qquad
+U_Y=\operatorname{adaptive\_avgpool2d}(U_X).
+$$
+
+See [Exact AdaptiveAvgPool2d encoding in NCET](adaptive_avgpool2d_exact_encoding.md)
+for the window boundaries and sparse averaging matrix.
 
 ### MaxPool2d layer
 
@@ -246,5 +261,6 @@ additional interval relaxation.
 - [Exact Encoding](exact_encoding.md)
 - [Exact Conv2d encoding](conv2d_exact_encoding.md)
 - [Exact BatchNorm encoding](batchnorm_exact_encoding.md)
+- [Exact AdaptiveAvgPool2d encoding](adaptive_avgpool2d_exact_encoding.md)
 - [Exact AvgPool2d encoding](avgpool2d_exact_encoding.md)
 - [Exact MaxPool2d encoding](maxpool2d_exact_encoding.md)

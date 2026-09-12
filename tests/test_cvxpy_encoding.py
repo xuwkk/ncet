@@ -70,6 +70,18 @@ class AvgPoolVariants(nn.Module):
         return without_padding, with_padding
 
 
+class AdaptiveAvgPoolVariants(nn.Module):
+    def __init__(self) -> None:
+        super().__init__()
+        self.pool = nn.AdaptiveAvgPool2d((2, 3))
+
+    def forward(
+        self,
+        x: torch.Tensor,
+    ) -> tuple[torch.Tensor, torch.Tensor]:
+        return self.pool(x), F.adaptive_avg_pool2d(x, (1, 2))
+
+
 class MaxPoolVariants(nn.Module):
     def __init__(self) -> None:
         super().__init__()
@@ -229,6 +241,51 @@ def test_avgpool2d_encoding_matches_pytorch() -> None:
         expected[1].squeeze(0).numpy(),
         atol=1e-6,
     )
+    assert encoding.stats.binary_variables == 0
+
+
+def test_adaptive_avgpool2d_encoding_matches_pytorch() -> None:
+    model = AdaptiveAvgPoolVariants().eval()
+    shape = (2, 5, 7)
+    lower = np.linspace(-2.0, -0.5, np.prod(shape), dtype=np.float32).reshape(
+        shape
+    )
+    upper = lower + 3.0
+    encoding = form_milp(model, Bounds(lower=lower, upper=upper))
+    sample = lower + 0.4 * (upper - lower)
+    problem = cp.Problem(
+        cp.Minimize(0),
+        [*encoding.constraints, encoding.inputs["x"] == sample],
+    )
+    problem.solve(solver=cp.SCIPY)
+
+    with torch.no_grad():
+        sample_outputs = model(torch.from_numpy(sample).unsqueeze(0))
+
+    nodes = [
+        node
+        for node in encoding.graph.nodes
+        if node.op_type == "AdaptiveAvgPool2d"
+    ]
+    assert problem.status == cp.OPTIMAL
+    assert [node.attrs["output_size"] for node in nodes] == [(2, 3), (1, 2)]
+    for index, node in enumerate(nodes):
+        value = encoding.values[node.outputs[0]]
+        expected_lower = F.adaptive_avg_pool2d(
+            torch.from_numpy(lower).unsqueeze(0),
+            node.attrs["output_size"],
+        ).squeeze(0)
+        expected_upper = F.adaptive_avg_pool2d(
+            torch.from_numpy(upper).unsqueeze(0),
+            node.attrs["output_size"],
+        ).squeeze(0)
+        np.testing.assert_allclose(value.bounds.lower, expected_lower.numpy())
+        np.testing.assert_allclose(value.bounds.upper, expected_upper.numpy())
+        np.testing.assert_allclose(
+            encoding.outputs[index].value,
+            sample_outputs[index].squeeze(0).numpy(),
+            atol=1e-6,
+        )
     assert encoding.stats.binary_variables == 0
 
 

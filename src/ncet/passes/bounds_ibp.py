@@ -17,6 +17,7 @@ _SUPPORTED_OPS = frozenset(
         "Linear",
         "Conv2d",
         "BatchNorm",
+        "AdaptiveAvgPool2d",
         "AvgPool2d",
         "MaxPool2d",
         "ReLU",
@@ -114,6 +115,9 @@ def _propagate_node(
 
     if node.op_type == "BatchNorm":
         return _batchnorm_bounds(graph, node, inputs[0])
+
+    if node.op_type == "AdaptiveAvgPool2d":
+        return _adaptive_avgpool2d_bounds(node, inputs[0])
 
     if node.op_type == "AvgPool2d":
         return _avgpool2d_bounds(node, inputs[0])
@@ -261,6 +265,20 @@ def _avgpool2d_bounds(node: IRNode, input_bounds: Bounds) -> Bounds:
     return Bounds(
         lower=F.avg_pool2d(lower, **options).squeeze(0).numpy(),
         upper=F.avg_pool2d(upper, **options).squeeze(0).numpy(),
+    )
+
+
+def _adaptive_avgpool2d_bounds(
+    node: IRNode,
+    input_bounds: Bounds,
+) -> Bounds:
+    """Apply the monotone adaptive average to both interval endpoints."""
+    output_size = node.attrs["output_size"]
+    lower = torch.as_tensor(input_bounds.lower).unsqueeze(0)
+    upper = torch.as_tensor(input_bounds.upper).unsqueeze(0)
+    return Bounds(
+        lower=F.adaptive_avg_pool2d(lower, output_size).squeeze(0).numpy(),
+        upper=F.adaptive_avg_pool2d(upper, output_size).squeeze(0).numpy(),
     )
 
 

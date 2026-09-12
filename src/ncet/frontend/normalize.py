@@ -111,6 +111,11 @@ def _canonical_operation(
                 module,
                 constants,
             )
+        if isinstance(module, nn.AdaptiveAvgPool2d):
+            return "AdaptiveAvgPool2d", _adaptive_avgpool2d_attrs(
+                node,
+                module.output_size,
+            )
         if isinstance(module, nn.AvgPool2d):
             return "AvgPool2d", _avgpool2d_attrs(
                 node.name,
@@ -148,6 +153,16 @@ def _canonical_operation(
             return "Sub", _unit_alpha_attrs(node, "Sub")
         if node.target in {F.relu, torch.relu}:
             return "ReLU", {}
+        if node.target is F.adaptive_avg_pool2d:
+            output_size = (
+                node.args[1]
+                if len(node.args) > 1
+                else node.kwargs["output_size"]
+            )
+            return "AdaptiveAvgPool2d", _adaptive_avgpool2d_attrs(
+                node,
+                output_size,
+            )
         if node.target is F.avg_pool2d:
             return "AvgPool2d", _avgpool2d_call_attrs(node)
         if node.target is F.max_pool2d:
@@ -183,6 +198,50 @@ def _canonical_operation(
             return "Transpose", _transpose_attrs(node)
 
     raise _unsupported_node(node)
+
+
+def _adaptive_avgpool2d_attrs(
+    node: fx.Node,
+    output_size: Any,
+) -> dict[str, tuple[int, int]]:
+    """Resolve AdaptiveAvgPool2d to one static per-sample output size."""
+    input_shape = _sample_shape(node.all_input_nodes[0])
+    output_shape = _sample_shape(node)
+    if len(input_shape) != 3 or len(output_shape) != 3:
+        raise UnsupportedOperatorError(
+            f"unsupported AdaptiveAvgPool2d shape at node '{node.name}': "
+            f"input={input_shape}, output={output_shape}"
+        )
+
+    if type(output_size) is int:
+        requested = (output_size, output_size)
+    elif isinstance(output_size, (tuple, list)) and len(output_size) == 2:
+        requested = tuple(output_size)
+    else:
+        raise UnsupportedOperatorError(
+            f"unsupported AdaptiveAvgPool2d output_size at node "
+            f"'{node.name}': {output_size!r}"
+        )
+
+    if any(
+        value is not None and (type(value) is not int or value <= 0)
+        for value in requested
+    ):
+        raise UnsupportedOperatorError(
+            f"unsupported AdaptiveAvgPool2d output_size at node "
+            f"'{node.name}': {output_size!r}"
+        )
+
+    resolved = tuple(
+        input_size if requested_size is None else requested_size
+        for input_size, requested_size in zip(input_shape[1:], requested)
+    )
+    if output_shape[0] != input_shape[0] or output_shape[1:] != resolved:
+        raise UnsupportedOperatorError(
+            f"inconsistent AdaptiveAvgPool2d shape at node '{node.name}': "
+            f"expected={(input_shape[0], *resolved)}, got={output_shape}"
+        )
+    return {"output_size": resolved}
 
 
 def _avgpool2d_call_attrs(node: fx.Node) -> dict[str, Any]:

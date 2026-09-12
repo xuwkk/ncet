@@ -18,6 +18,7 @@ _SUPPORTED_OPS = frozenset(
         "Linear",
         "Conv2d",
         "BatchNorm",
+        "AdaptiveAvgPool2d",
         "AvgPool2d",
         "MaxPool2d",
         "ReLU",
@@ -147,6 +148,10 @@ def encode_cvxpy(
             constraints.append(_conv2d_constraint(graph, node, variables))
         elif node.op_type == "BatchNorm":
             constraints.append(_batchnorm_constraint(graph, node, variables))
+        elif node.op_type == "AdaptiveAvgPool2d":
+            constraints.append(
+                _adaptive_avgpool2d_constraint(node, variables)
+            )
         elif node.op_type == "AvgPool2d":
             constraints.append(_avgpool2d_constraint(node, variables))
         elif node.op_type == "MaxPool2d":
@@ -378,6 +383,68 @@ def _avgpool2d_constraint(
     input_vector = cp.reshape(input_value, (input_value.size,), order="C")
     output_vector = cp.reshape(output_value, (output_value.size,), order="C")
     return output_vector == matrix @ input_vector
+
+
+def _adaptive_avgpool2d_constraint(
+    node: IRNode,
+    variables: dict[str, cp.Variable],
+) -> cp.Constraint:
+    """Encode AdaptiveAvgPool2d as an exact sparse linear equality."""
+    input_value = variables[node.inputs[0]]
+    output_value = variables[node.outputs[0]]
+    matrix = _adaptive_avgpool2d_matrix(
+        input_value.shape,
+        output_value.shape,
+    )
+    input_vector = cp.reshape(input_value, (input_value.size,), order="C")
+    output_vector = cp.reshape(output_value, (output_value.size,), order="C")
+    return output_vector == matrix @ input_vector
+
+
+def _adaptive_avgpool2d_matrix(
+    input_shape: tuple[int, ...],
+    output_shape: tuple[int, ...],
+) -> sparse.csc_matrix:
+    """Build the exact averaging matrix for adaptive pooling windows."""
+    channels, input_height, input_width = input_shape
+    _, output_height, output_width = output_shape
+    rows: list[int] = []
+    columns: list[int] = []
+    coefficients: list[float] = []
+
+    for channel in range(channels):
+        for output_row in range(output_height):
+            row_start = output_row * input_height // output_height
+            row_end = (
+                (output_row + 1) * input_height + output_height - 1
+            ) // output_height
+            for output_col in range(output_width):
+                col_start = output_col * input_width // output_width
+                col_end = (
+                    (output_col + 1) * input_width + output_width - 1
+                ) // output_width
+                divisor = (row_end - row_start) * (col_end - col_start)
+                # The position of the output vector given by the position of
+                # the original position (channel, output_row, output_col)
+                matrix_row = (
+                    (channel * output_height + output_row) * output_width
+                    + output_col
+                )
+
+                for input_row in range(row_start, row_end):
+                    for input_col in range(col_start, col_end):
+                        matrix_col = (
+                            (channel * input_height + input_row) * input_width
+                            + input_col
+                        )
+                        rows.append(matrix_row)
+                        columns.append(matrix_col)
+                        coefficients.append(1.0 / divisor)
+
+    return sparse.coo_matrix(
+        (coefficients, (rows, columns)),
+        shape=(int(np.prod(output_shape)), int(np.prod(input_shape))),
+    ).tocsc()
 
 
 def _avgpool2d_matrix(

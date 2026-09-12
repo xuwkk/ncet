@@ -34,6 +34,7 @@ below is outside the current exact boundary.
 | Affine | `Linear` | Linear equality | Fixed `nn.Linear` parameters; acts on the last tensor dimension; bias may be present or absent |
 | Affine | `Conv2d` | Sparse affine equality | Per-sample shape `(C,H,W)`; fixed `nn.Conv2d`; `groups=1`; `dilation=(1,1)`; numeric padding with `padding_mode="zeros"`; bias optional |
 | Affine | `BatchNorm` | Per-channel affine equality | `nn.BatchNorm1d` on `(C,)` or `(C,L)` and `nn.BatchNorm2d` on `(C,H,W)`; evaluation mode; fixed running statistics; affine or non-affine modules |
+| Pooling | `AdaptiveAvgPool2d` | Sparse linear equality | Per-sample shape `(C,H,W)`; module or functional form; static scalar or length-2 output size; each entry is a positive integer or `None`, where `None` preserves that input dimension |
 | Pooling | `AvgPool2d` | Sparse linear equality | Per-sample shape `(C,H,W)`; scalar or 2-D kernel, stride, and padding; `stride=None` uses the kernel size; `ceil_mode=False`; `divisor_override=None`; either value of `count_include_pad` |
 | Pooling | `MaxPool2d` | Full exact one-hot formulation | Per-sample shape `(C,H,W)`; scalar or 2-D kernel, stride, and padding; `stride=None` uses the kernel size; `dilation=(1,1)`; `ceil_mode=False`; `return_indices=False` |
 | Activation | `ReLU` | Exact big-M or stable equality | Elementwise ReLU; `relu_binary_mode` may be `"full"` or `"reduced"`; in-place forms are unsupported |

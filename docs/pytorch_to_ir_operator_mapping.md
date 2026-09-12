@@ -33,6 +33,7 @@ uses its concrete type to choose the canonical operator.
 | `nn.Conv2d` | `call_module` | `"features.conv"` | `Conv2d` |
 | `nn.BatchNorm1d` | `call_module` | `"features.batch_norm"` | `BatchNorm` |
 | `nn.BatchNorm2d` | `call_module` | `"features.batch_norm"` | `BatchNorm` |
+| `nn.AdaptiveAvgPool2d` | `call_module` | `"adaptive_pool"` | `AdaptiveAvgPool2d` |
 | `nn.AvgPool2d` | `call_module` | `"avg_pool"` | `AvgPool2d` |
 | `nn.MaxPool2d` | `call_module` | `"max_pool"` | `MaxPool2d` |
 | `nn.ReLU` | `call_module` | `"relu"` | `ReLU` |
@@ -64,6 +65,7 @@ recorded by FX.
 | `torch.subtract(x, y)` | `call_function` | `torch.subtract` | `Sub` |
 | `F.relu(x)` | `call_function` | `torch.nn.functional.relu` | `ReLU` |
 | `torch.relu(x)` | `call_function` | `torch.relu` | `ReLU` |
+| `F.adaptive_avg_pool2d(x, ...)` | `call_function` | `torch.nn.functional.adaptive_avg_pool2d` | `AdaptiveAvgPool2d` |
 | `F.avg_pool2d(x, ...)` | `call_function` | `torch.nn.functional.avg_pool2d` | `AvgPool2d` |
 | `F.max_pool2d(x, ...)` | `call_function` | `torch.nn.functional.max_pool2d` | `MaxPool2d` |
 | `torch.cat((x, y), dim)` | `call_function` | `torch.cat` | `Concat` |

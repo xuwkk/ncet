@@ -89,6 +89,20 @@ $$
 Its coefficients reflect the kernel, stride, padding, and
 `count_include_pad` semantics of the canonical operator.
 
+### AdaptiveAvgPool2d
+
+AdaptiveAvgPool2d is also a fixed linear map once its input and output shapes
+are known. NCET derives each adaptive window, builds a sparse matrix
+$A_{\mathrm{adaptive}}$, and enforces
+
+$$
+\operatorname{vec}_C(Y)
+=A_{\mathrm{adaptive}}\operatorname{vec}_C(X).
+$$
+
+Non-divisible input sizes may produce overlapping windows; the matrix records
+each connection exactly. The operation introduces no binary variables.
+
 ### Add and Sub
 
 For two input tensors:
@@ -263,5 +277,6 @@ relaxation and can make the optimization problem substantially slower.
 - [Interval Bound Propagation](bound_propagation.md)
 - [Exact Conv2d encoding](conv2d_exact_encoding.md)
 - [Exact BatchNorm encoding](batchnorm_exact_encoding.md)
+- [Exact AdaptiveAvgPool2d encoding](adaptive_avgpool2d_exact_encoding.md)
 - [Exact AvgPool2d encoding](avgpool2d_exact_encoding.md)
 - [Exact MaxPool2d encoding](maxpool2d_exact_encoding.md)
