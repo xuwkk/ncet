@@ -56,4 +56,5 @@ class GraphIR:
     inputs: list[str]                # tensor names: x
     outputs: list[str]               # tensor names: y
     tensors: dict[str, TensorSpec]   # mapping from tensor name to its specification
-    constants: dict[str, np.ndarray] = field(default_factory=dict) # fixed weights, biases, and buffers
+    # Fixed and derived operator arrays, never optimization variables.
+    constants: dict[str, np.ndarray] = field(default_factory=dict)

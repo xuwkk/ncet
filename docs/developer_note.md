@@ -27,7 +27,7 @@ FX nodes with shape/dtype in node.meta
 GraphIR
     ├── IRNode: canonical operations
     ├── TensorSpec: static tensor metadata of the model
-    └── constants: fixed parameters and buffers
+    └── constants: fixed and derived operator arrays
     │ propagate_bounds()
     ▼
 dict[tensor_name, Bounds]
@@ -212,7 +212,8 @@ The graph should have approximately these nodes:
 > This table describes the general FX node categories, not NCET's supported
 operator set. In particular, the current normalizer does not canonicalize an
 arbitrary standalone `get_attr` node. Supported `call_module` state for
-Linear, Conv2d, and BatchNorm are lifted directly into `GraphIR.constants`.
+Linear, Conv2d, and BatchNorm, as well as fixed constants used by
+ElementwiseAffine, are lifted directly into `GraphIR.constants`.
 
 > The raw `nn_module_stack` can contain several nested modules. NCET's `FXNodeInfo.module_path` keeps only its innermost module path. Provenance is optional, so `module_path` can be `None`.
 
@@ -281,7 +282,7 @@ class GraphIR:
 | `inputs` | Tensor names at the graph input boundary |
 | `outputs` | Tensor names at the graph output boundary |
 | `tensors` | Static metadata for every runtime graph tensor |
-| `constants` | Read-only weights, biases, and buffers |
+| `constants` | Read-only fixed and derived operator arrays |
 
 > `graph.inputs` and `graph.outputs` contain tensor names, not node objects.
 
@@ -359,6 +360,7 @@ such as `linear`, `linear_1`, and `linear_2`.
 | `Linear` | `weight`, `bias`: names in `graph.constants` |
 | `Conv2d` | `weight`, `bias`, `stride`, `padding`, `dilation`, `groups` |
 | `BatchNorm` | `scale`, `shift`: names in `graph.constants` |
+| `ElementwiseAffine` | `scale`, `shift`: names in `graph.constants` |
 | `AdaptiveAvgPool2d` | resolved per-sample `output_size` |
 | `AvgPool2d` | `kernel_size`, `stride`, `padding`, `ceil_mode`, `count_include_pad`, `divisor_override` |
 | `MaxPool2d` | `kernel_size`, `stride`, `padding`, `dilation`, `ceil_mode`, `return_indices` |
@@ -396,9 +398,9 @@ Canonical index actions are:
 
 ### 3.6 Constants and shared module state
 
-Linear, Conv2d, and BatchNorm nodes do not copy fixed arrays into
-`IRNode.attrs`. Instead, attrs contain names that refer into the graph-level
-constant table:
+Linear, Conv2d, BatchNorm, and ElementwiseAffine nodes do not copy fixed
+arrays into `IRNode.attrs`. Instead, attrs contain names that refer into the
+graph-level constant table:
 
 ```text
 IRNode.attrs["weight"]
@@ -416,6 +418,8 @@ read-only NumPy array
 Normalization copies direct parameters and buffers from the targeted PyTorch
 module into read-only NumPy arrays. BatchNorm running statistics and affine
 parameters are first combined into per-channel `scale` and `shift` arrays.
+ElementwiseAffine similarly converts a supported tensor-constant expression
+into fixed `scale` and `shift` arrays for $Y=\mathrm{scale}\odot X+\mathrm{shift}$.
 When a shared module is called more than once, several IR nodes refer to the
 same constant names, so its parameters are stored once. If a supported Linear
 or Conv2d module has no bias, normalization creates one fixed zero-bias array
@@ -424,15 +428,79 @@ so later passes can use a uniform affine formulation.
 Constants are not included in `graph.tensors`, do not receive propagated
 `Bounds`, and do not create CVXPY decision variables.
 
+#### 3.6.1 Constant arithmetic in FX and GraphIR
+
+For arithmetic normalization, NCET first distinguishes fixed values from
+runtime tensors:
+
+| Value in the PyTorch expression | FX representation | GraphIR representation |
+|---|---|---|
+| Registered `nn.Parameter` or buffer | `get_attr` node referenced by an arithmetic node | Derived constant; no standalone `IRNode` and not listed in `IRNode.inputs` |
+| Python scalar literal | Literal in `node.args` or `node.kwargs` | Derived constant; not listed in `IRNode.inputs` |
+| Runtime tensor | `placeholder` or tensor-producing FX node | Producer tensor name listed in `IRNode.inputs` |
+
+Thus, `IRNode.inputs` contains only variable tensor dependencies; fixed
+coefficients are retrieved during normalization and stored in
+`GraphIR.constants`.
+
+For example, let $a$ and $c$ be registered fixed values and let $x$ and $y$
+be runtime tensors:
+
+```python
+def forward(self, x, y):
+    return self.a * x + self.c + y
+```
+
+Python evaluates this expression from left to right, so FX records three
+operation nodes:
+
+```text
+mul   = operator.mul(a, x)
+add   = operator.add(mul, c)
+add_1 = operator.add(add, y)
+```
+
+NCET preserves the three arithmetic operations rather than algebraically
+fusing them:
+
+| Expression | Relevant FX nodes | GraphIR operator | `IRNode.inputs` | Fixed data |
+|---|---|---|---|---|
+| $t_1=a\odot x$ | `get_attr("a")`, then `mul` | `ElementwiseAffine` | `("x",)` | `scale=a`, `shift=0` |
+| $t_2=t_1+c$ | `get_attr("c")`, then `add` | `ElementwiseAffine` | `("mul",)` | `scale=1`, `shift=c` |
+| $z=t_2+y$ | `add_1` | `Add` | `("add", "y")` | None |
+
+The first two operators each have one runtime tensor input because their other
+operand is fixed. The final operator has two runtime tensor inputs, so both
+producer tensor names are retained. The same rule applies to subtraction:
+tensor-constant subtraction becomes `ElementwiseAffine`, whereas tensor-tensor
+subtraction remains `Sub` with both tensors in `IRNode.inputs`. Tensor-tensor
+multiplication and division are currently unsupported because they are
+nonlinear rather than affine.
+
+An `nn.Parameter`, registered buffer, and scalar literal can therefore produce
+the same canonical `ElementwiseAffine` operator; only the FX retrieval route
+differs. Parameters are learned model state, registered buffers are fixed
+serializable/device-aware state, and scalar literals remain directly in the FX
+call arguments.
+
 ### 3.7 How FX edges become IR tensor inputs
 
-An FX node can reference producer nodes anywhere inside nested positional or keyword arguments. `fx.map_arg()` recursively finds all producer Node references within the current FX node’s nested args and kwargs. NCET converts these references into tensor names and stores them in `IRNode.inputs`, thereby preserving the graph’s actual connectivity.
+An FX node can reference producer nodes anywhere inside nested positional or
+keyword arguments. `fx.map_arg()` recursively finds all Node references within
+the current FX node's nested args and kwargs. NCET converts runtime tensor
+producers into tensor names stored in `IRNode.inputs`, thereby preserving the
+graph's actual connectivity. Fixed `get_attr` nodes are instead lifted into
+`GraphIR.constants` and omitted from `IRNode.inputs`.
 
 ```python
 names = []
 fx.map_arg(
     (node.args, node.kwargs),  # Obtain producer nodes in nested args and kwargs
-    lambda input_node: names.append(input_node.name),  # Convert producer Node references into tensor names
+    lambda input_node: (
+        names.append(input_node.name)
+        if input_node.op != "get_attr"
+        else None
+    ),
 )
 input_names = tuple(names)
 ```
@@ -456,8 +524,8 @@ high-risk structural invariants:
 - a tensor has at most one producer;
 - every produced tensor has a `TensorSpec` with a static non-negative shape;
 - graph input/output boundaries reference available tensors;
-- Linear and Conv2d weight/bias references and BatchNorm scale/shift references
-  exist in `graph.constants`.
+- Linear and Conv2d weight/bias references, and BatchNorm and
+  ElementwiseAffine scale/shift references, exist in `graph.constants`.
 
 `analyze_capabilities(graph, supported_ops)` is a separate consumer-specific
 check. It counts canonical operators and returns the nodes that a particular

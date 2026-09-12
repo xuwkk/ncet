@@ -65,6 +65,12 @@ recorded by FX.
 | `x - y` | `call_function` | `operator.sub` | `Sub` |
 | `torch.sub(x, y)` | `call_function` | `torch.sub` | `Sub` |
 | `torch.subtract(x, y)` | `call_function` | `torch.subtract` | `Sub` |
+| `x + c`, `c + x`, `x - c`, `c - x` | `call_function` | `operator.add` or `operator.sub` | `ElementwiseAffine` |
+| `x * c`, `c * x` | `call_function` | `operator.mul` | `ElementwiseAffine` |
+| `x / c` | `call_function` | `operator.truediv` | `ElementwiseAffine` |
+| `torch.add/sub/subtract(x, c, ...)` | `call_function` | Corresponding PyTorch callable | `ElementwiseAffine` |
+| `torch.mul/multiply(x, c)` | `call_function` | Corresponding PyTorch callable | `ElementwiseAffine` |
+| `torch.div/divide/true_divide(x, c)` | `call_function` | Corresponding PyTorch callable | `ElementwiseAffine` |
 | `F.relu(x)` | `call_function` | `torch.nn.functional.relu` | `ReLU` |
 | `torch.relu(x)` | `call_function` | `torch.relu` | `ReLU` |
 | `F.adaptive_avg_pool2d(x, ...)` | `call_function` | `torch.nn.functional.adaptive_avg_pool2d` | `AdaptiveAvgPool2d` |
@@ -93,6 +99,9 @@ first tensor argument.
 | `x.add(y)` | `call_method` | `"add"` | `Add` |
 | `x.sub(y)` | `call_method` | `"sub"` | `Sub` |
 | `x.subtract(y)` | `call_method` | `"subtract"` | `Sub` |
+| `x.add(c)`, `x.sub(c)` | `call_method` | `"add"` or `"sub"` | `ElementwiseAffine` |
+| `x.mul(c)`, `x.multiply(c)` | `call_method` | `"mul"` or `"multiply"` | `ElementwiseAffine` |
+| `x.div(c)`, `x.divide(c)`, `x.true_divide(c)` | `call_method` | Corresponding method name | `ElementwiseAffine` |
 | `x.relu()` | `call_method` | `"relu"` | `ReLU` |
 | `x.flatten(...)` | `call_method` | `"flatten"` | `Flatten` |
 | `x.mean(dim=..., keepdim=...)` | `call_method` | `"mean"` | `ReduceMean` |
@@ -128,6 +137,10 @@ x + y, torch.add(x, y), x.add(y) -> Add
 ```
 
 ```text
+x + c, c - x, x * c, x / c -> ElementwiseAffine
+```
+
+```text
 torch.reshape(x, shape), x.reshape(shape), x.view(shape),
 torch.squeeze(x, dim), x.unsqueeze(dim) -> Reshape
 ```
@@ -152,13 +165,20 @@ every parameterization of that operation is supported.
 - Mean requires one or more explicit static dimensions that exclude tracing
   batch axis 0. Dtype conversion and caller-provided `out` storage are not
   supported.
+- ElementwiseAffine requires exactly one graph tensor and one finite, fixed
+  real constant. The constant may be a Python scalar or fixed tensor reached
+  through FX `get_attr`; broadcasting may not change the graph tensor shape.
+  Tensor-tensor Mul/Div, constant-over-tensor division, zero denominators,
+  division rounding modes, and `out` arguments are unsupported. Add/Sub with
+  a constant accepts a finite static `alpha`.
 - `F.linear()` and `F.conv2d()` are not currently mapped; use `nn.Linear` and
   `nn.Conv2d`.
 - `F.batch_norm()` is not currently mapped; use `nn.BatchNorm1d` or
   `nn.BatchNorm2d` in evaluation mode with fixed running statistics.
 - Direct FX `get_attr` nodes are not canonicalized as standalone operators.
-  State belonging to supported Linear, Conv2d, and BatchNorm modules is instead
-  lifted into `GraphIR.constants` during normalization.
+  Fixed state used by supported Linear, Conv2d, BatchNorm, and
+  ElementwiseAffine operations is instead lifted into `GraphIR.constants`
+  during normalization.
 - Any FX operation spelling not listed above raises
   `UnsupportedOperatorError`.
 

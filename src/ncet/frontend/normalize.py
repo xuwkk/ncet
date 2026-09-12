@@ -33,13 +33,28 @@ def normalize_graph(graph_module: fx.GraphModule) -> GraphIR:
     inputs: list[str] = []                    # output tensors of Input nodes
     outputs: list[str] = []                   # input tensors of Output nodes
     tensors: dict[str, TensorSpec] = {}       # Metadata for every graph tensor
-    constants: dict[str, np.ndarray] = {}     # Lifted parameters and buffers
+    constants: dict[str, np.ndarray] = {}     # Fixed and derived operator arrays
 
     for node in graph_module.graph.nodes:
         # FX nodes are topologically ordered: every producer appears before its
         # consumers, even when the model contains branches or residual edges.
+        # A get_attr node represents fixed model state such as calling a self.scale.
+        # Its consumers lift the value into graph.constants,
+        # so it is not a tensor-producing IR node.
+        if node.op == "get_attr":
+            # It will refered as input in the graph FX, but will not be included
+            # in the IR nodes.
+            continue
+
         # Obtain the input tensor names for the current node
-        input_names = _input_names(node)  # For example, ("linear", "x").
+        # The get_attr node is not a tensor-producing IR node
+        # therefore, it is not included in the input_names
+        input_names = _input_names(node)  # For example, ("linear", "x"). Except the get_attr node.
+        fixed_inputs = tuple(
+            input_node
+            for input_node in node.all_input_nodes
+            if input_node.op == "get_attr"
+        )
 
         if node.op == "placeholder":
             inputs.append(node.name)
@@ -50,6 +65,10 @@ def normalize_graph(graph_module: fx.GraphModule) -> GraphIR:
             continue
 
         if node.op == "output":
+            if fixed_inputs:
+                raise UnsupportedOperatorError(
+                    "fixed constants cannot be graph outputs"
+                )
             # The Output operation consumes existing tensors but does not create
             # another tensor. Multiple returned values produce multiple names.
             outputs.extend(input_names)  # For example, ["add", "sub"].
@@ -57,6 +76,11 @@ def normalize_graph(graph_module: fx.GraphModule) -> GraphIR:
             continue
 
         op_type, attrs = _canonical_operation(graph_module, node, constants)
+        if fixed_inputs and op_type != "ElementwiseAffine":
+            raise UnsupportedOperatorError(
+                f"unsupported fixed constant input at node '{node.name}' "
+                f"({op_type})"
+            )
         # An operation and its output tensor currently share the FX node name,
         # but IRNode and TensorSpec represent different concepts.
         tensors[node.name] = _tensor_spec(node, producer=node.name)
@@ -69,7 +93,7 @@ def normalize_graph(graph_module: fx.GraphModule) -> GraphIR:
         inputs=inputs,         # output tensors of Input nodes
         outputs=outputs,       # input tensors of Output nodes
         tensors=tensors,       # metadata for every graph tensor
-        constants=constants,   # lifted parameters and buffers
+        constants=constants,   # fixed and derived operator arrays
     )
     validate_ir(graph)
     return graph
@@ -159,9 +183,38 @@ def _canonical_operation(
     if node.op == "call_function":
         # A call_function target is the callable object recorded by FX.
         if node.target in {operator.add, torch.add}:
-            return "Add", _unit_alpha_attrs(node, "Add")
+            return _add_sub_operation(
+                graph_module,
+                node,
+                constants,
+                "Add",
+            )
         if node.target in {operator.sub, torch.sub, torch.subtract}:
-            return "Sub", _unit_alpha_attrs(node, "Sub")
+            return _add_sub_operation(
+                graph_module,
+                node,
+                constants,
+                "Sub",
+            )
+        if node.target in {operator.mul, torch.mul, torch.multiply}:
+            return "ElementwiseAffine", _elementwise_affine_attrs(
+                graph_module,
+                node,
+                constants,
+                "Mul",
+            )
+        if node.target in {
+            operator.truediv,
+            torch.div,
+            torch.divide,
+            torch.true_divide,
+        }:
+            return "ElementwiseAffine", _elementwise_affine_attrs(
+                graph_module,
+                node,
+                constants,
+                "Div",
+            )
         if node.target in {F.relu, torch.relu}:
             return "ReLU", {}
         if node.target in {
@@ -206,10 +259,36 @@ def _canonical_operation(
 
     if node.op == "call_method":
         # A call_method target is a method-name string such as "add" or "view".
+        # For add and sub, the inputs can be both run time tensor inputs or one is a fixed constant and the other is a run time tensor input.
+        # For mul and div, the inputs must be one fixed constant and one run time tensor input.
         if node.target == "add":
-            return "Add", _unit_alpha_attrs(node, "Add")
+            return _add_sub_operation(
+                graph_module,
+                node,
+                constants,
+                "Add",
+            )
         if node.target in {"sub", "subtract"}:
-            return "Sub", _unit_alpha_attrs(node, "Sub")
+            return _add_sub_operation(
+                graph_module,
+                node,
+                constants,
+                "Sub",
+            )
+        if node.target in {"mul", "multiply"}:
+            return "ElementwiseAffine", _elementwise_affine_attrs(
+                graph_module,
+                node,
+                constants,
+                "Mul",
+            )
+        if node.target in {"div", "divide", "true_divide"}:
+            return "ElementwiseAffine", _elementwise_affine_attrs(
+                graph_module,
+                node,
+                constants,
+                "Div",
+            )
         if node.target == "relu":
             return "ReLU", {}
         if node.target == "flatten":
@@ -441,6 +520,10 @@ def _unit_alpha_attrs(node: fx.Node, op_type: str) -> dict[str, int]:
     Add and Sub currently mean only ``x + y`` and ``x - y``, so other values
     are rejected explicitly.
     """
+    if node.kwargs.get("out") is not None:
+        raise UnsupportedOperatorError(
+            f"unsupported {op_type} out argument at node '{node.name}'"
+        )
     alpha = node.kwargs.get("alpha", 1)
     if not isinstance(alpha, Real) or alpha != 1:
         raise UnsupportedOperatorError(
@@ -448,6 +531,187 @@ def _unit_alpha_attrs(node: fx.Node, op_type: str) -> dict[str, int]:
             f"expected 1, got {alpha}"
         )
     return {"alpha": 1}
+
+
+def _add_sub_operation(
+    graph_module: fx.GraphModule,
+    node: fx.Node,
+    constants: dict[str, np.ndarray],
+    op_type: str,
+) -> tuple[str, dict[str, Any]]:
+    """Keep tensor branches as Add/Sub and normalize constant cases."""
+    if len(_input_names(node)) == 2:
+        # Both are run time tensor inputs
+        return op_type, _unit_alpha_attrs(node, op_type)
+    # One is a run time tensor input, the other is a fixed constant
+    return "ElementwiseAffine", _elementwise_affine_attrs(
+        graph_module,
+        node,
+        constants,
+        op_type,
+    )
+
+
+def _elementwise_affine_attrs(
+    graph_module: fx.GraphModule,
+    node: fx.Node,
+    constants: dict[str, np.ndarray],
+    operation: str,
+) -> dict[str, str]:
+    """Normalize tensor-constant arithmetic to ``y = scale * x + shift``."""
+    # One input is a run time tensor input, the other is a fixed constant
+    if node.kwargs.get("out") is not None:
+        raise UnsupportedOperatorError(
+            f"unsupported {operation} out argument at node '{node.name}'"
+        )
+    if operation == "Div" and node.kwargs.get("rounding_mode") is not None:
+        # E.g. rounding_mode = "floor" is not supported
+        raise UnsupportedOperatorError(
+            f"unsupported Div rounding_mode at node '{node.name}'"
+        )
+
+    left, right = _binary_operands(node, operation)
+    left_is_tensor = _is_ir_tensor(left)
+    right_is_tensor = _is_ir_tensor(right)
+    if left_is_tensor == right_is_tensor:
+        # Can only have one runtime tensor input, the other one must be a fixed constant
+        # 1. For add and sub, both runtime tensor cases are in the other branch.
+        # 2. For mul and div, both runtime tensor cases will give bilinear constraint, 
+        # which is not supported yet.
+        raise UnsupportedOperatorError(
+            f"unsupported {operation} at node '{node.name}': expected one "
+            "graph tensor and one fixed constant"
+        )
+
+    constant = _constant_array(
+        graph_module,
+        right if left_is_tensor else left,
+        node,
+        operation,
+    )
+    alpha = node.kwargs.get("alpha", 1)
+    if operation in {"Add", "Sub"}:
+        if not isinstance(alpha, Real) or not np.isfinite(alpha):
+            raise UnsupportedOperatorError(
+                f"unsupported {operation} alpha at node '{node.name}': "
+                f"expected a finite number, got {alpha!r}"
+            )
+    
+    # Compute scale * x + shift
+    # alpha is the scale for the second operand in Add and Sub
+    if operation == "Add":
+        # runtime tensor + constant: scale = 1, shift = alpha * constant
+        # constant + runtime tensor: scale = alpha, shift = constant
+        scale = np.asarray(1 if left_is_tensor else alpha)
+        shift = alpha * constant if left_is_tensor else constant
+    elif operation == "Sub":
+        # runtime tensor - constant: scale = 1, shift = -alpha * constant
+        # constant - runtime tensor: scale = -alpha, shift = constant
+        scale = np.asarray(1 if left_is_tensor else -alpha)
+        shift = -alpha * constant if left_is_tensor else constant
+    elif operation == "Mul":
+        scale = constant
+        shift = np.asarray(0)
+    else:
+        if not left_is_tensor:
+            raise UnsupportedOperatorError(
+                f"unsupported Div at node '{node.name}': the denominator "
+                "must be a fixed constant"
+            )
+        if np.any(constant == 0):
+            raise UnsupportedOperatorError(
+                f"unsupported Div at node '{node.name}': constant "
+                "denominator contains zero"
+            )
+        scale = 1 / constant
+        shift = np.asarray(0)
+
+    input_node = left if left_is_tensor else right
+    input_shape = _sample_shape(input_node)
+    output_shape = _sample_shape(node)
+    if output_shape != input_shape:
+        raise UnsupportedOperatorError(
+            f"unsupported {operation} broadcasting at node '{node.name}': "
+            f"input shape {input_shape} becomes {output_shape}"
+        )
+    try:
+        np.broadcast_to(scale, input_shape)
+        np.broadcast_to(shift, input_shape)
+    except ValueError as error:
+        raise UnsupportedOperatorError(
+            f"unsupported {operation} constant shape at node '{node.name}'"
+        ) from error
+
+    scale_name = f"{node.name}.scale"
+    shift_name = f"{node.name}.shift"
+    constants[scale_name] = _readonly_array(scale)
+    constants[shift_name] = _readonly_array(shift)
+    return {"scale": scale_name, "shift": shift_name}
+
+
+def _binary_operands(node: fx.Node, operation: str) -> tuple[Any, Any]:
+    """Return the two operands of a function or tensor-method binary call."""
+    missing = object()
+    left = node.args[0] if node.args else node.kwargs.get("input", missing)
+    right = (
+        node.args[1]
+        if len(node.args) > 1
+        else node.kwargs.get("other", missing)
+    )
+    if left is missing or right is missing or len(node.args) > 2:
+        raise UnsupportedOperatorError(
+            f"unsupported {operation} arguments at node '{node.name}'"
+        )
+    return left, right
+
+
+def _is_ir_tensor(value: Any) -> bool:
+    """Return whether an FX argument is a runtime graph tensor."""
+    return isinstance(value, fx.Node) and value.op != "get_attr"
+
+
+def _constant_array(
+    graph_module: fx.GraphModule,
+    value: Any,
+    node: fx.Node,
+    operation: str,
+) -> np.ndarray:
+    """Read one literal or get_attr tensor as a finite real array."""
+    if isinstance(value, fx.Node):
+        if value.op != "get_attr":
+            raise UnsupportedOperatorError(
+                f"unsupported {operation} constant at node '{node.name}'"
+            )
+        value = _fetch_attr(graph_module, str(value.target))
+
+    if isinstance(value, torch.Tensor):
+        array = value.detach().cpu().numpy()
+    elif isinstance(value, (Real, np.ndarray)):
+        array = np.asarray(value)
+    else:
+        raise UnsupportedOperatorError(
+            f"unsupported {operation} constant at node '{node.name}': "
+            f"{type(value).__name__}"
+        )
+
+    if not (
+        np.issubdtype(array.dtype, np.number)
+        and not np.iscomplexobj(array)
+        and np.all(np.isfinite(array))
+    ):
+        raise UnsupportedOperatorError(
+            f"unsupported {operation} constant at node '{node.name}': "
+            "expected finite real values"
+        )
+    return array
+
+
+def _fetch_attr(graph_module: fx.GraphModule, target: str) -> Any:
+    """Resolve a dotted FX get_attr target against its GraphModule."""
+    value: Any = graph_module
+    for name in target.split("."):
+        value = getattr(value, name)
+    return value
 
 
 def _concat_attrs(node: fx.Node) -> dict[str, int]:
@@ -1099,7 +1363,12 @@ def _lift_module_state(
 
 def _readonly_numpy(tensor: torch.Tensor) -> np.ndarray:
     """Detach fixed PyTorch state into an independent read-only NumPy array."""
-    array = tensor.detach().cpu().numpy().copy()
+    return _readonly_array(tensor.detach().cpu().numpy())
+
+
+def _readonly_array(value: Any) -> np.ndarray:
+    """Return an independent read-only NumPy array."""
+    array = np.asarray(value).copy()
     array.setflags(write=False)
     return array
 
@@ -1122,16 +1391,22 @@ def _ir_node(
 
 
 def _input_names(node: fx.Node) -> tuple[str, ...]:
-    """Return producer-node names referenced anywhere in args or kwargs.
+    """Return runtime tensor producer names referenced in args or kwargs.
 
     ``fx.map_arg`` recursively visits Node references inside tuples, lists, and
     dictionaries. This is why ``torch.cat((left, right), dim=1)`` produces the
     two tensor inputs ``("left", "right")`` while ignoring the integer dim.
+    Fixed ``get_attr`` values belong in ``GraphIR.constants`` rather than
+    ``IRNode.inputs``, so they are omitted here.
     """
     names = []
     fx.map_arg(
         (node.args, node.kwargs),
-        lambda input_node: names.append(input_node.name),
+        lambda input_node: (
+            names.append(input_node.name)
+            if input_node.op != "get_attr"
+            else None
+        ),
     )
     return tuple(names)
 

@@ -123,6 +123,30 @@ class DynamicIndexing(nn.Module):
         return x[index]
 
 
+class TensorMultiply(nn.Module):
+    def forward(self, x: torch.Tensor, y: torch.Tensor) -> torch.Tensor:
+        return x * y
+
+
+class ConstantOverTensor(nn.Module):
+    def forward(self, x: torch.Tensor) -> torch.Tensor:
+        return 2.0 / x
+
+
+class ZeroConstantDivision(nn.Module):
+    def forward(self, x: torch.Tensor) -> torch.Tensor:
+        return x / 0.0
+
+
+class ConstantConcat(nn.Module):
+    def __init__(self) -> None:
+        super().__init__()
+        self.register_buffer("constant", torch.ones(1, 1))
+
+    def forward(self, x: torch.Tensor) -> torch.Tensor:
+        return torch.cat((x, self.constant), dim=1)
+
+
 def _normalize(model: nn.Module, *inputs: torch.Tensor) -> GraphIR:
     traced = capture_graph(model.eval())
     propagate_shapes(traced, *inputs)
@@ -361,6 +385,18 @@ def test_normalize_rejects_unsupported_add_alpha() -> None:
     inputs = (torch.zeros(1, 4), torch.ones(1, 4))
     with pytest.raises(UnsupportedOperatorError, match="Add alpha"):
         _normalize(ScaledAdd(), *inputs)
+
+
+def test_normalize_rejects_non_affine_or_undefined_arithmetic() -> None:
+    cases = (
+        (TensorMultiply(), (torch.ones(1, 3), torch.ones(1, 3))),
+        (ConstantOverTensor(), (torch.ones(1, 3),)),
+        (ZeroConstantDivision(), (torch.ones(1, 3),)),
+        (ConstantConcat(), (torch.ones(1, 2),)),
+    )
+    for model, inputs in cases:
+        with pytest.raises(UnsupportedOperatorError):
+            _normalize(model, *inputs)
 
 
 def test_validate_ir_rejects_unknown_output() -> None:

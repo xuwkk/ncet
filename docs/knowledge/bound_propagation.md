@@ -11,8 +11,9 @@ elements or graph branches.
 
 ## 1. Signed affine propagation
 
-Linear, Conv2d, and BatchNorm may contain both positive and negative fixed
-coefficients, so their bounds require a positive/negative coefficient split.
+Linear, Conv2d, BatchNorm, and ElementwiseAffine may contain both positive and
+negative fixed coefficients, so their bounds require a positive/negative
+coefficient split.
 
 ### Linear layer
 
@@ -123,6 +124,35 @@ $$
 with the channel vectors broadcast over spatial or sequence dimensions. See
 [Exact BatchNorm encoding in NCET](batchnorm_exact_encoding.md) for the
 normalization and exact equality.
+
+### ElementwiseAffine
+
+Tensor arithmetic with one fixed constant is normalized to
+
+$$
+Y=A\odot X+D,
+$$
+
+where the fixed arrays $A$ and $D$ may be broadcast without changing the
+shape of $X$. Define
+
+$$
+A^+=\max(A,0), \qquad A^-=\min(A,0).
+$$
+
+The propagated bounds are
+
+$$
+L_Y=A^+\odot L_X+A^-\odot U_X+D,
+$$
+
+$$
+U_Y=A^+\odot U_X+A^-\odot L_X+D.
+$$
+
+This covers fixed-constant Add/Sub/Mul and division by a nonzero fixed
+constant. It gives the exact elementwise range of this operation over its
+input box.
 
 ## 2. Order-preserving unary operations
 

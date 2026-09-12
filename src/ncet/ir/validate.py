@@ -63,6 +63,7 @@ def _validate_constants(graph: GraphIR, node: IRNode) -> None:
         "Linear": ("weight", "bias"),
         "Conv2d": ("weight", "bias"),
         "BatchNorm": ("scale", "shift"),
+        "ElementwiseAffine": ("scale", "shift"),
     }
     attributes = constant_attributes.get(node.op_type)
     if attributes is None:

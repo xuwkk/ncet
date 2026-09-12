@@ -76,6 +76,18 @@ This is an exact affine equality and introduces no binary variables. See
 [batchnorm_exact_encoding.md](batchnorm_exact_encoding.md) for the derivation
 and supported shapes.
 
+### ElementwiseAffine
+
+Arithmetic between one graph tensor and one fixed constant is normalized to
+
+$$
+Y=A\odot X+D.
+$$
+
+The fixed scale $A$ and shift $D$ are stored in `graph.constants` and
+broadcast to the tensor shape. This exact affine equality covers supported
+fixed-constant Add/Sub/Mul/Div forms and introduces no binary variables.
+
 ### AveragePool2d
 
 AveragePool2d is a fixed linear map. NCET builds a sparse averaging matrix

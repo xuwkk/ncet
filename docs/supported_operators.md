@@ -34,12 +34,13 @@ below is outside the current exact boundary.
 | Affine | `Linear` | Linear equality | Fixed `nn.Linear` parameters; acts on the last tensor dimension; bias may be present or absent |
 | Affine | `Conv2d` | Sparse affine equality | Per-sample shape `(C,H,W)`; fixed `nn.Conv2d`; `groups=1`; `dilation=(1,1)`; numeric padding with `padding_mode="zeros"`; bias optional |
 | Affine | `BatchNorm` | Per-channel affine equality | `nn.BatchNorm1d` on `(C,)` or `(C,L)` and `nn.BatchNorm2d` on `(C,H,W)`; evaluation mode; fixed running statistics; affine or non-affine modules |
+| Affine | `ElementwiseAffine` | Elementwise affine equality | Exactly one graph tensor and one finite real scalar/tensor constant in Add/Sub/Mul/Div; constant broadcasting must preserve the graph tensor shape; division requires the graph tensor as numerator and a nonzero constant denominator |
 | Pooling | `AdaptiveAvgPool2d` | Sparse linear equality | Per-sample shape `(C,H,W)`; module or functional form; static scalar or length-2 output size; each entry is a positive integer or `None`, where `None` preserves that input dimension |
 | Pooling | `AvgPool2d` | Sparse linear equality | Per-sample shape `(C,H,W)`; scalar or 2-D kernel, stride, and padding; `stride=None` uses the kernel size; `ceil_mode=False`; `divisor_override=None`; either value of `count_include_pad` |
 | Pooling | `MaxPool2d` | Full exact one-hot formulation | Per-sample shape `(C,H,W)`; scalar or 2-D kernel, stride, and padding; `stride=None` uses the kernel size; `dilation=(1,1)`; `ceil_mode=False`; `return_indices=False` |
 | Structural | `Identity` | Elementwise equality | `nn.Identity`; `nn.Dropout`, `nn.Dropout1d/2d/3d`, or corresponding functional calls only with `training=False`; in-place forms unsupported |
 | Activation | `ReLU` | Exact big-M or stable equality | Elementwise ReLU; `relu_binary_mode` may be `"full"` or `"reduced"`; in-place forms are unsupported |
-| Arithmetic | `Add`, `Sub` | Linear equality | Exactly two tensor operands; `alpha=1`; scalar or constant operands are not canonicalized |
+| Arithmetic | `Add`, `Sub` | Linear equality | Exactly two graph tensor operands; `alpha=1` |
 | Composition | `Concat` | Exact output-slice equalities | Static tensor inputs and dimension; tracing batch axis cannot be concatenated; `out` must be absent or `None` |
 | Reduction | `ReduceMean` | Linear equality | `torch.mean` or `Tensor.mean`; one or more explicit static dimensions; `keepdim` is static; tracing batch axis cannot be reduced; `dtype` and `out` must be absent or `None` |
 | Shape | `Flatten` | C-order element-preserving equality | Static `start_dim` and `end_dim`; flattened range cannot include the tracing batch axis |
@@ -54,10 +55,10 @@ operation currently produces one tensor.
 
 ## Outside the current boundary
 
-Standalone `Constant` operators, constant arithmetic, and other canonical
-operators not shown above are not currently supported. Linear,
-Conv2d, and BatchNorm fixed arrays are lifted into `GraphIR.constants`, but
-this does not create standalone Constant operators.
+Standalone `Constant` operators and other canonical operators not shown above
+are not currently supported. Fixed state used by Linear, Conv2d, BatchNorm,
+and ElementwiseAffine is lifted into `GraphIR.constants`; this does not create
+standalone Constant operators or CVXPY decision variables.
 
 Planned operators and formulations remain outside this published capability
 boundary; appearing in a development roadmap does not imply current support.

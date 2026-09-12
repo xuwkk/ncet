@@ -165,6 +165,19 @@ class StaticIndexing(nn.Module):
         return x[:, 0], x[:, 1:3, ::2, -1]
 
 
+class ElementwiseConstantAffine(nn.Module):
+    def __init__(self) -> None:
+        super().__init__()
+        self.register_buffer("scale", torch.tensor([1.0, -2.0, 3.0]))
+
+    def forward(self, x: torch.Tensor) -> torch.Tensor:
+        value = torch.add(x, 2.0)
+        value = value.sub(1.0)
+        value = value * self.scale
+        value = torch.divide(value, 2.0)
+        return 3.0 - value
+
+
 @pytest.mark.parametrize(
     ("mode", "expected_binary_count"),
     [("reduced", 1), ("full", 3)],
@@ -234,6 +247,54 @@ def test_identity_dropout_encoding_matches_pytorch() -> None:
         "Identity",
         "Output",
     ]
+    assert encoding.stats.binary_variables == 0
+
+
+def test_elementwise_constant_affine_encoding_matches_pytorch() -> None:
+    model = ElementwiseConstantAffine().eval()
+    lower = np.array([-2.0, -1.0, 0.0], dtype=np.float32)
+    upper = np.array([2.0, 3.0, 4.0], dtype=np.float32)
+    encoding = form_milp(model, Bounds(lower=lower, upper=upper))
+    sample = np.array([-0.5, 2.0, 1.0], dtype=np.float32)
+    problem = cp.Problem(
+        cp.Minimize(0),
+        [*encoding.constraints, encoding.inputs["x"] == sample],
+    )
+    problem.solve(solver=cp.SCIPY)
+
+    with torch.no_grad():
+        expected = model(torch.from_numpy(sample).unsqueeze(0)).squeeze(0)
+
+    nodes = [
+        node
+        for node in encoding.graph.nodes
+        if node.op_type == "ElementwiseAffine"
+    ]
+    effective_scale = -model.scale.numpy() / 2
+    effective_shift = 3 - model.scale.numpy() / 2
+    expected_lower = np.where(
+        effective_scale >= 0,
+        effective_scale * lower,
+        effective_scale * upper,
+    ) + effective_shift
+    expected_upper = np.where(
+        effective_scale >= 0,
+        effective_scale * upper,
+        effective_scale * lower,
+    ) + effective_shift
+    output_bounds = encoding.values[encoding.graph.outputs[0]].bounds
+
+    assert problem.status == cp.OPTIMAL
+    assert len(nodes) == 5
+    assert all(len(node.inputs) == 1 for node in nodes)
+    assert all(
+        name in encoding.graph.constants
+        for node in nodes
+        for name in node.attrs.values()
+    )
+    np.testing.assert_allclose(encoding.outputs[0].value, expected.numpy())
+    np.testing.assert_allclose(output_bounds.lower, expected_lower)
+    np.testing.assert_allclose(output_bounds.upper, expected_upper)
     assert encoding.stats.binary_variables == 0
 
 

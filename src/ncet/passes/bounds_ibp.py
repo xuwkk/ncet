@@ -21,6 +21,7 @@ _SUPPORTED_OPS = frozenset(
         "AvgPool2d",
         "MaxPool2d",
         "Identity",
+        "ElementwiseAffine",
         "ReLU",
         "Add",
         "Sub",
@@ -129,6 +130,24 @@ def _propagate_node(
 
     if node.op_type == "Identity":
         return inputs[0]
+
+    if node.op_type == "ElementwiseAffine":
+        scale = graph.constants[node.attrs["scale"]]
+        shift = graph.constants[node.attrs["shift"]]
+        positive = np.maximum(scale, 0)
+        negative = np.minimum(scale, 0)
+        return Bounds(
+            lower=(
+                positive * inputs[0].lower
+                + negative * inputs[0].upper
+                + shift
+            ),
+            upper=(
+                positive * inputs[0].upper
+                + negative * inputs[0].lower
+                + shift
+            ),
+        )
 
     if node.op_type == "ReLU":
         return Bounds(

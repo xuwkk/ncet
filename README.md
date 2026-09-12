@@ -10,6 +10,8 @@ NCET is partly supported by Engineering and Physical Sciences Research Council g
 
 **Documentation:** [https://xuwkk.github.io/ncet/](https://xuwkk.github.io/ncet/)
 
+> Declarations: Codex has been used to refine the codebase, generate the documentation and the pytest cases.
+
 ## Installation
 
 Install NCET from PyPI:
@@ -80,7 +82,7 @@ for all arguments, accepted bound forms, return fields, and public exceptions.
 NCET captures static PyTorch FX graphs and normalizes the supported operations
 into a canonical graph intermediate representation (IR). The current operator
 set is Linear, Conv2d, BatchNorm1d/2d, AdaptiveAvgPool2d, AvgPool2d,
-MaxPool2d, ReLU, Add, Sub, Concat, Flatten,
+MaxPool2d, ReLU, Add, Sub, fixed-constant Add/Sub/Mul/Div, Concat, Flatten,
 ReduceMean, Reshape/View/Squeeze/Unsqueeze, Permute, Transpose, Identity/evaluation-mode
 Dropout, and static GetItem/Slice. Graph-based interval
 bound propagation and the CVXPY/MILP encoder support this operator set. See the

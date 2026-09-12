@@ -22,6 +22,7 @@ _SUPPORTED_OPS = frozenset(
         "AvgPool2d",
         "MaxPool2d",
         "Identity",  # also represents evaluation-mode Dropout
+        "ElementwiseAffine",
         "ReLU",
         "Add",
         "Sub",
@@ -167,6 +168,10 @@ def encode_cvxpy(
             binaries[node.name] = binary
         elif node.op_type == "Identity":
             constraints.append(_identity_constraint(node, variables))
+        elif node.op_type == "ElementwiseAffine":
+            constraints.append(
+                _elementwise_affine_constraint(graph, node, variables)
+            )
         elif node.op_type in {"Add", "Sub"}:
             constraints.append(_branch_constraint(node, variables))
         elif node.op_type == "Concat":
@@ -247,6 +252,25 @@ def _identity_constraint(
     """Preserve one tensor exactly."""
     # TODO: we can eliminate this constraint by changing the graph structure later
     return variables[node.outputs[0]] == variables[node.inputs[0]]
+
+
+def _elementwise_affine_constraint(
+    graph: GraphIR,
+    node: IRNode,
+    variables: dict[str, cp.Variable],
+) -> cp.Constraint:
+    """Encode ``y = scale * x + shift`` with fixed broadcast constants."""
+    input_value = variables[node.inputs[0]]
+    output_value = variables[node.outputs[0]]
+    scale = np.broadcast_to(
+        graph.constants[node.attrs["scale"]],
+        input_value.shape,
+    )
+    shift = np.broadcast_to(
+        graph.constants[node.attrs["shift"]],
+        input_value.shape,
+    )
+    return output_value == cp.multiply(scale, input_value) + shift
 
 
 def _conv2d_constraint(
