@@ -26,6 +26,7 @@ _SUPPORTED_OPS = frozenset(
         "Add",
         "Sub",
         "Concat",
+        "ReduceMean",
         "Flatten",
         "Reshape",
         "Permute",
@@ -170,6 +171,8 @@ def encode_cvxpy(
             constraints.append(_branch_constraint(node, variables))
         elif node.op_type == "Concat":
             constraints.extend(_concat_constraints(node, variables))
+        elif node.op_type == "ReduceMean":
+            constraints.append(_reduce_mean_constraint(node, variables))
         elif node.op_type in {"Flatten", "Reshape"}:
             constraints.append(_reshape_constraint(node, variables))
         elif node.op_type in {"Permute", "Transpose"}:
@@ -724,6 +727,24 @@ def _reshape_constraint(
     input_vector = cp.reshape(input_value, (input_value.size,), order="C")
     output_vector = cp.reshape(output_value, (output_value.size,), order="C")
     return output_vector == input_vector
+
+
+def _reduce_mean_constraint(
+    node: IRNode,
+    variables: dict[str, cp.Variable],
+) -> cp.Constraint:
+    """Average over fixed sample axes using one exact linear equality."""
+    input_value = variables[node.inputs[0]]
+    output_value = variables[node.outputs[0]]
+    dims = node.attrs["dims"]
+    element_count = int(np.prod([input_value.shape[dim] for dim in dims]))
+    keepdim = node.attrs["keepdim"]
+    total = input_value
+    # Descending axes keep lower axis numbers valid when keepdim=False.
+    for dim in sorted(dims, reverse=True):
+        total = cp.sum(total, axis=dim, keepdims=keepdim)
+    mean = total / element_count
+    return output_value == mean
 
 
 def _axis_reorder_constraint(

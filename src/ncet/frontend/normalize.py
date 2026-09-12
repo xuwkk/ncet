@@ -189,6 +189,8 @@ def _canonical_operation(
             return "Concat", _concat_attrs(node)
         if node.target is torch.flatten:
             return "Flatten", _flatten_call_attrs(node)
+        if node.target is torch.mean:
+            return "ReduceMean", _reduce_mean_attrs(node)
         if node.target is torch.reshape:
             return "Reshape", _reshape_attrs(node)
         if node.target is torch.squeeze:
@@ -212,6 +214,8 @@ def _canonical_operation(
             return "ReLU", {}
         if node.target == "flatten":
             return "Flatten", _flatten_call_attrs(node)
+        if node.target == "mean":
+            return "ReduceMean", _reduce_mean_attrs(node)
         if node.target in {"reshape", "view"}:
             return "Reshape", _reshape_attrs(node)
         if node.target == "squeeze":
@@ -508,6 +512,58 @@ def _reshape_attrs(node: fx.Node) -> dict[str, tuple[int, ...]]:
     # ShapeProp has already resolved inferred dimensions such as -1, so the
     # backend receives one explicit target shape for both View and Reshape.
     return {"shape": _sample_shape(node)}
+
+
+def _reduce_mean_attrs(node: fx.Node) -> dict[str, Any]:
+    """Normalize a static mean over sample dimensions."""
+    dim = node.args[1] if len(node.args) > 1 else node.kwargs.get("dim")
+    if dim is None:
+        raise UnsupportedOperatorError(
+            f"unsupported ReduceMean at node '{node.name}': "
+            "dim must be explicit to preserve batch dimension 0"
+        )
+
+    raw_dims = dim if isinstance(dim, (tuple, list)) else (dim,)
+    if not raw_dims:
+        raise UnsupportedOperatorError(
+            f"unsupported ReduceMean dims at node '{node.name}': {dim!r}"
+        )
+
+    rank = _input_rank(node)
+    dims = tuple(
+        _canonical_dim(node, item, rank, "ReduceMean") for item in raw_dims
+    )
+    if len(set(dims)) != len(dims):
+        raise UnsupportedOperatorError(
+            f"unsupported repeated ReduceMean dims at node '{node.name}': "
+            f"{dim!r}"
+        )
+
+    keepdim = (
+        node.args[2]
+        if len(node.args) > 2
+        else node.kwargs.get("keepdim", False)
+    )
+    if type(keepdim) is not bool:
+        raise UnsupportedOperatorError(
+            f"unsupported ReduceMean keepdim at node '{node.name}': "
+            f"{keepdim!r}"
+        )
+    if node.kwargs.get("dtype") is not None:
+        raise UnsupportedOperatorError(
+            f"unsupported ReduceMean dtype at node '{node.name}'"
+        )
+    if node.kwargs.get("out") is not None:
+        raise UnsupportedOperatorError(
+            f"unsupported ReduceMean out argument at node '{node.name}'"
+        )
+
+    return {
+        "dims": tuple(
+            _sample_dim(node, item, "ReduceMean") for item in dims
+        ),
+        "keepdim": keepdim,
+    }
 
 
 def _squeeze_attrs(node: fx.Node) -> dict[str, tuple[int, ...]]:

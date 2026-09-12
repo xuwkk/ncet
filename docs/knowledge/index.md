@@ -16,6 +16,7 @@ frontend and GraphIR design details are documented elsewhere under `docs/`.
    - [Conv2d](conv2d_exact_encoding.md)
    - [BatchNorm](batchnorm_exact_encoding.md)
    - [AdaptiveAvgPool2d](adaptive_avgpool2d_exact_encoding.md)
+   - [ReduceMean](reduce_mean_exact_encoding.md)
    - [AvgPool2d](avgpool2d_exact_encoding.md)
    - [MaxPool2d](maxpool2d_exact_encoding.md)
 
@@ -28,5 +29,6 @@ frontend and GraphIR design details are documented elsewhere under `docs/`.
 | [Conv2d](conv2d_exact_encoding.md) | Sparse affine matrix for convolution |
 | [BatchNorm](batchnorm_exact_encoding.md) | Inference-mode per-channel affine map |
 | [AdaptiveAvgPool2d](adaptive_avgpool2d_exact_encoding.md) | Adaptive windows and sparse averaging matrix |
+| [ReduceMean](reduce_mean_exact_encoding.md) | Mean reduction, dimension handling, and linear equality |
 | [AvgPool2d](avgpool2d_exact_encoding.md) | Sparse averaging matrix and pooling divisor |
 | [MaxPool2d](maxpool2d_exact_encoding.md) | Full one-hot exact maximum formulation |

@@ -366,6 +366,7 @@ such as `linear`, `linear_1`, and `linear_2`.
 | `ReLU` | `{}` |
 | `Add`, `Sub` | `alpha=1` |
 | `Concat` | `dim` |
+| `ReduceMean` | `dims`, `keepdim` |
 | `Flatten` | `start_dim`, `end_dim` |
 | `Reshape` | resolved output `shape`; also represents View and batch-preserving Squeeze/Unsqueeze |
 | `Permute` | complete `dims` permutation |

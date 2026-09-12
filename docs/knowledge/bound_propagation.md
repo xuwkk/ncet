@@ -126,8 +126,8 @@ normalization and exact equality.
 
 ## 2. Order-preserving unary operations
 
-ReLU, AvgPool2d, AdaptiveAvgPool2d, and MaxPool2d are order-preserving unary
-operations. Let $f$ denote any one of them. Given
+ReLU, ReduceMean, AvgPool2d, AdaptiveAvgPool2d, and MaxPool2d are
+order-preserving unary operations. Let $f$ denote any one of them. Given
 
 $$
 L_X \leq X \leq U_X,
@@ -139,7 +139,7 @@ $$
 f(L_X) \leq f(X) \leq f(U_X).
 $$
 
-Therefore, all three operators use the same IBP rule:
+Therefore, these operators use the same IBP rule:
 
 $$
 L_Y=f(L_X), \qquad U_Y=f(U_X).
@@ -158,6 +158,21 @@ Its bounds are
 $$
 L_y=\max(0,L_x), \qquad U_y=\max(0,U_x).
 $$
+
+### ReduceMean
+
+For a fixed set of sample axes $\mathcal D$, ReduceMean assigns every reduced
+element the nonnegative coefficient $1/K$, where $K$ is the number of reduced
+elements. Its bounds are therefore
+
+$$
+L_Y=\operatorname{mean}(L_X,\mathcal D),
+\qquad
+U_Y=\operatorname{mean}(U_X,\mathcal D).
+$$
+
+See [Exact ReduceMean encoding in NCET](reduce_mean_exact_encoding.md) for the
+dimension convention and linear equality.
 
 ### AveragePool2d layer
 
@@ -274,5 +289,6 @@ its random mask during inference.
 - [Exact Conv2d encoding](conv2d_exact_encoding.md)
 - [Exact BatchNorm encoding](batchnorm_exact_encoding.md)
 - [Exact AdaptiveAvgPool2d encoding](adaptive_avgpool2d_exact_encoding.md)
+- [Exact ReduceMean encoding](reduce_mean_exact_encoding.md)
 - [Exact AvgPool2d encoding](avgpool2d_exact_encoding.md)
 - [Exact MaxPool2d encoding](maxpool2d_exact_encoding.md)

@@ -41,6 +41,7 @@ nav:
       - Conv2d: knowledge/conv2d_exact_encoding.md
       - BatchNorm: knowledge/batchnorm_exact_encoding.md
       - AdaptiveAvgPool2d: knowledge/adaptive_avgpool2d_exact_encoding.md
+      - ReduceMean: knowledge/reduce_mean_exact_encoding.md
       - AvgPool2d: knowledge/avgpool2d_exact_encoding.md
       - MaxPool2d: knowledge/maxpool2d_exact_encoding.md
   - Developer reference: developer_note.md

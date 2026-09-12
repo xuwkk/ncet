@@ -129,6 +129,28 @@ class SqueezeUnsqueeze(nn.Module):
         return value.unsqueeze(-1)
 
 
+class ReduceMeanCNN(nn.Module):
+    def __init__(self) -> None:
+        super().__init__()
+        self.conv = nn.Conv2d(1, 2, kernel_size=1)
+        self.linear = nn.Linear(2, 2)
+        with torch.no_grad():
+            self.conv.weight.copy_(torch.tensor([[[[1.0]]], [[[-0.5]]]]))
+            self.conv.bias.copy_(torch.tensor([0.1, 0.2]))
+            self.linear.weight.copy_(torch.tensor([[1.0, -1.0], [0.5, 0.25]]))
+            self.linear.bias.copy_(torch.tensor([0.0, -0.1]))
+
+    def forward(
+        self,
+        x: torch.Tensor,
+    ) -> tuple[torch.Tensor, torch.Tensor]:
+        features = torch.relu(self.conv(x))
+        pooled = torch.mean(features, dim=(-2, -1))
+        logits = self.linear(pooled)
+        channel_mean = pooled.mean(dim=1, keepdim=True)
+        return logits, channel_mean
+
+
 class PermuteTranspose(nn.Module):
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         value = x.permute(0, 2, 3, 1)
@@ -526,6 +548,49 @@ def test_squeeze_unsqueeze_encoding_preserves_values() -> None:
     ]
     assert encoding.outputs[0].shape == (2, 3, 1)
     np.testing.assert_allclose(encoding.outputs[0].value, expected.numpy())
+
+
+def test_reduce_mean_encoding_matches_pytorch() -> None:
+    model = ReduceMeanCNN().eval()
+    shape = (1, 2, 3)
+    encoding = form_milp(
+        model,
+        Bounds(
+            lower=np.full(shape, -1.0, dtype=np.float32),
+            upper=np.full(shape, 1.0, dtype=np.float32),
+        ),
+    )
+    sample = np.linspace(-0.8, 0.7, np.prod(shape), dtype=np.float32).reshape(
+        shape
+    )
+    problem = cp.Problem(
+        cp.Minimize(0),
+        [*encoding.constraints, encoding.inputs["x"] == sample],
+    )
+    problem.solve(solver=cp.SCIPY)
+
+    with torch.no_grad():
+        expected = model(torch.from_numpy(sample).unsqueeze(0))
+
+    reduce_nodes = [
+        node for node in encoding.graph.nodes if node.op_type == "ReduceMean"
+    ]
+    assert problem.status == cp.OPTIMAL
+    assert [node.attrs for node in reduce_nodes] == [
+        {"dims": (1, 2), "keepdim": False},
+        {"dims": (0,), "keepdim": True},
+    ]
+    np.testing.assert_allclose(
+        encoding.outputs[0].value,
+        expected[0].squeeze(0).numpy(),
+        atol=1e-6,
+    )
+    np.testing.assert_allclose(
+        encoding.outputs[1].value,
+        expected[1].squeeze(0).numpy(),
+        atol=1e-6,
+    )
+    assert encoding.stats.binary_variables == 12
 
 
 def test_permute_transpose_encoding_matches_pytorch() -> None:

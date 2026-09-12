@@ -119,6 +119,20 @@ $$
 
 These equalities directly preserve residual and other branch connections.
 
+### ReduceMean
+
+For fixed sample axes $\mathcal D$, let $K$ be the product of their sizes.
+NCET enforces
+
+$$
+Y=\frac{1}{K}\sum_{d\in\mathcal D}X.
+$$
+
+The implementation performs the reductions from the highest axis to the
+lowest so axis numbers remain valid when `keepdim=False`. This is one exact
+linear equality and introduces no binary variables. See
+[reduce_mean_exact_encoding.md](reduce_mean_exact_encoding.md) for details.
+
 ### Identity and evaluation-mode Dropout
 
 Identity is represented by
@@ -290,5 +304,6 @@ relaxation and can make the optimization problem substantially slower.
 - [Exact Conv2d encoding](conv2d_exact_encoding.md)
 - [Exact BatchNorm encoding](batchnorm_exact_encoding.md)
 - [Exact AdaptiveAvgPool2d encoding](adaptive_avgpool2d_exact_encoding.md)
+- [Exact ReduceMean encoding](reduce_mean_exact_encoding.md)
 - [Exact AvgPool2d encoding](avgpool2d_exact_encoding.md)
 - [Exact MaxPool2d encoding](maxpool2d_exact_encoding.md)

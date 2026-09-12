@@ -25,6 +25,7 @@ _SUPPORTED_OPS = frozenset(
         "Add",
         "Sub",
         "Concat",
+        "ReduceMean",
         "Flatten",
         "Reshape",
         "Permute",
@@ -152,6 +153,16 @@ def _propagate_node(
         return Bounds(
             lower=np.concatenate([item.lower for item in inputs], axis=dim),
             upper=np.concatenate([item.upper for item in inputs], axis=dim),
+        )
+
+    if node.op_type == "ReduceMean":
+        options = {
+            "axis": node.attrs["dims"],
+            "keepdims": node.attrs["keepdim"],
+        }
+        return Bounds(
+            lower=np.mean(inputs[0].lower, **options),
+            upper=np.mean(inputs[0].upper, **options),
         )
 
     if node.op_type in {"Flatten", "Reshape"}:

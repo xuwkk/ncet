@@ -41,6 +41,7 @@ below is outside the current exact boundary.
 | Activation | `ReLU` | Exact big-M or stable equality | Elementwise ReLU; `relu_binary_mode` may be `"full"` or `"reduced"`; in-place forms are unsupported |
 | Arithmetic | `Add`, `Sub` | Linear equality | Exactly two tensor operands; `alpha=1`; scalar or constant operands are not canonicalized |
 | Composition | `Concat` | Exact output-slice equalities | Static tensor inputs and dimension; tracing batch axis cannot be concatenated; `out` must be absent or `None` |
+| Reduction | `ReduceMean` | Linear equality | `torch.mean` or `Tensor.mean`; one or more explicit static dimensions; `keepdim` is static; tracing batch axis cannot be reduced; `dtype` and `out` must be absent or `None` |
 | Shape | `Flatten` | C-order element-preserving equality | Static `start_dim` and `end_dim`; flattened range cannot include the tracing batch axis |
 | Shape | `Reshape` | C-order element-preserving equality | Reshape, View, and batch-preserving Squeeze/Unsqueeze spellings; statically resolved output shape; Squeeze requires explicit dimensions; tracing batch axis must remain first |
 | Shape | `Permute` | Native N-D axis permutation equality | Complete static permutation; tracing batch axis remains first |

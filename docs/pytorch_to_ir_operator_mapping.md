@@ -75,6 +75,7 @@ recorded by FX.
 | `torch.concat((x, y), dim)` | `call_function` | `torch.concat` | `Concat` |
 | `torch.concatenate((x, y), dim)` | `call_function` | `torch.concatenate` | `Concat` |
 | `torch.flatten(x, ...)` | `call_function` | `torch.flatten` | `Flatten` |
+| `torch.mean(x, dim=..., keepdim=...)` | `call_function` | `torch.mean` | `ReduceMean` |
 | `torch.reshape(x, shape)` | `call_function` | `torch.reshape` | `Reshape` |
 | `torch.squeeze(x, dim)` | `call_function` | `torch.squeeze` | `Reshape` |
 | `torch.unsqueeze(x, dim)` | `call_function` | `torch.unsqueeze` | `Reshape` |
@@ -94,6 +95,7 @@ first tensor argument.
 | `x.subtract(y)` | `call_method` | `"subtract"` | `Sub` |
 | `x.relu()` | `call_method` | `"relu"` | `ReLU` |
 | `x.flatten(...)` | `call_method` | `"flatten"` | `Flatten` |
+| `x.mean(dim=..., keepdim=...)` | `call_method` | `"mean"` | `ReduceMean` |
 | `x.reshape(...)` | `call_method` | `"reshape"` | `Reshape` |
 | `x.view(...)` | `call_method` | `"view"` | `Reshape` |
 | `x.squeeze(dim)` | `call_method` | `"squeeze"` | `Reshape` |
@@ -147,6 +149,9 @@ every parameterization of that operation is supported.
   stochastic training-mode Dropout is rejected.
 - Squeeze requires explicit static dimensions that exclude tracing batch axis
   0. Unsqueeze cannot insert a new dimension before tracing batch axis 0.
+- Mean requires one or more explicit static dimensions that exclude tracing
+  batch axis 0. Dtype conversion and caller-provided `out` storage are not
+  supported.
 - `F.linear()` and `F.conv2d()` are not currently mapped; use `nn.Linear` and
   `nn.Conv2d`.
 - `F.batch_norm()` is not currently mapped; use `nn.BatchNorm1d` or
