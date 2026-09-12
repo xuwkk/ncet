@@ -8,6 +8,7 @@ from torch.nn import functional as F
 
 from tests.fixtures.models import (
     CNN_INPUT_SHAPE,
+    IdentityDropout,
     make_batchnorm_residual_cnn,
     make_branch_concat_cnn,
     make_multiple_input_output,
@@ -192,6 +193,13 @@ def test_normalize_batchnorm_to_scale_and_shift() -> None:
 def test_capture_rejects_batchnorm_without_running_statistics() -> None:
     with pytest.raises(UnsupportedOperatorError, match="fixed running statistics"):
         capture_graph(NoRunningStatsBatchNorm().eval())
+
+
+def test_capture_rejects_training_dropout_submodule() -> None:
+    model = IdentityDropout().eval()
+    model.dropout.train()
+    with pytest.raises(UnsupportedOperatorError, match="evaluation mode"):
+        capture_graph(model)
 
 
 def test_normalize_conv2d_and_concat_branches() -> None:

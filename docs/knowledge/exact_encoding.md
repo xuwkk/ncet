@@ -119,6 +119,17 @@ $$
 
 These equalities directly preserve residual and other branch connections.
 
+### Identity and evaluation-mode Dropout
+
+Identity is represented by
+
+$$
+Y=X.
+$$
+
+Evaluation-mode Dropout is normalized to the same canonical operation because
+its random mask is disabled. This equality introduces no binary variables.
+
 ### Concat
 
 For concatenation along dimension $d$, NCET maps each input to its contiguous

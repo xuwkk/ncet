@@ -362,6 +362,7 @@ such as `linear`, `linear_1`, and `linear_2`.
 | `AdaptiveAvgPool2d` | resolved per-sample `output_size` |
 | `AvgPool2d` | `kernel_size`, `stride`, `padding`, `ceil_mode`, `count_include_pad`, `divisor_override` |
 | `MaxPool2d` | `kernel_size`, `stride`, `padding`, `dilation`, `ceil_mode`, `return_indices` |
+| `Identity` | `{}`; also represents evaluation-mode Dropout |
 | `ReLU` | `{}` |
 | `Add`, `Sub` | `alpha=1` |
 | `Concat` | `dim` |

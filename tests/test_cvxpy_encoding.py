@@ -6,6 +6,7 @@ from torch import nn
 from torch.nn import functional as F
 
 from tests.fixtures.models import (
+    IdentityDropout,
     make_batchnorm_residual_cnn,
     make_branch_concat_cnn,
 )
@@ -173,6 +174,37 @@ def test_residual_mlp_encoding_matches_pytorch(
     expected_indices = [0] if mode == "reduced" else [0, 1, 2]
     assert binary.flat_indices.tolist() == expected_indices
     assert binary.original_tensor_shape == (3,)
+
+
+def test_identity_dropout_encoding_matches_pytorch() -> None:
+    model = IdentityDropout().eval()
+    encoding = form_milp(
+        model,
+        Bounds(
+            lower=np.full(4, -1.0, dtype=np.float32),
+            upper=np.full(4, 1.0, dtype=np.float32),
+        ),
+    )
+    sample = np.array([-0.8, -0.2, 0.4, 0.9], dtype=np.float32)
+    problem = cp.Problem(
+        cp.Minimize(0),
+        [*encoding.constraints, encoding.inputs["x"] == sample],
+    )
+    problem.solve(solver=cp.SCIPY)
+
+    with torch.no_grad():
+        expected = model(torch.from_numpy(sample).unsqueeze(0)).squeeze(0)
+
+    assert problem.status == cp.OPTIMAL
+    np.testing.assert_allclose(encoding.outputs[0].value, expected.numpy())
+    assert [node.op_type for node in encoding.graph.nodes] == [
+        "Input",
+        "Identity",
+        "Identity",
+        "Identity",
+        "Output",
+    ]
+    assert encoding.stats.binary_variables == 0
 
 
 def test_conv2d_encoding_matches_pytorch() -> None:

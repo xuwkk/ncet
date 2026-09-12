@@ -20,6 +20,7 @@ _SUPPORTED_OPS = frozenset(
         "AdaptiveAvgPool2d",
         "AvgPool2d",
         "MaxPool2d",
+        "Identity",
         "ReLU",
         "Add",
         "Sub",
@@ -124,6 +125,9 @@ def _propagate_node(
 
     if node.op_type == "MaxPool2d":
         return _maxpool2d_bounds(node, inputs[0])
+
+    if node.op_type == "Identity":
+        return inputs[0]
 
     if node.op_type == "ReLU":
         return Bounds(

@@ -21,6 +21,7 @@ _SUPPORTED_OPS = frozenset(
         "AdaptiveAvgPool2d",
         "AvgPool2d",
         "MaxPool2d",
+        "Identity",  # also represents evaluation-mode Dropout
         "ReLU",
         "Add",
         "Sub",
@@ -163,6 +164,8 @@ def encode_cvxpy(
             )
             constraints.extend(pool_constraints)
             binaries[node.name] = binary
+        elif node.op_type == "Identity":
+            constraints.append(_identity_constraint(node, variables))
         elif node.op_type in {"Add", "Sub"}:
             constraints.append(_branch_constraint(node, variables))
         elif node.op_type == "Concat":
@@ -232,6 +235,15 @@ def _linear_constraint(
         order="C",
     )
     return output_matrix == input_matrix @ weight.T + bias
+
+
+def _identity_constraint(
+    node: IRNode,
+    variables: dict[str, cp.Variable],
+) -> cp.Constraint:
+    """Preserve one tensor exactly."""
+    # TODO: we can eliminate this constraint by changing the graph structure later
+    return variables[node.outputs[0]] == variables[node.inputs[0]]
 
 
 def _conv2d_constraint(

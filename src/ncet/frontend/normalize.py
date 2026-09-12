@@ -136,6 +136,17 @@ def _canonical_operation(
                 module.ceil_mode,
                 module.return_indices,
             )
+        if isinstance(module, nn.Identity):
+            return "Identity", {}
+        if isinstance(
+            module,
+            (nn.Dropout, nn.Dropout1d, nn.Dropout2d, nn.Dropout3d),
+        ):
+            if module.training:
+                raise UnsupportedOperatorError(
+                    f"Dropout node '{node.name}' must be in evaluation mode"
+                )
+            return "Identity", {}
         if isinstance(module, nn.ReLU):
             return "ReLU", {}
         if isinstance(module, nn.Flatten):
@@ -153,6 +164,13 @@ def _canonical_operation(
             return "Sub", _unit_alpha_attrs(node, "Sub")
         if node.target in {F.relu, torch.relu}:
             return "ReLU", {}
+        if node.target in {
+            F.dropout,
+            F.dropout1d,
+            F.dropout2d,
+            F.dropout3d,
+        }:
+            return "Identity", _dropout_call_attrs(node)
         if node.target is F.adaptive_avg_pool2d:
             output_size = (
                 node.args[1]
@@ -198,6 +216,29 @@ def _canonical_operation(
             return "Transpose", _transpose_attrs(node)
 
     raise _unsupported_node(node)
+
+
+def _dropout_call_attrs(node: fx.Node) -> dict[str, Any]:
+    """Accept a functional Dropout call only when it is a pure identity."""
+    training = (
+        node.args[2]
+        if len(node.args) > 2
+        else node.kwargs.get("training", True)
+    )
+    inplace = (
+        node.args[3]
+        if len(node.args) > 3
+        else node.kwargs.get("inplace", False)
+    )
+    if training is not False:
+        raise UnsupportedOperatorError(
+            f"Dropout node '{node.name}' must use training=False"
+        )
+    if inplace is not False:
+        raise UnsupportedOperatorError(
+            f"Dropout node '{node.name}' must use inplace=False"
+        )
+    return {}
 
 
 def _adaptive_avgpool2d_attrs(

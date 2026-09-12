@@ -37,6 +37,7 @@ below is outside the current exact boundary.
 | Pooling | `AdaptiveAvgPool2d` | Sparse linear equality | Per-sample shape `(C,H,W)`; module or functional form; static scalar or length-2 output size; each entry is a positive integer or `None`, where `None` preserves that input dimension |
 | Pooling | `AvgPool2d` | Sparse linear equality | Per-sample shape `(C,H,W)`; scalar or 2-D kernel, stride, and padding; `stride=None` uses the kernel size; `ceil_mode=False`; `divisor_override=None`; either value of `count_include_pad` |
 | Pooling | `MaxPool2d` | Full exact one-hot formulation | Per-sample shape `(C,H,W)`; scalar or 2-D kernel, stride, and padding; `stride=None` uses the kernel size; `dilation=(1,1)`; `ceil_mode=False`; `return_indices=False` |
+| Structural | `Identity` | Elementwise equality | `nn.Identity`; `nn.Dropout`, `nn.Dropout1d/2d/3d`, or corresponding functional calls only with `training=False`; in-place forms unsupported |
 | Activation | `ReLU` | Exact big-M or stable equality | Elementwise ReLU; `relu_binary_mode` may be `"full"` or `"reduced"`; in-place forms are unsupported |
 | Arithmetic | `Add`, `Sub` | Linear equality | Exactly two tensor operands; `alpha=1`; scalar or constant operands are not canonicalized |
 | Composition | `Concat` | Exact output-slice equalities | Static tensor inputs and dimension; tracing batch axis cannot be concatenated; `out` must be absent or `None` |
@@ -52,8 +53,8 @@ operation currently produces one tensor.
 
 ## Outside the current boundary
 
-Standalone `Constant` and `Identity` operators, constant arithmetic, and other
-canonical operators not shown above are not currently supported. Linear,
+Standalone `Constant` operators, constant arithmetic, and other canonical
+operators not shown above are not currently supported. Linear,
 Conv2d, and BatchNorm fixed arrays are lifted into `GraphIR.constants`, but
 this does not create standalone Constant operators.
 

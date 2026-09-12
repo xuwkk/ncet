@@ -36,6 +36,8 @@ uses its concrete type to choose the canonical operator.
 | `nn.AdaptiveAvgPool2d` | `call_module` | `"adaptive_pool"` | `AdaptiveAvgPool2d` |
 | `nn.AvgPool2d` | `call_module` | `"avg_pool"` | `AvgPool2d` |
 | `nn.MaxPool2d` | `call_module` | `"max_pool"` | `MaxPool2d` |
+| `nn.Identity` | `call_module` | `"identity"` | `Identity` |
+| `nn.Dropout`, `nn.Dropout1d/2d/3d` in evaluation mode | `call_module` | `"dropout"` | `Identity` |
 | `nn.ReLU` | `call_module` | `"relu"` | `ReLU` |
 | `nn.Flatten` | `call_module` | `"flatten"` | `Flatten` |
 
@@ -68,6 +70,7 @@ recorded by FX.
 | `F.adaptive_avg_pool2d(x, ...)` | `call_function` | `torch.nn.functional.adaptive_avg_pool2d` | `AdaptiveAvgPool2d` |
 | `F.avg_pool2d(x, ...)` | `call_function` | `torch.nn.functional.avg_pool2d` | `AvgPool2d` |
 | `F.max_pool2d(x, ...)` | `call_function` | `torch.nn.functional.max_pool2d` | `MaxPool2d` |
+| `F.dropout`, `F.dropout1d/2d/3d` with `training=False` | `call_function` | Corresponding `torch.nn.functional` callable | `Identity` |
 | `torch.cat((x, y), dim)` | `call_function` | `torch.cat` | `Concat` |
 | `torch.concat((x, y), dim)` | `call_function` | `torch.concat` | `Concat` |
 | `torch.concatenate((x, y), dim)` | `call_function` | `torch.concatenate` | `Concat` |
@@ -135,6 +138,8 @@ every parameterization of that operation is supported.
 
 - In-place forms such as `relu_()`, `add_()`, or `F.relu(..., inplace=True)`
   are rejected before GraphIR normalization.
+- Dropout is accepted only when its static `training` argument is `False`;
+  stochastic training-mode Dropout is rejected.
 - `F.linear()` and `F.conv2d()` are not currently mapped; use `nn.Linear` and
   `nn.Conv2d`.
 - `F.batch_norm()` is not currently mapped; use `nn.BatchNorm1d` or

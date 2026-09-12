@@ -245,7 +245,7 @@ L_Y=\operatorname{concat}(L_{X_1},\ldots,L_{X_k}), \qquad
 U_Y=\operatorname{concat}(U_{X_1},\ldots,U_{X_k}).
 $$
 
-For Flatten, Reshape, Permute, Transpose, GetItem, and Slice,
+For Identity, Flatten, Reshape, Permute, Transpose, GetItem, and Slice,
 
 $$
 L_Y=g(L_X), \qquad U_Y=g(U_X),
@@ -254,6 +254,17 @@ $$
 where $g$ is the same shape transformation, axis reordering, or static index
 operation recorded in the GraphIR node. These operations do not introduce
 additional interval relaxation.
+
+For Identity specifically,
+
+$$
+L_Y=L_X,
+\qquad
+U_Y=U_X.
+$$
+
+Evaluation-mode Dropout is normalized to Identity because PyTorch disables
+its random mask during inference.
 
 ## Related knowledge
 

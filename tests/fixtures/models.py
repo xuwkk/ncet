@@ -4,6 +4,7 @@ from typing import TypeVar
 
 import torch
 from torch import nn
+from torch.nn import functional as F
 
 MLP_INPUT_SHAPE = (1, 4)
 CNN_INPUT_SHAPE = (1, 1, 4, 4)
@@ -62,6 +63,20 @@ class BatchNormResidualCNN(nn.Module):
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         main = self.batch_norm(self.conv(x))
         return self.relu(main + self.shortcut(x))
+
+
+class IdentityDropout(nn.Module):
+    """Module and functional identity operations in evaluation mode."""
+
+    def __init__(self) -> None:
+        super().__init__()
+        self.identity = nn.Identity()
+        self.dropout = nn.Dropout(p=0.4)
+
+    def forward(self, x: torch.Tensor) -> torch.Tensor:
+        value = self.identity(x)
+        value = self.dropout(value)
+        return F.dropout(value, p=0.2, training=self.training)
 
 
 class BranchConcatCNN(nn.Module):

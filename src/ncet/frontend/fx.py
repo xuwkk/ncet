@@ -31,6 +31,7 @@ def capture_graph(model: nn.Module) -> fx.GraphModule:
     if model.training:
         raise GraphCaptureError("model must be in evaluation mode")
     _validate_batchnorm_modules(model)
+    _validate_dropout_modules(model)
 
     try:
         graph_module = fx.symbolic_trace(model)
@@ -61,6 +62,17 @@ def _validate_batchnorm_modules(model: nn.Module) -> None:
         ):
             raise UnsupportedOperatorError(
                 f"BatchNorm module '{name}' requires fixed running statistics"
+            )
+
+
+def _validate_dropout_modules(model: nn.Module) -> None:
+    """Reject stochastic Dropout while allowing its evaluation identity."""
+    supported = (nn.Dropout, nn.Dropout1d, nn.Dropout2d, nn.Dropout3d)
+    for path, module in model.named_modules():
+        if isinstance(module, supported) and module.training:
+            name = path or type(module).__name__
+            raise UnsupportedOperatorError(
+                f"Dropout module '{name}' must be in evaluation mode"
             )
 
 
