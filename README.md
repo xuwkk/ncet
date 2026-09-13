@@ -136,8 +136,9 @@ PyTorch 2.2+. See `pyproject.toml` for the supported upper bounds.
 | Notebook | Description |
 |---|---|
 | [Representative operator test](examples/artificial_test_on_operators.ipynb) | Compares PyTorch and NCET outputs for a branched CNN using representative supported operators. |
-| [MNIST adversarial attack](examples/mnist_cnn_adversarial_attack.ipynb) | Trains a small CNN and solves targeted and worst-case adversarial attacks with NCET. |
+| [MNIST targeted adversarial attack](examples/mnist_cnn_adversarial_attack.ipynb) | Trains a small CNN and solves an exact targeted adversarial attack with NCET. |
 | [Common failures and exceptions](examples/common_failures_and_exceptions.ipynb) | Demonstrates common invalid inputs and models, their public exceptions, and supported fixes. |
+| [Constraint learning for power system operational problems (open in new repo)](https://github.com/xuwkk/Neural-SmallSignal-UC-Tutorial) | An end-to-end tutorial on how to use NCET to solve a power system small-signal stability-constrained unit commitment problem, including data generation, neural network training, stability constraint encoding, and dynamic system verification. |
 
 ## License
 
