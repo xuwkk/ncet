@@ -40,6 +40,7 @@ below is outside the current exact boundary.
 | Pooling | `MaxPool2d` | Full exact one-hot formulation | Per-sample shape `(C,H,W)`; scalar or 2-D kernel, stride, and padding; `stride=None` uses the kernel size; `dilation=(1,1)`; `ceil_mode=False`; `return_indices=False` |
 | Structural | `Identity` | Elementwise equality | `nn.Identity`; `nn.Dropout`, `nn.Dropout1d/2d/3d`, or corresponding functional calls only with `training=False`; in-place forms unsupported |
 | Activation | `ReLU` | Exact big-M or stable equality | Elementwise ReLU; `relu_binary_mode` may be `"full"` or `"reduced"`; in-place forms are unsupported |
+| Activation | `LeakyReLU` | Exact big-M or stable equality | `nn.LeakyReLU` or `F.leaky_relu`; finite `negative_slope` in `[0,1]`; slopes 0 and 1 normalize to `ReLU` and `Identity`; in-place forms unsupported |
 | Arithmetic | `Add`, `Sub` | Linear equality | Exactly two graph tensor operands; finite real scalar `alpha` |
 | Composition | `Concat` | Exact output-slice equalities | Static tensor inputs and dimension; tracing batch axis cannot be concatenated; `out` must be absent or `None` |
 | Reduction | `ReduceMean` | Linear equality | `torch.mean` or `Tensor.mean`; one or more explicit static dimensions; `keepdim` is static; tracing batch axis cannot be reduced; `dtype` and `out` must be absent or `None` |

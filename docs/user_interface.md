@@ -55,7 +55,7 @@ supported boundary.
 
 > **Important — no batch dimension:** `lower` and `upper` describe exactly one
 > sample. Use `(features,)` for an MLP or `(channels, height, width)` for an
-> image, not `(batch, features)` or `(batch, channels, height, width)`.
+> image, not `(batch, features)` or `(batch, channels, height, width)`. This is more natively suited for the optimization problem formulation.
 
 Finite elementwise lower and upper bounds for every model input. Bounds use
 the shape of one sample and must not contain the batch dimension. For example,
@@ -95,7 +95,7 @@ order. A positional list cannot be reordered, so the caller must supply it in
 the same order as the arguments of `forward()`. Tuples are reserved for the
 single-input `(lower, upper)` form; use a list for multiple positional inputs.
 
-For a model defined as
+For example, for a model defined as
 
 ```python
 def forward(self, x, y):
@@ -115,15 +115,16 @@ not directly accept coupled $L_1$, $L_2$, or other norm domains.
 
 ### `relu_binary_mode`
 
-Controls the number of ReLU binary variables without changing exactness.
+Controls the number of ReLU and LeakyReLU binary variables without changing
+exactness.
 
 | Value | Behavior |
 |---|---|
-| `"reduced"` | Default. Introduces binaries only for unstable elements whose bounds satisfy $L < 0 < U$. |
-| `"full"` | Introduces one binary for every ReLU element, including elements already known to be active or inactive. |
+| `"reduced"` | Default. Introduces binaries only for unstable ReLU/LeakyReLU elements whose bounds satisfy $L < 0 < U$. |
+| `"full"` | Introduces one binary for every ReLU/LeakyReLU element, including elements already known to be active or inactive. |
 
-Both modes describe the same exact ReLU graph. `"reduced"` generally produces
-a smaller formulation.
+Both modes describe the same exact activation graph. `"reduced"` generally
+produces a smaller formulation and is set as the default.
 
 ## Return value
 
@@ -132,16 +133,18 @@ a smaller formulation.
 | Field | Type | Meaning |
 |---|---|---|
 | `constraints` | `list[cp.Constraint]` | All exact neural-network and input-bound constraints |
-| `inputs` | `dict[str, cp.Expression]` | Per-sample input variables keyed by `forward()` argument name |
+| `inputs` | `dict[str, cp.Expression]` | Per-sample input **variables** keyed by `forward()` argument name |
 | `outputs` | `list[cp.Expression]` | Per-sample output expressions in model return order |
 | `values` | `dict[str, EncodedTensor]` | Every graph tensor's expression, propagated bounds, and shape |
-| `binaries` | `dict[str, ReLUBinaries | MaxPoolBinaries]` | Binary-variable metadata keyed by the corresponding IR node name |
+| `binaries` | `dict[str, ReLUBinaries / MaxPoolBinaries]` | Binary-variable metadata keyed by the corresponding IR node name |
 | `graph` | `GraphIR` | Canonical NCET graph used by the encoder |
-| `stats` | `EncodingStats` | Counts of variables, constraints, and ReLU states |
+| `stats` | `EncodingStats` | Counts of variables, constraints, and ReLU-family states |
 
 Even a single model output is stored in a list, so access it with
 `encoding.outputs[0]`. A single model input is still stored in a dictionary,
 for example `encoding.inputs["x"]`.
+
+> Note: Even though the inputs to the neural network can be optimization parameters, extra variables are created.
 
 ## Using the encoding
 
@@ -154,8 +157,8 @@ encoding = form_milp(
     relu_binary_mode="reduced",
 )
 
-x = encoding.inputs["x"]
-y = encoding.outputs[0]
+x = encoding.inputs["x"]  # Extract the input variable
+y = encoding.outputs[0]   # Extract the output variable
 
 problem = cp.Problem(
     cp.Maximize(y[0]),
@@ -167,6 +170,38 @@ problem.solve(solver=cp.SCIPY)
 External decision variables can be connected to `x`, and additional
 constraints can be added alongside `encoding.constraints`. The selected solver
 must support mixed-integer problems whenever the encoding contains binaries.
+
+### Connecting to an existing optimization problem
+
+Assume an existing optimization model already has a decision variable and
+constraints. Connect that variable to the encoded network input with an
+equality, then use the network output in the objective or constraints:
+
+```python
+# Existing optimization model; A, b, c, and output_limit are problem data.
+decision = cp.Variable(lower.shape, name="decision")
+existing_constraints = [A @ decision <= b]
+
+# Connect the existing decision to the encoded network.
+nn_input_link = encoding.inputs["x"] == decision
+nn_output = encoding.outputs[0]
+
+problem = cp.Problem(
+    cp.Minimize(c @ decision),
+    [
+        *existing_constraints,
+        *encoding.constraints,
+        nn_input_link,
+        nn_output[0] <= output_limit,
+    ],
+)
+problem.solve(solver=cp.SCIPY)
+```
+
+`nn_input_link` makes the network evaluate the same value selected by the
+original optimization model. The bounds supplied to `form_milp()` must cover
+every feasible value of `decision`, and `encoding.constraints` must be included
+exactly once in the final problem.
 
 ## Errors
 

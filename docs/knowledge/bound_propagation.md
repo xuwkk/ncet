@@ -156,7 +156,8 @@ input box.
 
 ## 2. Order-preserving unary operations
 
-ReLU, ReduceMean, AvgPool2d, AdaptiveAvgPool2d, and MaxPool2d are
+ReLU, LeakyReLU with a nonnegative slope, ReduceMean, AvgPool2d,
+AdaptiveAvgPool2d, and MaxPool2d are
 order-preserving unary operations. Let $f$ denote any one of them. Given
 
 $$
@@ -187,6 +188,23 @@ Its bounds are
 
 $$
 L_y=\max(0,L_x), \qquad U_y=\max(0,U_x).
+$$
+
+### LeakyReLU
+
+For $0<\alpha<1$, LeakyReLU is also elementwise and nondecreasing:
+
+$$
+f(x)=\begin{cases}
+x, & x\geq0,\\
+\alpha x, & x<0.
+\end{cases}
+$$
+
+Therefore,
+
+$$
+L_y=f(L_x), \qquad U_y=f(U_x).
 $$
 
 ### ReduceMean

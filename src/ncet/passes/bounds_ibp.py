@@ -23,6 +23,7 @@ _SUPPORTED_OPS = frozenset(
         "Identity",
         "ElementwiseAffine",
         "ReLU",
+        "LeakyReLU",
         "Add",
         "Sub",
         "Concat",
@@ -153,6 +154,21 @@ def _propagate_node(
         return Bounds(
             lower=np.maximum(inputs[0].lower, 0),
             upper=np.maximum(inputs[0].upper, 0),
+        )
+
+    if node.op_type == "LeakyReLU":
+        negative_slope = node.attrs["negative_slope"]
+        return Bounds(
+            lower=np.where(
+                inputs[0].lower >= 0,
+                inputs[0].lower,
+                negative_slope * inputs[0].lower,
+            ),
+            upper=np.where(
+                inputs[0].upper >= 0,
+                inputs[0].upper,
+                negative_slope * inputs[0].upper,
+            ),
         )
 
     if node.op_type in {"Add", "Sub"}:

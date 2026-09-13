@@ -39,6 +39,7 @@ uses its concrete type to choose the canonical operator.
 | `nn.Identity` | `call_module` | `"identity"` | `Identity` |
 | `nn.Dropout`, `nn.Dropout1d/2d/3d` in evaluation mode | `call_module` | `"dropout"` | `Identity` |
 | `nn.ReLU` | `call_module` | `"relu"` | `ReLU` |
+| `nn.LeakyReLU` | `call_module` | `"leaky_relu"` | `LeakyReLU` |
 | `nn.Flatten` | `call_module` | `"flatten"` | `Flatten` |
 
 Example:
@@ -74,6 +75,7 @@ recorded by FX.
 | `torch.mul/multiply(x, c)` | `call_function` | Corresponding PyTorch callable | `ElementwiseAffine` |
 | `torch.div/divide/true_divide(x, c)` | `call_function` | Corresponding PyTorch callable | `ElementwiseAffine` |
 | `F.relu(x)` | `call_function` | `torch.nn.functional.relu` | `ReLU` |
+| `F.leaky_relu(x, ...)` | `call_function` | `torch.nn.functional.leaky_relu` | `LeakyReLU` |
 | `torch.relu(x)` | `call_function` | `torch.relu` | `ReLU` |
 | `F.adaptive_avg_pool2d(x, ...)` | `call_function` | `torch.nn.functional.adaptive_avg_pool2d` | `AdaptiveAvgPool2d` |
 | `F.avg_pool2d(x, ...)` | `call_function` | `torch.nn.functional.avg_pool2d` | `AvgPool2d` |
@@ -179,6 +181,8 @@ every parameterization of that operation is supported.
   runtime weight or bias tensors are unsupported.
 - `F.batch_norm()` is not currently mapped; use `nn.BatchNorm1d` or
   `nn.BatchNorm2d` in evaluation mode with fixed running statistics.
+- LeakyReLU requires a finite `negative_slope` in `[0,1]` and `inplace=False`.
+  Slopes 0 and 1 normalize to `ReLU` and `Identity`, respectively.
 - Direct FX `get_attr` nodes are not canonicalized as standalone operators.
   Fixed state used by supported Linear, Conv2d, BatchNorm, and
   ElementwiseAffine operations is instead lifted into `GraphIR.constants`

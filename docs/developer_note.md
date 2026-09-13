@@ -366,6 +366,7 @@ such as `linear`, `linear_1`, and `linear_2`.
 | `MaxPool2d` | `kernel_size`, `stride`, `padding`, `dilation`, `ceil_mode`, `return_indices` |
 | `Identity` | `{}`; also represents evaluation-mode Dropout |
 | `ReLU` | `{}` |
+| `LeakyReLU` | finite scalar `negative_slope` in `(0,1)` |
 | `Add`, `Sub` | finite scalar `alpha` applied to the second tensor |
 | `Concat` | `dim` |
 | `ReduceMean` | `dims`, `keepdim` |
@@ -637,7 +638,7 @@ class MILPEncoding:
 | `inputs` | input tensor name | CVXPY input variable (input of the NN and constraints) |
 | `outputs` | output position | CVXPY output variable (output of the NN and constraints) |
 | `values` | any tensor name | `EncodedTensor` for that value |
-| `binaries` | ReLU or MaxPool node name | Operator-specific binary information |
+| `binaries` | ReLU-family or MaxPool node name | Operator-specific binary information |
 | `graph` | — | The canonical `GraphIR` |
 | `stats` | — | Formulation counts |
 
@@ -649,7 +650,7 @@ Multiple model return values are supported through multiple names in
 `graph.outputs`. This is different from one canonical operator producing
 several tensor values: current computational encoders read `node.outputs[0]`, so general multi-output operators are not yet supported.
 
-NCET creates one `cp.Variable` for each graph tensor. `values` wraps this full variable set with bounds and shapes, while `inputs` and `outputs` reference the same underlying variables at the two graph boundaries; they do not create duplicate decision variables. `binaries` contains the separate ReLU activation and MaxPool selection variables required by the MILP formulation.
+NCET creates one `cp.Variable` for each graph tensor. `values` wraps this full variable set with bounds and shapes, while `inputs` and `outputs` reference the same underlying variables at the two graph boundaries; they do not create duplicate decision variables. `binaries` contains the separate ReLU-family activation and MaxPool selection variables required by the MILP formulation.
 
 ### 5.2 Builder input types
 
@@ -688,12 +689,12 @@ shape propagation and removes it after shape propagation.
 
 | Mode | Meaning |
 |---|---|
-| `"reduced"` | Binary variables only for unstable ReLU elements |
-| `"full"` | Binary variables for every ReLU element |
+| `"reduced"` | Binary variables only for unstable ReLU/LeakyReLU elements |
+| `"full"` | Binary variables for every ReLU/LeakyReLU element |
 
 Both modes are exact.
 
-The option affects ReLU only. MaxPool2d currently always uses its full exact
+The option affects ReLU and LeakyReLU only. MaxPool2d uses its full exact
 one-hot formulation, with one selector for every valid candidate in every
 pooling window.
 
@@ -713,6 +714,9 @@ of one per-sample graph tensor. Its shape does not contain a batch dimension.
 
 ### 5.4 `ReLUBinaries`
 
+This metadata structure is shared by ReLU and LeakyReLU because both use one
+binary branch selector for each encoded element.
+
 ```python
 @dataclass(frozen=True)
 class ReLUBinaries:
@@ -721,8 +725,8 @@ class ReLUBinaries:
     original_tensor_shape: tuple[int, ...]
 ```
 
-`variable` is always a one-dimensional binary vector. `flat_indices` is its
-address table: `variable[k]` controls the ReLU element at C-order flat position
+`variable` is always a one-dimensional binary vector. As not all elements require a binary selector in the reduced mode, `flat_indices` represents the 
+address table: `variable[k]` controls the ReLU-family element at C-order flat position
 `flat_indices[k]`. `original_tensor_shape` records the shape before flattening
 so that a flat position can be converted back to its tensor coordinate. It is
 metadata, not the shape of `variable`.
@@ -867,11 +871,11 @@ variable.size == len(input_indices) == len(output_indices)
 | Field | Meaning |
 |---|---|
 | `continuous_variables` | Total scalar graph-tensor variables |
-| `binary_variables` | Total scalar ReLU and MaxPool binaries |
+| `binary_variables` | Total scalar ReLU-family and MaxPool binaries |
 | `constraints` | Number of CVXPY constraint objects |
-| `always_active_relu` | ReLU elements with lower bound at least zero |
-| `always_inactive_relu` | ReLU elements with upper bound at most zero |
-| `unstable_relu` | ReLU elements whose interval crosses zero |
+| `always_active_relu` | ReLU-family elements with lower bound at least zero |
+| `always_inactive_relu` | ReLU-family elements fixed to the non-positive-input branch; this is the zero branch only for ReLU |
+| `unstable_relu` | ReLU-family elements whose interval crosses zero |
 
 
 ## 6. Residual example across all stages

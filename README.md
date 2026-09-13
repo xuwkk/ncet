@@ -82,7 +82,7 @@ for all arguments, accepted bound forms, return fields, and public exceptions.
 NCET captures static PyTorch FX graphs and normalizes the supported operations
 into a canonical graph intermediate representation (IR). The current operator
 set is Linear, Conv2d, BatchNorm1d/2d, AdaptiveAvgPool2d, AvgPool2d,
-MaxPool2d, ReLU, Add, Sub, fixed-constant Add/Sub/Mul/Div, Concat, Flatten,
+MaxPool2d, ReLU, LeakyReLU, Add, Sub, fixed-constant Add/Sub/Mul/Div, Concat, Flatten,
 ReduceMean, Reshape/View/Squeeze/Unsqueeze, Permute, Transpose, Identity/evaluation-mode
 Dropout, and static GetItem/Slice. Graph-based interval
 bound propagation and the CVXPY/MILP encoder support this operator set. See the
@@ -97,7 +97,8 @@ for the accepted semantics and restrictions of each operator.
   $[x_0-\epsilon, x_0+\epsilon]$ is an $L_\infty$ ball. Coupled $L_1$,
   $L_2$, and other norm bounds are not currently accepted.
 - `relu_binary_mode="reduced"` (the default) introduces binaries only for
-  unstable ReLU elements. `"full"` introduces one binary per ReLU element.
+  unstable ReLU/LeakyReLU elements. `"full"` introduces one binary per
+  activation element.
   Both modes are exact; see
   [ReLU binary handling](https://xuwkk.github.io/ncet/user_interface/#relu_binary_mode).
 - MaxPool2d uses the

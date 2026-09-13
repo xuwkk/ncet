@@ -194,7 +194,7 @@ If a network contains only these operators, its encoding consists entirely of
 continuous variables and linear constraints. Combined with a linear
 objective, it is an LP.
 
-## 3. Exact ReLU encoding
+## 3. Exact ReLU-family encoding
 
 For one ReLU element
 
@@ -236,10 +236,42 @@ $$
 
 These constraints describe exactly the graph of ReLU over $[L,U]$.
 
+For LeakyReLU with $0<\alpha<1$,
+
+$$
+y=\begin{cases}
+x, & x\geq0,\\
+\alpha x, & x<0.
+\end{cases}
+$$
+
+The stable equalities are $y=x$ when $L\geq0$ and $y=\alpha x$ when
+$U\leq0$. For $L<0<U$, NCET uses
+
+$$
+y\geq x,
+$$
+
+$$
+y\geq\alpha x,
+$$
+
+$$
+y\leq x-(1-\alpha)L(1-z),
+$$
+
+$$
+y\leq\alpha x+(1-\alpha)Uz,
+$$
+
+$$
+z\in\{0,1\}.
+$$
+
 In `relu_binary_mode="reduced"`, stable elements use the direct equalities and
-only unstable elements receive binaries. In `"full"` mode, every ReLU element
-uses the binary formulation. Both modes are exact, but reduced mode normally
-produces a smaller MILP and is considered as default.
+only unstable elements receive binaries. In `"full"` mode, every ReLU or
+LeakyReLU element uses its binary formulation. Both modes are exact, but
+reduced mode normally produces a smaller MILP and is the default. You can verify the equivalance by setting $z=1$ and $z=0$ respectively.
 
 ## 4. Exact MaxPool2d encoding
 

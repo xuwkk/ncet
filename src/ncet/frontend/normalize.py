@@ -176,6 +176,12 @@ def _canonical_operation(
             return "Identity", {}
         if isinstance(module, nn.ReLU):
             return "ReLU", {}
+        if isinstance(module, nn.LeakyReLU):
+            return _leaky_relu_operation(
+                node,
+                module.negative_slope,
+                module.inplace,
+            )
         if isinstance(module, nn.Flatten):
             return "Flatten", _flatten_attrs(
                 node,
@@ -232,6 +238,18 @@ def _canonical_operation(
             )
         if node.target in {F.relu, torch.relu}:
             return "ReLU", {}
+        if node.target is F.leaky_relu:
+            negative_slope = (
+                node.args[1]
+                if len(node.args) > 1
+                else node.kwargs.get("negative_slope", 0.01)
+            )
+            inplace = (
+                node.args[2]
+                if len(node.args) > 2
+                else node.kwargs.get("inplace", False)
+            )
+            return _leaky_relu_operation(node, negative_slope, inplace)
         if node.target in {
             F.dropout,
             F.dropout1d,
@@ -345,6 +363,32 @@ def _dropout_call_attrs(node: fx.Node) -> dict[str, Any]:
             f"Dropout node '{node.name}' must use inplace=False"
         )
     return {}
+
+
+def _leaky_relu_operation(
+    node: fx.Node,
+    negative_slope: Any,
+    inplace: Any,
+) -> tuple[str, dict[str, float]]:
+    """Canonicalize the supported non-mutating LeakyReLU semantics."""
+    if inplace is not False:
+        raise UnsupportedOperatorError(
+            f"LeakyReLU node '{node.name}' must use inplace=False"
+        )
+    if (
+        not isinstance(negative_slope, Real)
+        or not np.isfinite(negative_slope)
+        or not 0 <= negative_slope <= 1
+    ):
+        raise UnsupportedOperatorError(
+            f"unsupported LeakyReLU negative_slope at node '{node.name}': "
+            f"expected a finite value in [0, 1], got {negative_slope!r}"
+        )
+    if negative_slope == 0:
+        return "ReLU", {}
+    if negative_slope == 1:
+        return "Identity", {}
+    return "LeakyReLU", {"negative_slope": float(negative_slope)}
 
 
 def _adaptive_avgpool2d_attrs(

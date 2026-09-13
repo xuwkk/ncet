@@ -24,6 +24,7 @@ _SUPPORTED_OPS = frozenset(
         "Identity",  # also represents evaluation-mode Dropout
         "ElementwiseAffine",
         "ReLU",
+        "LeakyReLU",
         "Add",
         "Sub",
         "Concat",
@@ -58,10 +59,10 @@ class EncodedTensor:
 
 @dataclass(frozen=True)
 class ReLUBinaries:
-    """Binary vector and the flattened per-sample ReLU positions it represents."""
+    """Binary vector and flattened ReLU-family positions it represents."""
 
-    variable: cp.Variable        # vectorized ReLU activation variables
-    # when reduced mode, only the unstable elements are represented by the binary vector
+    variable: cp.Variable        # vectorized ReLU-family activation variables
+    # In reduced mode, only unstable elements are represented by the binary vector.
     # the flat_indices is therefore represents the actual indices of the flattened vector
     flat_indices: np.ndarray 
     # given the flat_indices and original_tensor_shape, 
@@ -184,11 +185,15 @@ def encode_cvxpy(
             constraints.append(_axis_reorder_constraint(node, variables))
         elif node.op_type in {"GetItem", "Slice"}:
             constraints.append(_index_constraint(node, variables))
-        elif node.op_type == "ReLU":
+        elif node.op_type in {"ReLU", "LeakyReLU"}:
+            negative_slope = (
+                0 if node.op_type == "ReLU" else node.attrs["negative_slope"]
+            )
             relu_constraints, binary, counts = _relu_constraints(
                 node,
                 variables,
                 bounds[node.inputs[0]],
+                negative_slope,
                 options.relu_binary_mode,
             )
             constraints.extend(relu_constraints)
@@ -809,6 +814,7 @@ def _relu_constraints(
     node: IRNode,
     variables: dict[str, cp.Variable],
     input_bounds: Bounds,
+    negative_slope: float,
     mode: Literal["full", "reduced"],
 ) -> tuple[
     list[cp.Constraint],
@@ -820,22 +826,22 @@ def _relu_constraints(
     output_value = variables[node.outputs[0]]
     size = input_value.size
     
-    # For element-wise ReLU, flatten does not change the operation
+    # Flattening does not change an elementwise ReLU-family operation.
     x = cp.reshape(input_value, (size,), order="C")
     y = cp.reshape(output_value, (size,), order="C")
     lower = input_bounds.lower.reshape(-1)
     upper = input_bounds.upper.reshape(-1)
 
-    active = np.flatnonzero(lower >= 0)  # y_i = x_i, no binary variable needed
-    inactive = np.flatnonzero((upper <= 0) & (lower < 0))  # y_i = 0, no binary variable needed
-    unstable = np.flatnonzero((lower < 0) & (upper > 0))   # with binary variable needed
+    active = np.flatnonzero(lower >= 0)  # y_i = x_i
+    inactive = np.flatnonzero((upper <= 0) & (lower < 0))
+    unstable = np.flatnonzero((lower < 0) & (upper > 0))
     constraints: list[cp.Constraint] = []
 
     if mode == "reduced":
         if active.size:
             constraints.append(y[active] == x[active])
         if inactive.size:
-            constraints.append(y[inactive] == 0)
+            constraints.append(y[inactive] == negative_slope * x[inactive])
         binary_indices = unstable
     else:
         binary_indices = np.arange(size)
@@ -843,7 +849,8 @@ def _relu_constraints(
     binary = None
     # binary_indices is the indices in vector form.
     if binary_indices.size:
-        # Only create binary variables for unstable ReLU elements
+        # Reduced mode reaches this block only for unstable elements; full mode
+        # applies the same exact formulation to every element.
         z = cp.Variable(
             binary_indices.size,
             boolean=True,
@@ -856,9 +863,19 @@ def _relu_constraints(
         constraints.extend(
             [
                 y_binary >= x_binary,
-                y_binary >= 0,
-                y_binary <= x_binary - cp.multiply(lower_binary, 1 - z),
-                y_binary <= cp.multiply(upper_binary, z),
+                y_binary >= negative_slope * x_binary,
+                y_binary
+                <= x_binary
+                - cp.multiply(
+                    (1 - negative_slope) * lower_binary,
+                    1 - z,
+                ),
+                y_binary
+                <= negative_slope * x_binary
+                + cp.multiply(
+                    (1 - negative_slope) * upper_binary,
+                    z,
+                ),
             ]
         )
         # For reduced mode, we have z.size == len(binary_indices) <= np.prod(original_tensor_shape)

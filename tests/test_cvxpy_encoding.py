@@ -25,6 +25,18 @@ class ResidualReLUMLP(nn.Module):
         return torch.relu(self.linear(x)) + x
 
 
+class LeakyReLUVariants(nn.Module):
+    def __init__(self) -> None:
+        super().__init__()
+        self.activation = nn.LeakyReLU(negative_slope=0.1)
+
+    def forward(
+        self,
+        x: torch.Tensor,
+    ) -> tuple[torch.Tensor, torch.Tensor]:
+        return self.activation(x), F.leaky_relu(x, negative_slope=0.2)
+
+
 class StridedConv2d(nn.Module):
     """Exercise channels, rectangular kernels, stride, padding, and bias."""
 
@@ -252,6 +264,55 @@ def test_residual_mlp_encoding_matches_pytorch(
     expected_indices = [0] if mode == "reduced" else [0, 1, 2]
     assert binary.flat_indices.tolist() == expected_indices
     assert binary.original_tensor_shape == (3,)
+
+
+@pytest.mark.parametrize(
+    ("mode", "expected_binary_count"),
+    [("reduced", 2), ("full", 6)],
+)
+def test_leaky_relu_encoding_matches_pytorch(
+    mode: str,
+    expected_binary_count: int,
+) -> None:
+    model = LeakyReLUVariants().eval()
+    lower = np.array([-2.0, -1.0, 0.5], dtype=np.float32)
+    upper = np.array([-0.5, 2.0, 2.5], dtype=np.float32)
+    encoding = form_milp(
+        model,
+        Bounds(lower=lower, upper=upper),
+        relu_binary_mode=mode,
+    )
+    sample = np.array([-1.0, 0.75, 1.5], dtype=np.float32)
+    problem = cp.Problem(
+        cp.Minimize(0),
+        [*encoding.constraints, encoding.inputs["x"] == sample],
+    )
+    problem.solve(solver=cp.SCIPY)
+
+    with torch.no_grad():
+        expected = model(torch.from_numpy(sample).unsqueeze(0))
+
+    nodes = [
+        node for node in encoding.graph.nodes if node.op_type == "LeakyReLU"
+    ]
+    assert problem.status == cp.OPTIMAL
+    assert [node.attrs["negative_slope"] for node in nodes] == [0.1, 0.2]
+    for index, slope in enumerate((0.1, 0.2)):
+        value = encoding.values[encoding.graph.outputs[index]]
+        np.testing.assert_allclose(
+            encoding.outputs[index].value,
+            expected[index].squeeze(0).numpy(),
+        )
+        np.testing.assert_allclose(
+            value.bounds.lower,
+            np.where(lower >= 0, lower, slope * lower),
+        )
+        np.testing.assert_allclose(
+            value.bounds.upper,
+            np.where(upper >= 0, upper, slope * upper),
+        )
+    assert encoding.stats.binary_variables == expected_binary_count
+    assert encoding.stats.unstable_relu == 2
 
 
 def test_identity_dropout_encoding_matches_pytorch() -> None:
