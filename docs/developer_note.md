@@ -366,7 +366,7 @@ such as `linear`, `linear_1`, and `linear_2`.
 | `MaxPool2d` | `kernel_size`, `stride`, `padding`, `dilation`, `ceil_mode`, `return_indices` |
 | `Identity` | `{}`; also represents evaluation-mode Dropout |
 | `ReLU` | `{}` |
-| `Add`, `Sub` | `alpha=1` |
+| `Add`, `Sub` | finite scalar `alpha` applied to the second tensor |
 | `Concat` | `dim` |
 | `ReduceMean` | `dims`, `keepdim` |
 | `Flatten` | `start_dim`, `end_dim` |

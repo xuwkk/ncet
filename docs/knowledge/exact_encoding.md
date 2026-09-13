@@ -117,19 +117,21 @@ each connection exactly. The operation introduces no binary variables.
 
 ### Add and Sub
 
-For two input tensors:
+For two input tensors and a fixed finite scalar $\alpha$, NCET preserves
+PyTorch's scaling of the second operand:
 
 $$
-Y=X_1+X_2
+Y=X_1+\alpha X_2
 $$
 
 or
 
 $$
-Y=X_1-X_2.
+Y=X_1-\alpha X_2.
 $$
 
-These equalities directly preserve residual and other branch connections.
+The default is $\alpha=1$. These linear equalities directly preserve residual
+and other branch connections and introduce no binary variables.
 
 ### ReduceMean
 

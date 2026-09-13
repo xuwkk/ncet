@@ -178,6 +178,15 @@ class ElementwiseConstantAffine(nn.Module):
         return 3.0 - value
 
 
+class ScaledTensorAddSub(nn.Module):
+    def forward(
+        self,
+        x: torch.Tensor,
+        y: torch.Tensor,
+    ) -> tuple[torch.Tensor, torch.Tensor]:
+        return torch.add(x, y, alpha=-2), torch.sub(x, y, alpha=-3)
+
+
 @pytest.mark.parametrize(
     ("mode", "expected_binary_count"),
     [("reduced", 1), ("full", 3)],
@@ -295,6 +304,56 @@ def test_elementwise_constant_affine_encoding_matches_pytorch() -> None:
     np.testing.assert_allclose(encoding.outputs[0].value, expected.numpy())
     np.testing.assert_allclose(output_bounds.lower, expected_lower)
     np.testing.assert_allclose(output_bounds.upper, expected_upper)
+    assert encoding.stats.binary_variables == 0
+
+
+def test_scaled_tensor_add_sub_encoding_matches_pytorch() -> None:
+    model = ScaledTensorAddSub().eval()
+    x_bounds = Bounds(
+        lower=np.array([-1.0, 0.0]),
+        upper=np.array([2.0, 4.0]),
+    )
+    y_bounds = Bounds(
+        lower=np.array([-2.0, 1.0]),
+        upper=np.array([3.0, 2.0]),
+    )
+    encoding = form_milp(model, {"x": x_bounds, "y": y_bounds})
+    x = np.array([0.5, 1.5])
+    y = np.array([-1.0, 1.25])
+    problem = cp.Problem(
+        cp.Minimize(0),
+        [
+            *encoding.constraints,
+            encoding.inputs["x"] == x,
+            encoding.inputs["y"] == y,
+        ],
+    )
+    problem.solve(solver=cp.SCIPY)
+
+    with torch.no_grad():
+        expected = model(torch.from_numpy(x), torch.from_numpy(y))
+
+    add_bounds = encoding.values[encoding.graph.outputs[0]].bounds
+    sub_bounds = encoding.values[encoding.graph.outputs[1]].bounds
+    assert problem.status == cp.OPTIMAL
+    np.testing.assert_allclose(encoding.outputs[0].value, expected[0].numpy())
+    np.testing.assert_allclose(encoding.outputs[1].value, expected[1].numpy())
+    np.testing.assert_allclose(
+        add_bounds.lower,
+        x_bounds.lower - 2 * y_bounds.upper,
+    )
+    np.testing.assert_allclose(
+        add_bounds.upper,
+        x_bounds.upper - 2 * y_bounds.lower,
+    )
+    np.testing.assert_allclose(
+        sub_bounds.lower,
+        x_bounds.lower + 3 * y_bounds.lower,
+    )
+    np.testing.assert_allclose(
+        sub_bounds.upper,
+        x_bounds.upper + 3 * y_bounds.upper,
+    )
     assert encoding.stats.binary_variables == 0
 
 

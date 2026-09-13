@@ -708,7 +708,12 @@ def _branch_constraint(
     left = variables[node.inputs[0]]
     right = variables[node.inputs[1]]
     output = variables[node.outputs[0]]
-    operation = left + right if node.op_type == "Add" else left - right
+    alpha = node.attrs["alpha"]
+    operation = (
+        left + alpha * right
+        if node.op_type == "Add"
+        else left - alpha * right
+    )
     return output == operation
 
 

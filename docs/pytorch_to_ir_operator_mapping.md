@@ -61,10 +61,10 @@ recorded by FX.
 | PyTorch spelling | `node.op` | `node.target` | `IRNode.op_type` |
 |---|---|---|---|
 | `x + y` | `call_function` | `operator.add` | `Add` |
-| `torch.add(x, y)` | `call_function` | `torch.add` | `Add` |
+| `torch.add(x, y, alpha=...)` | `call_function` | `torch.add` | `Add` |
 | `x - y` | `call_function` | `operator.sub` | `Sub` |
-| `torch.sub(x, y)` | `call_function` | `torch.sub` | `Sub` |
-| `torch.subtract(x, y)` | `call_function` | `torch.subtract` | `Sub` |
+| `torch.sub(x, y, alpha=...)` | `call_function` | `torch.sub` | `Sub` |
+| `torch.subtract(x, y, alpha=...)` | `call_function` | `torch.subtract` | `Sub` |
 | `x + c`, `c + x`, `x - c`, `c - x` | `call_function` | `operator.add` or `operator.sub` | `ElementwiseAffine` |
 | `x * c`, `c * x` | `call_function` | `operator.mul` | `ElementwiseAffine` |
 | `x / c` | `call_function` | `operator.truediv` | `ElementwiseAffine` |
@@ -96,9 +96,9 @@ first tensor argument.
 
 | PyTorch spelling | `node.op` | `node.target` | `IRNode.op_type` |
 |---|---|---|---|
-| `x.add(y)` | `call_method` | `"add"` | `Add` |
-| `x.sub(y)` | `call_method` | `"sub"` | `Sub` |
-| `x.subtract(y)` | `call_method` | `"subtract"` | `Sub` |
+| `x.add(y, alpha=...)` | `call_method` | `"add"` | `Add` |
+| `x.sub(y, alpha=...)` | `call_method` | `"sub"` | `Sub` |
+| `x.subtract(y, alpha=...)` | `call_method` | `"subtract"` | `Sub` |
 | `x.add(c)`, `x.sub(c)` | `call_method` | `"add"` or `"sub"` | `ElementwiseAffine` |
 | `x.mul(c)`, `x.multiply(c)` | `call_method` | `"mul"` or `"multiply"` | `ElementwiseAffine` |
 | `x.div(c)`, `x.divide(c)`, `x.true_divide(c)` | `call_method` | Corresponding method name | `ElementwiseAffine` |
@@ -170,7 +170,8 @@ every parameterization of that operation is supported.
   through FX `get_attr`; broadcasting may not change the graph tensor shape.
   Tensor-tensor Mul/Div, constant-over-tensor division, zero denominators,
   division rounding modes, and `out` arguments are unsupported. Add/Sub with
-  a constant accepts a finite static `alpha`.
+  either two graph tensors or one graph tensor and one constant accepts a
+  finite static `alpha`.
 - `F.linear()` and `F.conv2d()` are not currently mapped; use `nn.Linear` and
   `nn.Conv2d`.
 - `F.batch_norm()` is not currently mapped; use `nn.BatchNorm1d` or

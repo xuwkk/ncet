@@ -513,24 +513,19 @@ def _spatial_pair(value: Any) -> tuple[int, int]:
     return values[0], values[1]
 
 
-def _unit_alpha_attrs(node: fx.Node, op_type: str) -> dict[str, int]:
-    """Accept the unit-scaled Add/Sub semantics represented by the current IR.
-
-    PyTorch Add/Sub can scale the second operand through ``alpha``. Canonical
-    Add and Sub currently mean only ``x + y`` and ``x - y``, so other values
-    are rejected explicitly.
-    """
+def _add_sub_tensors(node: fx.Node, op_type: str) -> dict[str, Real]:
+    """Return the fixed scale applied to the second runtime tensor."""
     if node.kwargs.get("out") is not None:
         raise UnsupportedOperatorError(
             f"unsupported {op_type} out argument at node '{node.name}'"
         )
     alpha = node.kwargs.get("alpha", 1)
-    if not isinstance(alpha, Real) or alpha != 1:
+    if not isinstance(alpha, Real) or not np.isfinite(alpha):
         raise UnsupportedOperatorError(
             f"unsupported {op_type} alpha at node '{node.name}': "
-            f"expected 1, got {alpha}"
+            f"expected a finite number, got {alpha!r}"
         )
-    return {"alpha": 1}
+    return {"alpha": alpha}
 
 
 def _add_sub_operation(
@@ -542,7 +537,7 @@ def _add_sub_operation(
     """Keep tensor branches as Add/Sub and normalize constant cases."""
     if len(_input_names(node)) == 2:
         # Both are run time tensor inputs
-        return op_type, _unit_alpha_attrs(node, op_type)
+        return op_type, _add_sub_tensors(node, op_type)
     # One is a run time tensor input, the other is a fixed constant
     return "ElementwiseAffine", _elementwise_affine_attrs(
         graph_module,

@@ -261,21 +261,28 @@ $$
 L_X\leq X\leq U_X, \qquad L_Z\leq Z\leq U_Z,
 $$
 
-Add is increasing in both inputs:
+Write both scaled Add and Sub as
 
 $$
-L_Y=L_X+L_Z, \qquad U_Y=U_X+U_Z.
+Y=X+\beta Z,
 $$
 
-Sub is increasing in its first input and decreasing in its second input:
+where $\beta=\alpha$ for `Add` and $\beta=-\alpha$ for `Sub`. Define
+$\beta^+=\max(\beta,0)$ and $\beta^-=\min(\beta,0)$. Then
 
 $$
-L_Y=L_X-U_Z, \qquad U_Y=U_X-L_Z.
+L_Y=L_X+\beta^+L_Z+\beta^-U_Z,
 $$
 
-These ranges are exact when $X$ and $Z$ independently span their input boxes.
-If they are correlated graph branches, as in a residual connection, the
-formulas remain sound but can be conservative.
+$$
+U_Y=U_X+\beta^+U_Z+\beta^-L_Z.
+$$
+
+For the default $\alpha=1$, these reduce to the usual
+$L_X+L_Z, U_X+U_Z$ rule for Add and $L_X-U_Z, U_X-L_Z$ rule for Sub. The
+ranges are exact when $X$ and $Z$ independently span their input boxes. If
+they are correlated graph branches, as in a residual connection, the formulas
+remain sound but can be conservative.
 
 ## 4. Structural operations
 

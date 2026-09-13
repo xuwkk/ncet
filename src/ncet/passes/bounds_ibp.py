@@ -155,16 +155,26 @@ def _propagate_node(
             upper=np.maximum(inputs[0].upper, 0),
         )
 
-    if node.op_type == "Add":
-        return Bounds(
-            lower=inputs[0].lower + inputs[1].lower,
-            upper=inputs[0].upper + inputs[1].upper,
+    if node.op_type in {"Add", "Sub"}:
+        # PyTorch applies alpha to the second operand: x +/- alpha * y.
+        coefficient = (
+            node.attrs["alpha"]
+            if node.op_type == "Add"
+            else -node.attrs["alpha"]
         )
-
-    if node.op_type == "Sub":
+        positive = max(coefficient, 0)
+        negative = min(coefficient, 0)
         return Bounds(
-            lower=inputs[0].lower - inputs[1].upper,
-            upper=inputs[0].upper - inputs[1].lower,
+            lower=(
+                inputs[0].lower
+                + positive * inputs[1].lower
+                + negative * inputs[1].upper
+            ),
+            upper=(
+                inputs[0].upper
+                + positive * inputs[1].upper
+                + negative * inputs[1].lower
+            ),
         )
 
     if node.op_type == "Concat":

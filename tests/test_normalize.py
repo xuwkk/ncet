@@ -381,10 +381,13 @@ def test_normalize_equivalent_operator_spellings(model: nn.Module) -> None:
     assert add.attrs == {"alpha": 1}
 
 
-def test_normalize_rejects_unsupported_add_alpha() -> None:
+def test_normalize_scaled_add() -> None:
     inputs = (torch.zeros(1, 4), torch.ones(1, 4))
-    with pytest.raises(UnsupportedOperatorError, match="Add alpha"):
-        _normalize(ScaledAdd(), *inputs)
+    graph = _normalize(ScaledAdd(), *inputs)
+
+    add = next(node for node in graph.nodes if node.op_type == "Add")
+    assert add.inputs == ("x", "y")
+    assert add.attrs == {"alpha": 2}
 
 
 def test_normalize_rejects_non_affine_or_undefined_arithmetic() -> None:
