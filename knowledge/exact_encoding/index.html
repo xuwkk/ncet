@@ -760,6 +760,28 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#batchnorm" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        BatchNorm
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#elementwiseaffine" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        ElementwiseAffine
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#averagepool2d" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -771,10 +793,43 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#adaptiveavgpool2d" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        AdaptiveAvgPool2d
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#add-and-sub" class="md-nav__link">
     <span class="md-ellipsis">
       
         Add and Sub
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#reducemean" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        ReduceMean
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#identity-and-evaluation-mode-dropout" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Identity and evaluation-mode Dropout
       
     </span>
   </a>
@@ -809,10 +864,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#3-exact-relu-encoding" class="md-nav__link">
+  <a href="#3-exact-relu-family-encoding" class="md-nav__link">
     <span class="md-ellipsis">
       
-        3. Exact ReLU encoding
+        3. Exact ReLU-family encoding
       
     </span>
   </a>
@@ -887,6 +942,90 @@
     
   
     Conv2d
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../batchnorm_exact_encoding/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    BatchNorm
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../adaptive_avgpool2d_exact_encoding/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    AdaptiveAvgPool2d
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../reduce_mean_exact_encoding/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    ReduceMean
   
 
     
@@ -1062,6 +1201,28 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#batchnorm" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        BatchNorm
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#elementwiseaffine" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        ElementwiseAffine
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#averagepool2d" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1073,10 +1234,43 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#adaptiveavgpool2d" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        AdaptiveAvgPool2d
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#add-and-sub" class="md-nav__link">
     <span class="md-ellipsis">
       
         Add and Sub
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#reducemean" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        ReduceMean
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#identity-and-evaluation-mode-dropout" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Identity and evaluation-mode Dropout
       
     </span>
   </a>
@@ -1111,10 +1305,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#3-exact-relu-encoding" class="md-nav__link">
+  <a href="#3-exact-relu-family-encoding" class="md-nav__link">
     <span class="md-ellipsis">
       
-        3. Exact ReLU encoding
+        3. Exact ReLU-family encoding
       
     </span>
   </a>
@@ -1228,6 +1422,23 @@ kernel-to-input connection. Using C-order vectorization:</p>
 <p><span class="arithmatex">\(\bar b\)</span> repeats each output-channel bias across its spatial positions.
 Kernel positions lying in zero padding are omitted from the sparse matrix.</p>
 <p>More details can be found in <a href="../conv2d_exact_encoding/">conv2d_exact_encoding.md</a>.</p>
+<h3 id="batchnorm">BatchNorm<a class="headerlink" href="#batchnorm" title="Permanent link">&para;</a></h3>
+<p>Evaluation-mode BatchNorm is normalized into fixed per-channel scale and shift
+vectors <span class="arithmatex">\(a\)</span> and <span class="arithmatex">\(d\)</span>. NCET broadcasts them to the input shape and enforces</p>
+<div class="arithmatex">\[
+Y=a\odot X+d.
+\]</div>
+<p>This is an exact affine equality and introduces no binary variables. See
+<a href="../batchnorm_exact_encoding/">batchnorm_exact_encoding.md</a> for the derivation
+and supported shapes.</p>
+<h3 id="elementwiseaffine">ElementwiseAffine<a class="headerlink" href="#elementwiseaffine" title="Permanent link">&para;</a></h3>
+<p>Arithmetic between one graph tensor and one fixed constant is normalized to</p>
+<div class="arithmatex">\[
+Y=A\odot X+D.
+\]</div>
+<p>The fixed scale <span class="arithmatex">\(A\)</span> and shift <span class="arithmatex">\(D\)</span> are stored in <code>graph.constants</code> and
+broadcast to the tensor shape. This exact affine equality covers supported
+fixed-constant Add/Sub/Mul/Div forms and introduces no binary variables.</p>
 <h3 id="averagepool2d">AveragePool2d<a class="headerlink" href="#averagepool2d" title="Permanent link">&para;</a></h3>
 <p>AveragePool2d is a fixed linear map. NCET builds a sparse averaging matrix
 <span class="arithmatex">\(A_{\mathrm{avg}}\)</span> and enforces:</p>
@@ -1237,16 +1448,45 @@ Kernel positions lying in zero padding are omitted from the sparse matrix.</p>
 \]</div>
 <p>Its coefficients reflect the kernel, stride, padding, and
 <code>count_include_pad</code> semantics of the canonical operator.</p>
-<h3 id="add-and-sub">Add and Sub<a class="headerlink" href="#add-and-sub" title="Permanent link">&para;</a></h3>
-<p>For two input tensors:</p>
+<h3 id="adaptiveavgpool2d">AdaptiveAvgPool2d<a class="headerlink" href="#adaptiveavgpool2d" title="Permanent link">&para;</a></h3>
+<p>AdaptiveAvgPool2d is also a fixed linear map once its input and output shapes
+are known. NCET derives each adaptive window, builds a sparse matrix
+<span class="arithmatex">\(A_{\mathrm{adaptive}}\)</span>, and enforces</p>
 <div class="arithmatex">\[
-Y=X_1+X_2
+\operatorname{vec}_C(Y)
+=A_{\mathrm{adaptive}}\operatorname{vec}_C(X).
+\]</div>
+<p>Non-divisible input sizes may produce overlapping windows; the matrix records
+each connection exactly. The operation introduces no binary variables.</p>
+<h3 id="add-and-sub">Add and Sub<a class="headerlink" href="#add-and-sub" title="Permanent link">&para;</a></h3>
+<p>For two input tensors and a fixed finite scalar <span class="arithmatex">\(\alpha\)</span>, NCET preserves
+PyTorch's scaling of the second operand:</p>
+<div class="arithmatex">\[
+Y=X_1+\alpha X_2
 \]</div>
 <p>or</p>
 <div class="arithmatex">\[
-Y=X_1-X_2.
+Y=X_1-\alpha X_2.
 \]</div>
-<p>These equalities directly preserve residual and other branch connections.</p>
+<p>The default is <span class="arithmatex">\(\alpha=1\)</span>. These linear equalities directly preserve residual
+and other branch connections and introduce no binary variables.</p>
+<h3 id="reducemean">ReduceMean<a class="headerlink" href="#reducemean" title="Permanent link">&para;</a></h3>
+<p>For fixed sample axes <span class="arithmatex">\(\mathcal D\)</span>, let <span class="arithmatex">\(K\)</span> be the product of their sizes.
+NCET enforces</p>
+<div class="arithmatex">\[
+Y=\frac{1}{K}\sum_{d\in\mathcal D}X.
+\]</div>
+<p>The implementation performs the reductions from the highest axis to the
+lowest so axis numbers remain valid when <code>keepdim=False</code>. This is one exact
+linear equality and introduces no binary variables. See
+<a href="../reduce_mean_exact_encoding/">reduce_mean_exact_encoding.md</a> for details.</p>
+<h3 id="identity-and-evaluation-mode-dropout">Identity and evaluation-mode Dropout<a class="headerlink" href="#identity-and-evaluation-mode-dropout" title="Permanent link">&para;</a></h3>
+<p>Identity is represented by</p>
+<div class="arithmatex">\[
+Y=X.
+\]</div>
+<p>Evaluation-mode Dropout is normalized to the same canonical operation because
+its random mask is disabled. This equality introduces no binary variables.</p>
 <h3 id="concat">Concat<a class="headerlink" href="#concat" title="Permanent link">&para;</a></h3>
 <p>For concatenation along dimension <span class="arithmatex">\(d\)</span>, NCET maps each input to its contiguous
 slice in the output:</p>
@@ -1255,7 +1495,8 @@ Y[s_k]=X_k,
 \]</div>
 <p>where <span class="arithmatex">\(s_k\)</span> is the output slice assigned to input <span class="arithmatex">\(X_k\)</span> along dimension <span class="arithmatex">\(d\)</span>.</p>
 <h3 id="shape-axis-and-index-operations">Shape, axis, and index operations<a class="headerlink" href="#shape-axis-and-index-operations" title="Permanent link">&para;</a></h3>
-<p>Flatten and Reshape preserve C-order element positions:</p>
+<p>Flatten and Reshape preserve C-order element positions. View, Squeeze, and
+Unsqueeze are normalized to the same Reshape semantics:</p>
 <div class="arithmatex">\[
 \operatorname{vec}_C(Y)=\operatorname{vec}_C(X).
 \]</div>
@@ -1270,7 +1511,7 @@ Y=X[\mathrm{index}].
 <p>If a network contains only these operators, its encoding consists entirely of
 continuous variables and linear constraints. Combined with a linear
 objective, it is an LP.</p>
-<h2 id="3-exact-relu-encoding">3. Exact ReLU encoding<a class="headerlink" href="#3-exact-relu-encoding" title="Permanent link">&para;</a></h2>
+<h2 id="3-exact-relu-family-encoding">3. Exact ReLU-family encoding<a class="headerlink" href="#3-exact-relu-family-encoding" title="Permanent link">&para;</a></h2>
 <p>For one ReLU element</p>
 <div class="arithmatex">\[
 y=\max(0,x), \qquad L\leq x\leq U,
@@ -1298,10 +1539,34 @@ y\leq x-L(1-z),
 y\leq Uz.
 \]</div>
 <p>These constraints describe exactly the graph of ReLU over <span class="arithmatex">\([L,U]\)</span>.</p>
+<p>For LeakyReLU with <span class="arithmatex">\(0&lt;\alpha&lt;1\)</span>,</p>
+<div class="arithmatex">\[
+y=\begin{cases}
+x, &amp; x\geq0,\\
+\alpha x, &amp; x&lt;0.
+\end{cases}
+\]</div>
+<p>The stable equalities are <span class="arithmatex">\(y=x\)</span> when <span class="arithmatex">\(L\geq0\)</span> and <span class="arithmatex">\(y=\alpha x\)</span> when
+<span class="arithmatex">\(U\leq0\)</span>. For <span class="arithmatex">\(L&lt;0&lt;U\)</span>, NCET uses</p>
+<div class="arithmatex">\[
+y\geq x,
+\]</div>
+<div class="arithmatex">\[
+y\geq\alpha x,
+\]</div>
+<div class="arithmatex">\[
+y\leq x-(1-\alpha)L(1-z),
+\]</div>
+<div class="arithmatex">\[
+y\leq\alpha x+(1-\alpha)Uz,
+\]</div>
+<div class="arithmatex">\[
+z\in\{0,1\}.
+\]</div>
 <p>In <code>relu_binary_mode="reduced"</code>, stable elements use the direct equalities and
-only unstable elements receive binaries. In <code>"full"</code> mode, every ReLU element
-uses the binary formulation. Both modes are exact, but reduced mode normally
-produces a smaller MILP and is considered as default.</p>
+only unstable elements receive binaries. In <code>"full"</code> mode, every ReLU or
+LeakyReLU element uses its binary formulation. Both modes are exact, but
+reduced mode normally produces a smaller MILP and is the default. You can verify the equivalance by setting <span class="arithmatex">\(z=1\)</span> and <span class="arithmatex">\(z=0\)</span> respectively.</p>
 <h2 id="4-exact-maxpool2d-encoding">4. Exact MaxPool2d encoding<a class="headerlink" href="#4-exact-maxpool2d-encoding" title="Permanent link">&para;</a></h2>
 <p>For one output position <span class="arithmatex">\(p\)</span>, let <span class="arithmatex">\(\mathcal V(p)\)</span> contain its valid input
 candidates. MaxPool2d requires:</p>
@@ -1361,6 +1626,9 @@ relaxation and can make the optimization problem substantially slower.</p>
 <li><a href="../">Knowledge notes index</a></li>
 <li><a href="../bound_propagation/">Interval Bound Propagation</a></li>
 <li><a href="../conv2d_exact_encoding/">Exact Conv2d encoding</a></li>
+<li><a href="../batchnorm_exact_encoding/">Exact BatchNorm encoding</a></li>
+<li><a href="../adaptive_avgpool2d_exact_encoding/">Exact AdaptiveAvgPool2d encoding</a></li>
+<li><a href="../reduce_mean_exact_encoding/">Exact ReduceMean encoding</a></li>
 <li><a href="../avgpool2d_exact_encoding/">Exact AvgPool2d encoding</a></li>
 <li><a href="../maxpool2d_exact_encoding/">Exact MaxPool2d encoding</a></li>
 </ul>

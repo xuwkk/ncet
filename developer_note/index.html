@@ -707,6 +707,90 @@
   
   
     <li class="md-nav__item">
+      <a href="../knowledge/batchnorm_exact_encoding/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    BatchNorm
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../knowledge/adaptive_avgpool2d_exact_encoding/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    AdaptiveAvgPool2d
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../knowledge/reduce_mean_exact_encoding/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    ReduceMean
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../knowledge/avgpool2d_exact_encoding/" class="md-nav__link">
         
   
@@ -1043,6 +1127,23 @@
       
     </span>
   </a>
+  
+    <nav class="md-nav" aria-label="3.6 Constants and shared module state">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#361-constant-arithmetic-in-fx-and-graphir" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3.6.1 Constant arithmetic in FX and GraphIR
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
   
 </li>
         
@@ -1588,6 +1689,23 @@
     </span>
   </a>
   
+    <nav class="md-nav" aria-label="3.6 Constants and shared module state">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#361-constant-arithmetic-in-fx-and-graphir" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3.6.1 Constant arithmetic in FX and GraphIR
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
 </li>
         
           <li class="md-nav__item">
@@ -1926,7 +2044,7 @@ exactness is defined in <a href="../exactness_contract/"><code>exactness_contrac
 </span><span id="__span-0-13"><a id="__codelineno-0-13" name="__codelineno-0-13" href="#__codelineno-0-13"></a>GraphIR
 </span><span id="__span-0-14"><a id="__codelineno-0-14" name="__codelineno-0-14" href="#__codelineno-0-14"></a>    ├── IRNode: canonical operations
 </span><span id="__span-0-15"><a id="__codelineno-0-15" name="__codelineno-0-15" href="#__codelineno-0-15"></a>    ├── TensorSpec: static tensor metadata of the model
-</span><span id="__span-0-16"><a id="__codelineno-0-16" name="__codelineno-0-16" href="#__codelineno-0-16"></a>    └── constants: fixed parameters and buffers
+</span><span id="__span-0-16"><a id="__codelineno-0-16" name="__codelineno-0-16" href="#__codelineno-0-16"></a>    └── constants: fixed and derived operator arrays
 </span><span id="__span-0-17"><a id="__codelineno-0-17" name="__codelineno-0-17" href="#__codelineno-0-17"></a>    │ propagate_bounds()
 </span><span id="__span-0-18"><a id="__codelineno-0-18" name="__codelineno-0-18" href="#__codelineno-0-18"></a>    ▼
 </span><span id="__span-0-19"><a id="__codelineno-0-19" name="__codelineno-0-19" href="#__codelineno-0-19"></a>dict[tensor_name, Bounds]
@@ -2211,8 +2329,9 @@ names.</p>
 <blockquote>
 <p>This table describes the general FX node categories, not NCET's supported
 operator set. In particular, the current normalizer does not canonicalize an
-arbitrary standalone <code>get_attr</code> node. Supported <code>call_module</code> state such as
-Linear and Conv2d weights is lifted directly into <code>GraphIR.constants</code>.</p>
+arbitrary standalone <code>get_attr</code> node. Supported <code>call_module</code> state for
+Linear, Conv2d, and BatchNorm, as well as fixed constants used by
+ElementwiseAffine, are lifted directly into <code>GraphIR.constants</code>.</p>
 <p>The raw <code>nn_module_stack</code> can contain several nested modules. NCET's <code>FXNodeInfo.module_path</code> keeps only its innermost module path. Provenance is optional, so <code>module_path</code> can be <code>None</code>.</p>
 </blockquote>
 <p>For the complete list of PyTorch/FX spellings that NCET recognizes, see
@@ -2327,7 +2446,7 @@ temporary dimension.</p>
 </tr>
 <tr>
 <td><code>constants</code></td>
-<td>Read-only weights, biases, and buffers</td>
+<td>Read-only fixed and derived operator arrays</td>
 </tr>
 </tbody>
 </table>
@@ -2450,6 +2569,18 @@ such as <code>linear</code>, <code>linear_1</code>, and <code>linear_2</code>.</
 <td><code>weight</code>, <code>bias</code>, <code>stride</code>, <code>padding</code>, <code>dilation</code>, <code>groups</code></td>
 </tr>
 <tr>
+<td><code>BatchNorm</code></td>
+<td><code>scale</code>, <code>shift</code>: names in <code>graph.constants</code></td>
+</tr>
+<tr>
+<td><code>ElementwiseAffine</code></td>
+<td><code>scale</code>, <code>shift</code>: names in <code>graph.constants</code></td>
+</tr>
+<tr>
+<td><code>AdaptiveAvgPool2d</code></td>
+<td>resolved per-sample <code>output_size</code></td>
+</tr>
+<tr>
 <td><code>AvgPool2d</code></td>
 <td><code>kernel_size</code>, <code>stride</code>, <code>padding</code>, <code>ceil_mode</code>, <code>count_include_pad</code>, <code>divisor_override</code></td>
 </tr>
@@ -2458,16 +2589,28 @@ such as <code>linear</code>, <code>linear_1</code>, and <code>linear_2</code>.</
 <td><code>kernel_size</code>, <code>stride</code>, <code>padding</code>, <code>dilation</code>, <code>ceil_mode</code>, <code>return_indices</code></td>
 </tr>
 <tr>
+<td><code>Identity</code></td>
+<td><code>{}</code>; also represents evaluation-mode Dropout</td>
+</tr>
+<tr>
 <td><code>ReLU</code></td>
 <td><code>{}</code></td>
 </tr>
 <tr>
+<td><code>LeakyReLU</code></td>
+<td>finite scalar <code>negative_slope</code> in <code>(0,1)</code></td>
+</tr>
+<tr>
 <td><code>Add</code>, <code>Sub</code></td>
-<td><code>alpha=1</code></td>
+<td>finite scalar <code>alpha</code> applied to the second tensor</td>
 </tr>
 <tr>
 <td><code>Concat</code></td>
 <td><code>dim</code></td>
+</tr>
+<tr>
+<td><code>ReduceMean</code></td>
+<td><code>dims</code>, <code>keepdim</code></td>
 </tr>
 <tr>
 <td><code>Flatten</code></td>
@@ -2475,7 +2618,7 @@ such as <code>linear</code>, <code>linear_1</code>, and <code>linear_2</code>.</
 </tr>
 <tr>
 <td><code>Reshape</code></td>
-<td>resolved output <code>shape</code></td>
+<td>resolved output <code>shape</code>; also represents View and batch-preserving Squeeze/Unsqueeze</td>
 </tr>
 <tr>
 <td><code>Permute</code></td>
@@ -2509,8 +2652,9 @@ batch axis is removed. Normalization rejects operations that modify batch axis
 </span><span id="__span-10-3"><a id="__codelineno-10-3" name="__codelineno-10-3" href="#__codelineno-10-3"></a>(&quot;newaxis&quot;,)
 </span></code></pre></div>
 <h3 id="36-constants-and-shared-module-state">3.6 Constants and shared module state<a class="headerlink" href="#36-constants-and-shared-module-state" title="Permanent link">&para;</a></h3>
-<p>Linear and Conv2d nodes do not copy parameter arrays into <code>IRNode.attrs</code>.
-Instead, attrs contain names that refer into the graph-level constant table:</p>
+<p>Linear, Conv2d, BatchNorm, and ElementwiseAffine nodes do not copy fixed
+arrays into <code>IRNode.attrs</code>. Instead, attrs contain names that refer into the
+graph-level constant table:</p>
 <div class="language-text highlight"><pre><span></span><code><span id="__span-11-1"><a id="__codelineno-11-1" name="__codelineno-11-1" href="#__codelineno-11-1"></a>IRNode.attrs[&quot;weight&quot;]
 </span><span id="__span-11-2"><a id="__codelineno-11-2" name="__codelineno-11-2" href="#__codelineno-11-2"></a>          │
 </span><span id="__span-11-3"><a id="__codelineno-11-3" name="__codelineno-11-3" href="#__codelineno-11-3"></a>          ▼
@@ -2522,26 +2666,130 @@ Instead, attrs contain names that refer into the graph-level constant table:</p>
 </span><span id="__span-11-9"><a id="__codelineno-11-9" name="__codelineno-11-9" href="#__codelineno-11-9"></a>          ▼
 </span><span id="__span-11-10"><a id="__codelineno-11-10" name="__codelineno-11-10" href="#__codelineno-11-10"></a>read-only NumPy array
 </span></code></pre></div>
-<p>Normalization copies direct parameters and buffers from the targeted PyTorch
-module into read-only NumPy arrays. When a shared module is called more than
-once, several IR nodes refer to the same constant names, so its parameters are
-stored once. If a supported Linear or Conv2d module has no bias, normalization
-creates one fixed zero-bias array so later passes can use a uniform affine
-formulation.</p>
+<p>Normalization copies direct parameters and buffers from a targeted PyTorch
+module, or fixed weight/bias operands from a supported functional call, into
+read-only NumPy arrays. BatchNorm running statistics and affine
+parameters are first combined into per-channel <code>scale</code> and <code>shift</code> arrays.
+ElementwiseAffine similarly converts a supported tensor-constant expression
+into fixed <code>scale</code> and <code>shift</code> arrays for <span class="arithmatex">\(Y=\mathrm{scale}\odot X+\mathrm{shift}\)</span>.
+When a shared module is called more than once, several IR nodes refer to the
+same constant names, so its parameters are stored once. If a supported Linear
+or Conv2d module has no bias, normalization creates one fixed zero-bias array
+so later passes can use a uniform affine formulation.</p>
 <p>Constants are not included in <code>graph.tensors</code>, do not receive propagated
 <code>Bounds</code>, and do not create CVXPY decision variables.</p>
+<h4 id="361-constant-arithmetic-in-fx-and-graphir">3.6.1 Constant arithmetic in FX and GraphIR<a class="headerlink" href="#361-constant-arithmetic-in-fx-and-graphir" title="Permanent link">&para;</a></h4>
+<p>For arithmetic normalization, NCET first distinguishes fixed values from
+runtime tensors:</p>
+<table>
+<thead>
+<tr>
+<th>Value in the PyTorch expression</th>
+<th>FX representation</th>
+<th>GraphIR representation</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Registered <code>nn.Parameter</code> or buffer</td>
+<td><code>get_attr</code> node referenced by an arithmetic node</td>
+<td>Derived constant; no standalone <code>IRNode</code> and not listed in <code>IRNode.inputs</code></td>
+</tr>
+<tr>
+<td>Python scalar literal</td>
+<td>Literal in <code>node.args</code> or <code>node.kwargs</code></td>
+<td>Derived constant; not listed in <code>IRNode.inputs</code></td>
+</tr>
+<tr>
+<td>Runtime tensor</td>
+<td><code>placeholder</code> or tensor-producing FX node</td>
+<td>Producer tensor name listed in <code>IRNode.inputs</code></td>
+</tr>
+</tbody>
+</table>
+<p>Thus, <code>IRNode.inputs</code> contains only variable tensor dependencies; fixed
+coefficients are retrieved during normalization and stored in
+<code>GraphIR.constants</code>.</p>
+<p>For example, let <span class="arithmatex">\(a\)</span> and <span class="arithmatex">\(c\)</span> be registered fixed values and let <span class="arithmatex">\(x\)</span> and <span class="arithmatex">\(y\)</span>
+be runtime tensors:</p>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-12-1"><a id="__codelineno-12-1" name="__codelineno-12-1" href="#__codelineno-12-1"></a><span class="k">def</span><span class="w"> </span><span class="nf">forward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">):</span>
+</span><span id="__span-12-2"><a id="__codelineno-12-2" name="__codelineno-12-2" href="#__codelineno-12-2"></a>    <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">a</span> <span class="o">*</span> <span class="n">x</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">c</span> <span class="o">+</span> <span class="n">y</span>
+</span></code></pre></div>
+<p>Python evaluates this expression from left to right, so FX records three
+operation nodes:</p>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-13-1"><a id="__codelineno-13-1" name="__codelineno-13-1" href="#__codelineno-13-1"></a>mul   = operator.mul(a, x)
+</span><span id="__span-13-2"><a id="__codelineno-13-2" name="__codelineno-13-2" href="#__codelineno-13-2"></a>add   = operator.add(mul, c)
+</span><span id="__span-13-3"><a id="__codelineno-13-3" name="__codelineno-13-3" href="#__codelineno-13-3"></a>add_1 = operator.add(add, y)
+</span></code></pre></div>
+<p>NCET preserves the three arithmetic operations rather than algebraically
+fusing them:</p>
+<table>
+<thead>
+<tr>
+<th>Expression</th>
+<th>Relevant FX nodes</th>
+<th>GraphIR operator</th>
+<th><code>IRNode.inputs</code></th>
+<th>Fixed data</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><span class="arithmatex">\(t_1=a\odot x\)</span></td>
+<td><code>get_attr("a")</code>, then <code>mul</code></td>
+<td><code>ElementwiseAffine</code></td>
+<td><code>("x",)</code></td>
+<td><code>scale=a</code>, <code>shift=0</code></td>
+</tr>
+<tr>
+<td><span class="arithmatex">\(t_2=t_1+c\)</span></td>
+<td><code>get_attr("c")</code>, then <code>add</code></td>
+<td><code>ElementwiseAffine</code></td>
+<td><code>("mul",)</code></td>
+<td><code>scale=1</code>, <code>shift=c</code></td>
+</tr>
+<tr>
+<td><span class="arithmatex">\(z=t_2+y\)</span></td>
+<td><code>add_1</code></td>
+<td><code>Add</code></td>
+<td><code>("add", "y")</code></td>
+<td>None</td>
+</tr>
+</tbody>
+</table>
+<p>The first two operators each have one runtime tensor input because their other
+operand is fixed. The final operator has two runtime tensor inputs, so both
+producer tensor names are retained. The same rule applies to subtraction:
+tensor-constant subtraction becomes <code>ElementwiseAffine</code>, whereas tensor-tensor
+subtraction remains <code>Sub</code> with both tensors in <code>IRNode.inputs</code>. Tensor-tensor
+multiplication and division are currently unsupported because they are
+nonlinear rather than affine.</p>
+<p>An <code>nn.Parameter</code>, registered buffer, and scalar literal can therefore produce
+the same canonical <code>ElementwiseAffine</code> operator; only the FX retrieval route
+differs. Parameters are learned model state, registered buffers are fixed
+serializable/device-aware state, and scalar literals remain directly in the FX
+call arguments.</p>
 <h3 id="37-how-fx-edges-become-ir-tensor-inputs">3.7 How FX edges become IR tensor inputs<a class="headerlink" href="#37-how-fx-edges-become-ir-tensor-inputs" title="Permanent link">&para;</a></h3>
-<p>An FX node can reference producer nodes anywhere inside nested positional or keyword arguments. <code>fx.map_arg()</code> recursively finds all producer Node references within the current FX node’s nested args and kwargs. NCET converts these references into tensor names and stores them in <code>IRNode.inputs</code>, thereby preserving the graph’s actual connectivity.</p>
-<div class="language-python highlight"><pre><span></span><code><span id="__span-12-1"><a id="__codelineno-12-1" name="__codelineno-12-1" href="#__codelineno-12-1"></a><span class="n">names</span> <span class="o">=</span> <span class="p">[]</span>
-</span><span id="__span-12-2"><a id="__codelineno-12-2" name="__codelineno-12-2" href="#__codelineno-12-2"></a><span class="n">fx</span><span class="o">.</span><span class="n">map_arg</span><span class="p">(</span>
-</span><span id="__span-12-3"><a id="__codelineno-12-3" name="__codelineno-12-3" href="#__codelineno-12-3"></a>    <span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">args</span><span class="p">,</span> <span class="n">node</span><span class="o">.</span><span class="n">kwargs</span><span class="p">),</span>  <span class="c1"># Obtain producer nodes in nested args and kwargs</span>
-</span><span id="__span-12-4"><a id="__codelineno-12-4" name="__codelineno-12-4" href="#__codelineno-12-4"></a>    <span class="k">lambda</span> <span class="n">input_node</span><span class="p">:</span> <span class="n">names</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">input_node</span><span class="o">.</span><span class="n">name</span><span class="p">),</span>  <span class="c1"># Convert producer Node references into tensor names</span>
-</span><span id="__span-12-5"><a id="__codelineno-12-5" name="__codelineno-12-5" href="#__codelineno-12-5"></a><span class="p">)</span>
-</span><span id="__span-12-6"><a id="__codelineno-12-6" name="__codelineno-12-6" href="#__codelineno-12-6"></a><span class="n">input_names</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">names</span><span class="p">)</span>
+<p>An FX node can reference producer nodes anywhere inside nested positional or
+keyword arguments. <code>fx.map_arg()</code> recursively finds all Node references within
+the current FX node's nested args and kwargs. NCET converts runtime tensor
+producers into tensor names stored in <code>IRNode.inputs</code>, thereby preserving the
+graph's actual connectivity. Fixed <code>get_attr</code> nodes are instead lifted into
+<code>GraphIR.constants</code> and omitted from <code>IRNode.inputs</code>.</p>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-14-1"><a id="__codelineno-14-1" name="__codelineno-14-1" href="#__codelineno-14-1"></a><span class="n">names</span> <span class="o">=</span> <span class="p">[]</span>
+</span><span id="__span-14-2"><a id="__codelineno-14-2" name="__codelineno-14-2" href="#__codelineno-14-2"></a><span class="n">fx</span><span class="o">.</span><span class="n">map_arg</span><span class="p">(</span>
+</span><span id="__span-14-3"><a id="__codelineno-14-3" name="__codelineno-14-3" href="#__codelineno-14-3"></a>    <span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">args</span><span class="p">,</span> <span class="n">node</span><span class="o">.</span><span class="n">kwargs</span><span class="p">),</span>  <span class="c1"># Obtain producer nodes in nested args and kwargs</span>
+</span><span id="__span-14-4"><a id="__codelineno-14-4" name="__codelineno-14-4" href="#__codelineno-14-4"></a>    <span class="k">lambda</span> <span class="n">input_node</span><span class="p">:</span> <span class="p">(</span>
+</span><span id="__span-14-5"><a id="__codelineno-14-5" name="__codelineno-14-5" href="#__codelineno-14-5"></a>        <span class="n">names</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">input_node</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
+</span><span id="__span-14-6"><a id="__codelineno-14-6" name="__codelineno-14-6" href="#__codelineno-14-6"></a>        <span class="k">if</span> <span class="n">input_node</span><span class="o">.</span><span class="n">op</span> <span class="o">!=</span> <span class="s2">&quot;get_attr&quot;</span>
+</span><span id="__span-14-7"><a id="__codelineno-14-7" name="__codelineno-14-7" href="#__codelineno-14-7"></a>        <span class="k">else</span> <span class="kc">None</span>
+</span><span id="__span-14-8"><a id="__codelineno-14-8" name="__codelineno-14-8" href="#__codelineno-14-8"></a>    <span class="p">),</span>
+</span><span id="__span-14-9"><a id="__codelineno-14-9" name="__codelineno-14-9" href="#__codelineno-14-9"></a><span class="p">)</span>
+</span><span id="__span-14-10"><a id="__codelineno-14-10" name="__codelineno-14-10" href="#__codelineno-14-10"></a><span class="n">input_names</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">names</span><span class="p">)</span>
 </span></code></pre></div>
 <p>The resulting names become <code>IRNode.inputs</code>. For example:</p>
-<div class="language-text highlight"><pre><span></span><code><span id="__span-13-1"><a id="__codelineno-13-1" name="__codelineno-13-1" href="#__codelineno-13-1"></a>operator.add(relu_node, x_node)       → (&quot;relu&quot;, &quot;x&quot;)
-</span><span id="__span-13-2"><a id="__codelineno-13-2" name="__codelineno-13-2" href="#__codelineno-13-2"></a>torch.cat((left_node, right_node), 1) → (&quot;left&quot;, &quot;right&quot;)
+<div class="language-text highlight"><pre><span></span><code><span id="__span-15-1"><a id="__codelineno-15-1" name="__codelineno-15-1" href="#__codelineno-15-1"></a>operator.add(relu_node, x_node)       → (&quot;relu&quot;, &quot;x&quot;)
+</span><span id="__span-15-2"><a id="__codelineno-15-2" name="__codelineno-15-2" href="#__codelineno-15-2"></a>torch.cat((left_node, right_node), 1) → (&quot;left&quot;, &quot;right&quot;)
 </span></code></pre></div>
 <p>This recursive conversion preserves branches, fan-out, residual shortcuts, nested input containers, and repeated uses of the same tensor. Non-node arguments such as dimensions and flags are not tensor inputs and will not be returned by <code>fx.map_arg()</code>; normalization stores their canonical static meanings in <code>IRNode.attrs</code> when needed.</p>
 <h3 id="38-graph-validation-and-capability-checks">3.8 Graph validation and capability checks<a class="headerlink" href="#38-graph-validation-and-capability-checks" title="Permanent link">&para;</a></h3>
@@ -2553,7 +2801,8 @@ high-risk structural invariants:</p>
 <li>a tensor has at most one producer;</li>
 <li>every produced tensor has a <code>TensorSpec</code> with a static non-negative shape;</li>
 <li>graph input/output boundaries reference available tensors;</li>
-<li>Linear and Conv2d weight/bias references exist in <code>graph.constants</code>.</li>
+<li>Linear and Conv2d weight/bias references, and BatchNorm and
+  ElementwiseAffine scale/shift references, exist in <code>graph.constants</code>.</li>
 </ul>
 <p><code>analyze_capabilities(graph, supported_ops)</code> is a separate consumer-specific
 check. It counts canonical operators and returns the nodes that a particular
@@ -2562,28 +2811,28 @@ apply this check using their own supported-operator sets before processing the
 graph.</p>
 <h2 id="4-bounds-stage">4. Bounds stage<a class="headerlink" href="#4-bounds-stage" title="Permanent link">&para;</a></h2>
 <h3 id="41-bounds">4.1 <code>Bounds</code><a class="headerlink" href="#41-bounds" title="Permanent link">&para;</a></h3>
-<div class="language-python highlight"><pre><span></span><code><span id="__span-14-1"><a id="__codelineno-14-1" name="__codelineno-14-1" href="#__codelineno-14-1"></a><span class="nd">@dataclass</span><span class="p">(</span><span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-</span><span id="__span-14-2"><a id="__codelineno-14-2" name="__codelineno-14-2" href="#__codelineno-14-2"></a><span class="k">class</span><span class="w"> </span><span class="nc">Bounds</span><span class="p">:</span>
-</span><span id="__span-14-3"><a id="__codelineno-14-3" name="__codelineno-14-3" href="#__codelineno-14-3"></a>    <span class="n">lower</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span>
-</span><span id="__span-14-4"><a id="__codelineno-14-4" name="__codelineno-14-4" href="#__codelineno-14-4"></a>    <span class="n">upper</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-16-1"><a id="__codelineno-16-1" name="__codelineno-16-1" href="#__codelineno-16-1"></a><span class="nd">@dataclass</span><span class="p">(</span><span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+</span><span id="__span-16-2"><a id="__codelineno-16-2" name="__codelineno-16-2" href="#__codelineno-16-2"></a><span class="k">class</span><span class="w"> </span><span class="nc">Bounds</span><span class="p">:</span>
+</span><span id="__span-16-3"><a id="__codelineno-16-3" name="__codelineno-16-3" href="#__codelineno-16-3"></a>    <span class="n">lower</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span>
+</span><span id="__span-16-4"><a id="__codelineno-16-4" name="__codelineno-16-4" href="#__codelineno-16-4"></a>    <span class="n">upper</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span>
 </span></code></pre></div>
 <p>Both arrays must match the corresponding <code>TensorSpec.shape</code>, contain finite
 values, and satisfy <code>lower &lt;= upper</code> elementwise. They describe one sample and
 do not contain a batch dimension.</p>
 <h3 id="42-bounds-dictionary">4.2 Bounds dictionary<a class="headerlink" href="#42-bounds-dictionary" title="Permanent link">&para;</a></h3>
 <p>The low-level API returns:</p>
-<div class="language-python highlight"><pre><span></span><code><span id="__span-15-1"><a id="__codelineno-15-1" name="__codelineno-15-1" href="#__codelineno-15-1"></a><span class="n">bounds</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Bounds</span><span class="p">]</span>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-17-1"><a id="__codelineno-17-1" name="__codelineno-17-1" href="#__codelineno-17-1"></a><span class="n">bounds</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Bounds</span><span class="p">]</span>
 </span></code></pre></div>
 <p>Each key is a tensor name. Every graph tensor receives one entry:</p>
-<div class="language-python highlight"><pre><span></span><code><span id="__span-16-1"><a id="__codelineno-16-1" name="__codelineno-16-1" href="#__codelineno-16-1"></a><span class="n">bounds</span><span class="p">[</span><span class="s2">&quot;x&quot;</span><span class="p">]</span>
-</span><span id="__span-16-2"><a id="__codelineno-16-2" name="__codelineno-16-2" href="#__codelineno-16-2"></a><span class="n">bounds</span><span class="p">[</span><span class="s2">&quot;linear&quot;</span><span class="p">]</span>
-</span><span id="__span-16-3"><a id="__codelineno-16-3" name="__codelineno-16-3" href="#__codelineno-16-3"></a><span class="n">bounds</span><span class="p">[</span><span class="s2">&quot;relu&quot;</span><span class="p">]</span>
-</span><span id="__span-16-4"><a id="__codelineno-16-4" name="__codelineno-16-4" href="#__codelineno-16-4"></a><span class="n">bounds</span><span class="p">[</span><span class="s2">&quot;add&quot;</span><span class="p">]</span>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-18-1"><a id="__codelineno-18-1" name="__codelineno-18-1" href="#__codelineno-18-1"></a><span class="n">bounds</span><span class="p">[</span><span class="s2">&quot;x&quot;</span><span class="p">]</span>
+</span><span id="__span-18-2"><a id="__codelineno-18-2" name="__codelineno-18-2" href="#__codelineno-18-2"></a><span class="n">bounds</span><span class="p">[</span><span class="s2">&quot;linear&quot;</span><span class="p">]</span>
+</span><span id="__span-18-3"><a id="__codelineno-18-3" name="__codelineno-18-3" href="#__codelineno-18-3"></a><span class="n">bounds</span><span class="p">[</span><span class="s2">&quot;relu&quot;</span><span class="p">]</span>
+</span><span id="__span-18-4"><a id="__codelineno-18-4" name="__codelineno-18-4" href="#__codelineno-18-4"></a><span class="n">bounds</span><span class="p">[</span><span class="s2">&quot;add&quot;</span><span class="p">]</span>
 </span></code></pre></div>
 <p>When processing an IR node, NCET reads existing input entries and creates an
 entry for its output tensor:</p>
-<div class="language-python highlight"><pre><span></span><code><span id="__span-17-1"><a id="__codelineno-17-1" name="__codelineno-17-1" href="#__codelineno-17-1"></a><span class="n">input_bounds</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">bounds</span><span class="p">[</span><span class="n">name</span><span class="p">]</span> <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">node</span><span class="o">.</span><span class="n">inputs</span><span class="p">)</span>
-</span><span id="__span-17-2"><a id="__codelineno-17-2" name="__codelineno-17-2" href="#__codelineno-17-2"></a><span class="n">bounds</span><span class="p">[</span><span class="n">node</span><span class="o">.</span><span class="n">outputs</span><span class="p">[</span><span class="mi">0</span><span class="p">]]</span> <span class="o">=</span> <span class="n">output_bounds</span>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-19-1"><a id="__codelineno-19-1" name="__codelineno-19-1" href="#__codelineno-19-1"></a><span class="n">input_bounds</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">bounds</span><span class="p">[</span><span class="n">name</span><span class="p">]</span> <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">node</span><span class="o">.</span><span class="n">inputs</span><span class="p">)</span>
+</span><span id="__span-19-2"><a id="__codelineno-19-2" name="__codelineno-19-2" href="#__codelineno-19-2"></a><span class="n">bounds</span><span class="p">[</span><span class="n">node</span><span class="o">.</span><span class="n">outputs</span><span class="p">[</span><span class="mi">0</span><span class="p">]]</span> <span class="o">=</span> <span class="n">output_bounds</span>
 </span></code></pre></div>
 <p>An input tensor reused by a residual connection refers to the same dictionary
 entry; it is not duplicated.</p>
@@ -2607,28 +2856,28 @@ as valid big-M values for exact ReLU and MaxPool formulations.</p>
 </blockquote>
 <h2 id="5-cvxpy-encoding-stage">5. CVXPY encoding stage<a class="headerlink" href="#5-cvxpy-encoding-stage" title="Permanent link">&para;</a></h2>
 <p><code>encode_cvxpy()</code> first creates one continuous <code>cp.Variable</code> for every entry in <code>graph.tensors</code>. It then processes <code>graph.nodes</code> in topological order and adds the exact constraints for each canonical operation:</p>
-<div class="language-python highlight"><pre><span></span><code><span id="__span-18-1"><a id="__codelineno-18-1" name="__codelineno-18-1" href="#__codelineno-18-1"></a><span class="n">variables</span> <span class="o">=</span> <span class="p">{</span>
-</span><span id="__span-18-2"><a id="__codelineno-18-2" name="__codelineno-18-2" href="#__codelineno-18-2"></a>    <span class="n">name</span><span class="p">:</span> <span class="n">cp</span><span class="o">.</span><span class="n">Variable</span><span class="p">(</span><span class="n">spec</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
-</span><span id="__span-18-3"><a id="__codelineno-18-3" name="__codelineno-18-3" href="#__codelineno-18-3"></a>    <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">spec</span> <span class="ow">in</span> <span class="n">graph</span><span class="o">.</span><span class="n">tensors</span><span class="o">.</span><span class="n">items</span><span class="p">()</span>
-</span><span id="__span-18-4"><a id="__codelineno-18-4" name="__codelineno-18-4" href="#__codelineno-18-4"></a><span class="p">}</span>
-</span><span id="__span-18-5"><a id="__codelineno-18-5" name="__codelineno-18-5" href="#__codelineno-18-5"></a>
-</span><span id="__span-18-6"><a id="__codelineno-18-6" name="__codelineno-18-6" href="#__codelineno-18-6"></a><span class="k">for</span> <span class="n">node</span> <span class="ow">in</span> <span class="n">graph</span><span class="o">.</span><span class="n">nodes</span><span class="p">:</span>
-</span><span id="__span-18-7"><a id="__codelineno-18-7" name="__codelineno-18-7" href="#__codelineno-18-7"></a>    <span class="c1"># Dispatch on node.op_type and append its exact constraints.</span>
-</span><span id="__span-18-8"><a id="__codelineno-18-8" name="__codelineno-18-8" href="#__codelineno-18-8"></a>    <span class="o">...</span>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-20-1"><a id="__codelineno-20-1" name="__codelineno-20-1" href="#__codelineno-20-1"></a><span class="n">variables</span> <span class="o">=</span> <span class="p">{</span>
+</span><span id="__span-20-2"><a id="__codelineno-20-2" name="__codelineno-20-2" href="#__codelineno-20-2"></a>    <span class="n">name</span><span class="p">:</span> <span class="n">cp</span><span class="o">.</span><span class="n">Variable</span><span class="p">(</span><span class="n">spec</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+</span><span id="__span-20-3"><a id="__codelineno-20-3" name="__codelineno-20-3" href="#__codelineno-20-3"></a>    <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">spec</span> <span class="ow">in</span> <span class="n">graph</span><span class="o">.</span><span class="n">tensors</span><span class="o">.</span><span class="n">items</span><span class="p">()</span>
+</span><span id="__span-20-4"><a id="__codelineno-20-4" name="__codelineno-20-4" href="#__codelineno-20-4"></a><span class="p">}</span>
+</span><span id="__span-20-5"><a id="__codelineno-20-5" name="__codelineno-20-5" href="#__codelineno-20-5"></a>
+</span><span id="__span-20-6"><a id="__codelineno-20-6" name="__codelineno-20-6" href="#__codelineno-20-6"></a><span class="k">for</span> <span class="n">node</span> <span class="ow">in</span> <span class="n">graph</span><span class="o">.</span><span class="n">nodes</span><span class="p">:</span>
+</span><span id="__span-20-7"><a id="__codelineno-20-7" name="__codelineno-20-7" href="#__codelineno-20-7"></a>    <span class="c1"># Dispatch on node.op_type and append its exact constraints.</span>
+</span><span id="__span-20-8"><a id="__codelineno-20-8" name="__codelineno-20-8" href="#__codelineno-20-8"></a>    <span class="o">...</span>
 </span></code></pre></div>
 <p>Input nodes add lower/upper constraints to their existing graph variables.
 Affine, branching, pooling, shape, and index nodes link their input and output variables with equalities or exact mixed-integer constraints. ReLU and MaxPool may additionally create binary variables. The Output node creates no new value; <code>graph.outputs</code> selects existing graph variables for <code>MILPEncoding.outputs</code>.</p>
 <h3 id="51-milpencoding">5.1 <code>MILPEncoding</code><a class="headerlink" href="#51-milpencoding" title="Permanent link">&para;</a></h3>
 <p><code>MILPEncoding</code> is the output of the CVXPY encoding stage.</p>
-<div class="language-python highlight"><pre><span></span><code><span id="__span-19-1"><a id="__codelineno-19-1" name="__codelineno-19-1" href="#__codelineno-19-1"></a><span class="nd">@dataclass</span>
-</span><span id="__span-19-2"><a id="__codelineno-19-2" name="__codelineno-19-2" href="#__codelineno-19-2"></a><span class="k">class</span><span class="w"> </span><span class="nc">MILPEncoding</span><span class="p">:</span>
-</span><span id="__span-19-3"><a id="__codelineno-19-3" name="__codelineno-19-3" href="#__codelineno-19-3"></a>    <span class="n">constraints</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">cp</span><span class="o">.</span><span class="n">Constraint</span><span class="p">]</span>
-</span><span id="__span-19-4"><a id="__codelineno-19-4" name="__codelineno-19-4" href="#__codelineno-19-4"></a>    <span class="n">inputs</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">cp</span><span class="o">.</span><span class="n">Expression</span><span class="p">]</span>
-</span><span id="__span-19-5"><a id="__codelineno-19-5" name="__codelineno-19-5" href="#__codelineno-19-5"></a>    <span class="n">outputs</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">cp</span><span class="o">.</span><span class="n">Expression</span><span class="p">]</span>
-</span><span id="__span-19-6"><a id="__codelineno-19-6" name="__codelineno-19-6" href="#__codelineno-19-6"></a>    <span class="n">values</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">EncodedTensor</span><span class="p">]</span>
-</span><span id="__span-19-7"><a id="__codelineno-19-7" name="__codelineno-19-7" href="#__codelineno-19-7"></a>    <span class="n">binaries</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">ReLUBinaries</span> <span class="o">|</span> <span class="n">MaxPoolBinaries</span><span class="p">]</span>
-</span><span id="__span-19-8"><a id="__codelineno-19-8" name="__codelineno-19-8" href="#__codelineno-19-8"></a>    <span class="n">graph</span><span class="p">:</span> <span class="n">GraphIR</span>
-</span><span id="__span-19-9"><a id="__codelineno-19-9" name="__codelineno-19-9" href="#__codelineno-19-9"></a>    <span class="n">stats</span><span class="p">:</span> <span class="n">EncodingStats</span>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-21-1"><a id="__codelineno-21-1" name="__codelineno-21-1" href="#__codelineno-21-1"></a><span class="nd">@dataclass</span>
+</span><span id="__span-21-2"><a id="__codelineno-21-2" name="__codelineno-21-2" href="#__codelineno-21-2"></a><span class="k">class</span><span class="w"> </span><span class="nc">MILPEncoding</span><span class="p">:</span>
+</span><span id="__span-21-3"><a id="__codelineno-21-3" name="__codelineno-21-3" href="#__codelineno-21-3"></a>    <span class="n">constraints</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">cp</span><span class="o">.</span><span class="n">Constraint</span><span class="p">]</span>
+</span><span id="__span-21-4"><a id="__codelineno-21-4" name="__codelineno-21-4" href="#__codelineno-21-4"></a>    <span class="n">inputs</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">cp</span><span class="o">.</span><span class="n">Expression</span><span class="p">]</span>
+</span><span id="__span-21-5"><a id="__codelineno-21-5" name="__codelineno-21-5" href="#__codelineno-21-5"></a>    <span class="n">outputs</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">cp</span><span class="o">.</span><span class="n">Expression</span><span class="p">]</span>
+</span><span id="__span-21-6"><a id="__codelineno-21-6" name="__codelineno-21-6" href="#__codelineno-21-6"></a>    <span class="n">values</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">EncodedTensor</span><span class="p">]</span>
+</span><span id="__span-21-7"><a id="__codelineno-21-7" name="__codelineno-21-7" href="#__codelineno-21-7"></a>    <span class="n">binaries</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">ReLUBinaries</span> <span class="o">|</span> <span class="n">MaxPoolBinaries</span><span class="p">]</span>
+</span><span id="__span-21-8"><a id="__codelineno-21-8" name="__codelineno-21-8" href="#__codelineno-21-8"></a>    <span class="n">graph</span><span class="p">:</span> <span class="n">GraphIR</span>
+</span><span id="__span-21-9"><a id="__codelineno-21-9" name="__codelineno-21-9" href="#__codelineno-21-9"></a>    <span class="n">stats</span><span class="p">:</span> <span class="n">EncodingStats</span>
 </span></code></pre></div>
 <table>
 <thead>
@@ -2661,7 +2910,7 @@ Affine, branching, pooling, shape, and index nodes link their input and output v
 </tr>
 <tr>
 <td><code>binaries</code></td>
-<td>ReLU or MaxPool node name</td>
+<td>ReLU-family or MaxPool node name</td>
 <td>Operator-specific binary information</td>
 </tr>
 <tr>
@@ -2682,15 +2931,15 @@ input name.</p>
 <p>Multiple model return values are supported through multiple names in
 <code>graph.outputs</code>. This is different from one canonical operator producing
 several tensor values: current computational encoders read <code>node.outputs[0]</code>, so general multi-output operators are not yet supported.</p>
-<p>NCET creates one <code>cp.Variable</code> for each graph tensor. <code>values</code> wraps this full variable set with bounds and shapes, while <code>inputs</code> and <code>outputs</code> reference the same underlying variables at the two graph boundaries; they do not create duplicate decision variables. <code>binaries</code> contains the separate ReLU activation and MaxPool selection variables required by the MILP formulation.</p>
+<p>NCET creates one <code>cp.Variable</code> for each graph tensor. <code>values</code> wraps this full variable set with bounds and shapes, while <code>inputs</code> and <code>outputs</code> reference the same underlying variables at the two graph boundaries; they do not create duplicate decision variables. <code>binaries</code> contains the separate ReLU-family activation and MaxPool selection variables required by the MILP formulation.</p>
 <h3 id="52-builder-input-types">5.2 Builder input types<a class="headerlink" href="#52-builder-input-types" title="Permanent link">&para;</a></h3>
-<div class="language-python highlight"><pre><span></span><code><span id="__span-20-1"><a id="__codelineno-20-1" name="__codelineno-20-1" href="#__codelineno-20-1"></a><span class="n">form_milp</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">input_bounds</span><span class="p">,</span> <span class="n">relu_binary_mode</span><span class="o">=</span><span class="s2">&quot;reduced&quot;</span><span class="p">)</span>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-22-1"><a id="__codelineno-22-1" name="__codelineno-22-1" href="#__codelineno-22-1"></a><span class="n">form_milp</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">input_bounds</span><span class="p">,</span> <span class="n">relu_binary_mode</span><span class="o">=</span><span class="s2">&quot;reduced&quot;</span><span class="p">)</span>
 </span></code></pre></div>
 <h4 id="bound-types">Bound types<a class="headerlink" href="#bound-types" title="Permanent link">&para;</a></h4>
 <p>The public builder accepts:</p>
-<div class="language-python highlight"><pre><span></span><code><span id="__span-21-1"><a id="__codelineno-21-1" name="__codelineno-21-1" href="#__codelineno-21-1"></a><span class="n">BoundPair</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">Any</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span>
-</span><span id="__span-21-2"><a id="__codelineno-21-2" name="__codelineno-21-2" href="#__codelineno-21-2"></a><span class="n">BoundLike</span> <span class="o">=</span> <span class="n">Bounds</span> <span class="o">|</span> <span class="n">BoundPair</span>
-</span><span id="__span-21-3"><a id="__codelineno-21-3" name="__codelineno-21-3" href="#__codelineno-21-3"></a><span class="n">InputBounds</span> <span class="o">=</span> <span class="n">BoundLike</span> <span class="o">|</span> <span class="n">Sequence</span><span class="p">[</span><span class="n">Bounds</span><span class="p">]</span> <span class="o">|</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">BoundLike</span><span class="p">]</span>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-23-1"><a id="__codelineno-23-1" name="__codelineno-23-1" href="#__codelineno-23-1"></a><span class="n">BoundPair</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">Any</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span>
+</span><span id="__span-23-2"><a id="__codelineno-23-2" name="__codelineno-23-2" href="#__codelineno-23-2"></a><span class="n">BoundLike</span> <span class="o">=</span> <span class="n">Bounds</span> <span class="o">|</span> <span class="n">BoundPair</span>
+</span><span id="__span-23-3"><a id="__codelineno-23-3" name="__codelineno-23-3" href="#__codelineno-23-3"></a><span class="n">InputBounds</span> <span class="o">=</span> <span class="n">BoundLike</span> <span class="o">|</span> <span class="n">Sequence</span><span class="p">[</span><span class="n">Bounds</span><span class="p">]</span> <span class="o">|</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">BoundLike</span><span class="p">]</span>
 </span></code></pre></div>
 <table>
 <thead>
@@ -2741,75 +2990,77 @@ shape propagation and removes it after shape propagation.</p>
 <tbody>
 <tr>
 <td><code>"reduced"</code></td>
-<td>Binary variables only for unstable ReLU elements</td>
+<td>Binary variables only for unstable ReLU/LeakyReLU elements</td>
 </tr>
 <tr>
 <td><code>"full"</code></td>
-<td>Binary variables for every ReLU element</td>
+<td>Binary variables for every ReLU/LeakyReLU element</td>
 </tr>
 </tbody>
 </table>
 <p>Both modes are exact.</p>
-<p>The option affects ReLU only. MaxPool2d currently always uses its full exact
+<p>The option affects ReLU and LeakyReLU only. MaxPool2d uses its full exact
 one-hot formulation, with one selector for every valid candidate in every
 pooling window.</p>
 <h3 id="53-encodedtensor">5.3 <code>EncodedTensor</code><a class="headerlink" href="#53-encodedtensor" title="Permanent link">&para;</a></h3>
-<div class="language-python highlight"><pre><span></span><code><span id="__span-22-1"><a id="__codelineno-22-1" name="__codelineno-22-1" href="#__codelineno-22-1"></a><span class="nd">@dataclass</span><span class="p">(</span><span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-</span><span id="__span-22-2"><a id="__codelineno-22-2" name="__codelineno-22-2" href="#__codelineno-22-2"></a><span class="k">class</span><span class="w"> </span><span class="nc">EncodedTensor</span><span class="p">:</span>
-</span><span id="__span-22-3"><a id="__codelineno-22-3" name="__codelineno-22-3" href="#__codelineno-22-3"></a>    <span class="n">expression</span><span class="p">:</span> <span class="n">cp</span><span class="o">.</span><span class="n">Expression</span>
-</span><span id="__span-22-4"><a id="__codelineno-22-4" name="__codelineno-22-4" href="#__codelineno-22-4"></a>    <span class="n">bounds</span><span class="p">:</span> <span class="n">Bounds</span>
-</span><span id="__span-22-5"><a id="__codelineno-22-5" name="__codelineno-22-5" href="#__codelineno-22-5"></a>    <span class="n">shape</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="o">...</span><span class="p">]</span>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-24-1"><a id="__codelineno-24-1" name="__codelineno-24-1" href="#__codelineno-24-1"></a><span class="nd">@dataclass</span><span class="p">(</span><span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+</span><span id="__span-24-2"><a id="__codelineno-24-2" name="__codelineno-24-2" href="#__codelineno-24-2"></a><span class="k">class</span><span class="w"> </span><span class="nc">EncodedTensor</span><span class="p">:</span>
+</span><span id="__span-24-3"><a id="__codelineno-24-3" name="__codelineno-24-3" href="#__codelineno-24-3"></a>    <span class="n">expression</span><span class="p">:</span> <span class="n">cp</span><span class="o">.</span><span class="n">Expression</span>
+</span><span id="__span-24-4"><a id="__codelineno-24-4" name="__codelineno-24-4" href="#__codelineno-24-4"></a>    <span class="n">bounds</span><span class="p">:</span> <span class="n">Bounds</span>
+</span><span id="__span-24-5"><a id="__codelineno-24-5" name="__codelineno-24-5" href="#__codelineno-24-5"></a>    <span class="n">shape</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="o">...</span><span class="p">]</span>
 </span></code></pre></div>
 <p>This joins the optimization representation with the static interval and shape
 of one per-sample graph tensor. Its shape does not contain a batch dimension.</p>
 <h3 id="54-relubinaries">5.4 <code>ReLUBinaries</code><a class="headerlink" href="#54-relubinaries" title="Permanent link">&para;</a></h3>
-<div class="language-python highlight"><pre><span></span><code><span id="__span-23-1"><a id="__codelineno-23-1" name="__codelineno-23-1" href="#__codelineno-23-1"></a><span class="nd">@dataclass</span><span class="p">(</span><span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-</span><span id="__span-23-2"><a id="__codelineno-23-2" name="__codelineno-23-2" href="#__codelineno-23-2"></a><span class="k">class</span><span class="w"> </span><span class="nc">ReLUBinaries</span><span class="p">:</span>
-</span><span id="__span-23-3"><a id="__codelineno-23-3" name="__codelineno-23-3" href="#__codelineno-23-3"></a>    <span class="n">variable</span><span class="p">:</span> <span class="n">cp</span><span class="o">.</span><span class="n">Variable</span>  <span class="c1"># Flattened binary selector vector.</span>
-</span><span id="__span-23-4"><a id="__codelineno-23-4" name="__codelineno-23-4" href="#__codelineno-23-4"></a>    <span class="n">flat_indices</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span>
-</span><span id="__span-23-5"><a id="__codelineno-23-5" name="__codelineno-23-5" href="#__codelineno-23-5"></a>    <span class="n">original_tensor_shape</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="o">...</span><span class="p">]</span>
+<p>This metadata structure is shared by ReLU and LeakyReLU because both use one
+binary branch selector for each encoded element.</p>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-25-1"><a id="__codelineno-25-1" name="__codelineno-25-1" href="#__codelineno-25-1"></a><span class="nd">@dataclass</span><span class="p">(</span><span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+</span><span id="__span-25-2"><a id="__codelineno-25-2" name="__codelineno-25-2" href="#__codelineno-25-2"></a><span class="k">class</span><span class="w"> </span><span class="nc">ReLUBinaries</span><span class="p">:</span>
+</span><span id="__span-25-3"><a id="__codelineno-25-3" name="__codelineno-25-3" href="#__codelineno-25-3"></a>    <span class="n">variable</span><span class="p">:</span> <span class="n">cp</span><span class="o">.</span><span class="n">Variable</span>  <span class="c1"># Flattened binary selector vector.</span>
+</span><span id="__span-25-4"><a id="__codelineno-25-4" name="__codelineno-25-4" href="#__codelineno-25-4"></a>    <span class="n">flat_indices</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span>
+</span><span id="__span-25-5"><a id="__codelineno-25-5" name="__codelineno-25-5" href="#__codelineno-25-5"></a>    <span class="n">original_tensor_shape</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="o">...</span><span class="p">]</span>
 </span></code></pre></div>
-<p><code>variable</code> is always a one-dimensional binary vector. <code>flat_indices</code> is its
-address table: <code>variable[k]</code> controls the ReLU element at C-order flat position
+<p><code>variable</code> is always a one-dimensional binary vector. As not all elements require a binary selector in the reduced mode, <code>flat_indices</code> represents the 
+address table: <code>variable[k]</code> controls the ReLU-family element at C-order flat position
 <code>flat_indices[k]</code>. <code>original_tensor_shape</code> records the shape before flattening
 so that a flat position can be converted back to its tensor coordinate. It is
 metadata, not the shape of <code>variable</code>.</p>
 <p>For example, consider a ReLU tensor with shape <code>(2, 3)</code>:</p>
-<div class="language-text highlight"><pre><span></span><code><span id="__span-24-1"><a id="__codelineno-24-1" name="__codelineno-24-1" href="#__codelineno-24-1"></a>tensor coordinate:  (0,0) (0,1) (0,2) (1,0) (1,1) (1,2)
-</span><span id="__span-24-2"><a id="__codelineno-24-2" name="__codelineno-24-2" href="#__codelineno-24-2"></a>C-order flat index:    0     1     2     3     4     5
+<div class="language-text highlight"><pre><span></span><code><span id="__span-26-1"><a id="__codelineno-26-1" name="__codelineno-26-1" href="#__codelineno-26-1"></a>tensor coordinate:  (0,0) (0,1) (0,2) (1,0) (1,1) (1,2)
+</span><span id="__span-26-2"><a id="__codelineno-26-2" name="__codelineno-26-2" href="#__codelineno-26-2"></a>C-order flat index:    0     1     2     3     4     5
 </span></code></pre></div>
 <p>If only positions <code>1</code> and <code>4</code> are unstable, reduced mode stores:</p>
-<div class="language-python highlight"><pre><span></span><code><span id="__span-25-1"><a id="__codelineno-25-1" name="__codelineno-25-1" href="#__codelineno-25-1"></a><span class="n">ReLUBinaries</span><span class="p">(</span>
-</span><span id="__span-25-2"><a id="__codelineno-25-2" name="__codelineno-25-2" href="#__codelineno-25-2"></a>    <span class="n">variable</span><span class="o">=</span><span class="n">cp</span><span class="o">.</span><span class="n">Variable</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="n">boolean</span><span class="o">=</span><span class="kc">True</span><span class="p">),</span>
-</span><span id="__span-25-3"><a id="__codelineno-25-3" name="__codelineno-25-3" href="#__codelineno-25-3"></a>    <span class="n">flat_indices</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mi">1</span><span class="p">,</span> <span class="mi">4</span><span class="p">]),</span>
-</span><span id="__span-25-4"><a id="__codelineno-25-4" name="__codelineno-25-4" href="#__codelineno-25-4"></a>    <span class="n">original_tensor_shape</span><span class="o">=</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">),</span>
-</span><span id="__span-25-5"><a id="__codelineno-25-5" name="__codelineno-25-5" href="#__codelineno-25-5"></a><span class="p">)</span>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-27-1"><a id="__codelineno-27-1" name="__codelineno-27-1" href="#__codelineno-27-1"></a><span class="n">ReLUBinaries</span><span class="p">(</span>
+</span><span id="__span-27-2"><a id="__codelineno-27-2" name="__codelineno-27-2" href="#__codelineno-27-2"></a>    <span class="n">variable</span><span class="o">=</span><span class="n">cp</span><span class="o">.</span><span class="n">Variable</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="n">boolean</span><span class="o">=</span><span class="kc">True</span><span class="p">),</span>
+</span><span id="__span-27-3"><a id="__codelineno-27-3" name="__codelineno-27-3" href="#__codelineno-27-3"></a>    <span class="n">flat_indices</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mi">1</span><span class="p">,</span> <span class="mi">4</span><span class="p">]),</span>
+</span><span id="__span-27-4"><a id="__codelineno-27-4" name="__codelineno-27-4" href="#__codelineno-27-4"></a>    <span class="n">original_tensor_shape</span><span class="o">=</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">),</span>
+</span><span id="__span-27-5"><a id="__codelineno-27-5" name="__codelineno-27-5" href="#__codelineno-27-5"></a><span class="p">)</span>
 </span></code></pre></div>
 <p>The mapping is:</p>
-<div class="language-text highlight"><pre><span></span><code><span id="__span-26-1"><a id="__codelineno-26-1" name="__codelineno-26-1" href="#__codelineno-26-1"></a>variable[0] -&gt; flat index 1 -&gt; coordinate (0, 1)
-</span><span id="__span-26-2"><a id="__codelineno-26-2" name="__codelineno-26-2" href="#__codelineno-26-2"></a>variable[1] -&gt; flat index 4 -&gt; coordinate (1, 1)
+<div class="language-text highlight"><pre><span></span><code><span id="__span-28-1"><a id="__codelineno-28-1" name="__codelineno-28-1" href="#__codelineno-28-1"></a>variable[0] -&gt; flat index 1 -&gt; coordinate (0, 1)
+</span><span id="__span-28-2"><a id="__codelineno-28-2" name="__codelineno-28-2" href="#__codelineno-28-2"></a>variable[1] -&gt; flat index 4 -&gt; coordinate (1, 1)
 </span></code></pre></div>
 <p>The original coordinates can be recovered with:</p>
-<div class="language-python highlight"><pre><span></span><code><span id="__span-27-1"><a id="__codelineno-27-1" name="__codelineno-27-1" href="#__codelineno-27-1"></a><span class="n">np</span><span class="o">.</span><span class="n">unravel_index</span><span class="p">(</span><span class="n">flat_indices</span><span class="p">,</span> <span class="n">original_tensor_shape</span><span class="p">)</span>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-29-1"><a id="__codelineno-29-1" name="__codelineno-29-1" href="#__codelineno-29-1"></a><span class="n">np</span><span class="o">.</span><span class="n">unravel_index</span><span class="p">(</span><span class="n">flat_indices</span><span class="p">,</span> <span class="n">original_tensor_shape</span><span class="p">)</span>
 </span></code></pre></div>
 <p>The ReLU formulation uses the same mapping when selecting the continuous
 input and output elements:</p>
-<div class="language-python highlight"><pre><span></span><code><span id="__span-28-1"><a id="__codelineno-28-1" name="__codelineno-28-1" href="#__codelineno-28-1"></a><span class="n">x_binary</span> <span class="o">=</span> <span class="n">x</span><span class="p">[</span><span class="n">flat_indices</span><span class="p">]</span>
-</span><span id="__span-28-2"><a id="__codelineno-28-2" name="__codelineno-28-2" href="#__codelineno-28-2"></a><span class="n">y_binary</span> <span class="o">=</span> <span class="n">y</span><span class="p">[</span><span class="n">flat_indices</span><span class="p">]</span>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-30-1"><a id="__codelineno-30-1" name="__codelineno-30-1" href="#__codelineno-30-1"></a><span class="n">x_binary</span> <span class="o">=</span> <span class="n">x</span><span class="p">[</span><span class="n">flat_indices</span><span class="p">]</span>
+</span><span id="__span-30-2"><a id="__codelineno-30-2" name="__codelineno-30-2" href="#__codelineno-30-2"></a><span class="n">y_binary</span> <span class="o">=</span> <span class="n">y</span><span class="p">[</span><span class="n">flat_indices</span><span class="p">]</span>
 </span></code></pre></div>
 <p>Thus <code>variable[k]</code> controls <code>y_binary[k] = ReLU(x_binary[k])</code>. The invariants
 are:</p>
-<div class="language-python highlight"><pre><span></span><code><span id="__span-29-1"><a id="__codelineno-29-1" name="__codelineno-29-1" href="#__codelineno-29-1"></a><span class="n">variable</span><span class="o">.</span><span class="n">size</span> <span class="o">==</span> <span class="nb">len</span><span class="p">(</span><span class="n">flat_indices</span><span class="p">)</span>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-31-1"><a id="__codelineno-31-1" name="__codelineno-31-1" href="#__codelineno-31-1"></a><span class="n">variable</span><span class="o">.</span><span class="n">size</span> <span class="o">==</span> <span class="nb">len</span><span class="p">(</span><span class="n">flat_indices</span><span class="p">)</span>
 </span></code></pre></div>
 <p>In reduced mode, this size is the number of unstable elements and can be
 smaller than <code>np.prod(original_tensor_shape)</code>. In full mode, <code>flat_indices</code> is
 <code>[0, 1, ..., tensor_size - 1]</code>, so the element counts are equal.</p>
 <h3 id="55-maxpoolbinaries">5.5 <code>MaxPoolBinaries</code><a class="headerlink" href="#55-maxpoolbinaries" title="Permanent link">&para;</a></h3>
-<div class="language-python highlight"><pre><span></span><code><span id="__span-30-1"><a id="__codelineno-30-1" name="__codelineno-30-1" href="#__codelineno-30-1"></a><span class="nd">@dataclass</span><span class="p">(</span><span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-</span><span id="__span-30-2"><a id="__codelineno-30-2" name="__codelineno-30-2" href="#__codelineno-30-2"></a><span class="k">class</span><span class="w"> </span><span class="nc">MaxPoolBinaries</span><span class="p">:</span>
-</span><span id="__span-30-3"><a id="__codelineno-30-3" name="__codelineno-30-3" href="#__codelineno-30-3"></a>    <span class="n">variable</span><span class="p">:</span> <span class="n">cp</span><span class="o">.</span><span class="n">Variable</span>
-</span><span id="__span-30-4"><a id="__codelineno-30-4" name="__codelineno-30-4" href="#__codelineno-30-4"></a>    <span class="n">output_indices</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span>
-</span><span id="__span-30-5"><a id="__codelineno-30-5" name="__codelineno-30-5" href="#__codelineno-30-5"></a>    <span class="n">input_indices</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-32-1"><a id="__codelineno-32-1" name="__codelineno-32-1" href="#__codelineno-32-1"></a><span class="nd">@dataclass</span><span class="p">(</span><span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+</span><span id="__span-32-2"><a id="__codelineno-32-2" name="__codelineno-32-2" href="#__codelineno-32-2"></a><span class="k">class</span><span class="w"> </span><span class="nc">MaxPoolBinaries</span><span class="p">:</span>
+</span><span id="__span-32-3"><a id="__codelineno-32-3" name="__codelineno-32-3" href="#__codelineno-32-3"></a>    <span class="n">variable</span><span class="p">:</span> <span class="n">cp</span><span class="o">.</span><span class="n">Variable</span>
+</span><span id="__span-32-4"><a id="__codelineno-32-4" name="__codelineno-32-4" href="#__codelineno-32-4"></a>    <span class="n">output_indices</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span>
+</span><span id="__span-32-5"><a id="__codelineno-32-5" name="__codelineno-32-5" href="#__codelineno-32-5"></a>    <span class="n">input_indices</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span>
 </span></code></pre></div>
 <ul>
 <li><code>input_indices[k]</code> is the coordinate of the <span class="arithmatex">\(k\)</span>-th valid input candidate in
@@ -2821,41 +3072,41 @@ smaller than <code>np.prod(original_tensor_shape)</code>. In full mode, <code>fl
   maximum for the associated output element.</li>
 </ul>
 <p>The three arrays are aligned by position:</p>
-<div class="language-text highlight"><pre><span></span><code><span id="__span-31-1"><a id="__codelineno-31-1" name="__codelineno-31-1" href="#__codelineno-31-1"></a>variable[k]: input_indices[k] -&gt; output_indices[k]
+<div class="language-text highlight"><pre><span></span><code><span id="__span-33-1"><a id="__codelineno-33-1" name="__codelineno-33-1" href="#__codelineno-33-1"></a>variable[k]: input_indices[k] -&gt; output_indices[k]
 </span></code></pre></div>
 <p>For example, consider a per-sample input with shape <code>(1, 2, 3)</code>:</p>
-<div class="language-text highlight"><pre><span></span><code><span id="__span-32-1"><a id="__codelineno-32-1" name="__codelineno-32-1" href="#__codelineno-32-1"></a>x00  x01  x02
-</span><span id="__span-32-2"><a id="__codelineno-32-2" name="__codelineno-32-2" href="#__codelineno-32-2"></a>x10  x11  x12
+<div class="language-text highlight"><pre><span></span><code><span id="__span-34-1"><a id="__codelineno-34-1" name="__codelineno-34-1" href="#__codelineno-34-1"></a>x00  x01  x02
+</span><span id="__span-34-2"><a id="__codelineno-34-2" name="__codelineno-34-2" href="#__codelineno-34-2"></a>x10  x11  x12
 </span></code></pre></div>
 <p>With <code>kernel_size=(2, 2)</code>, <code>stride=(1, 1)</code>, and no padding, MaxPool2d
 creates two overlapping windows:</p>
-<div class="language-text highlight"><pre><span></span><code><span id="__span-33-1"><a id="__codelineno-33-1" name="__codelineno-33-1" href="#__codelineno-33-1"></a>window 0: x00, x01, x10, x11 -&gt; y00
-</span><span id="__span-33-2"><a id="__codelineno-33-2" name="__codelineno-33-2" href="#__codelineno-33-2"></a>window 1: x01, x02, x11, x12 -&gt; y01
+<div class="language-text highlight"><pre><span></span><code><span id="__span-35-1"><a id="__codelineno-35-1" name="__codelineno-35-1" href="#__codelineno-35-1"></a>window 0: x00, x01, x10, x11 -&gt; y00
+</span><span id="__span-35-2"><a id="__codelineno-35-2" name="__codelineno-35-2" href="#__codelineno-35-2"></a>window 1: x01, x02, x11, x12 -&gt; y01
 </span></code></pre></div>
 <p>Each of the eight candidate connections receives one binary selector:</p>
-<div class="language-python highlight"><pre><span></span><code><span id="__span-34-1"><a id="__codelineno-34-1" name="__codelineno-34-1" href="#__codelineno-34-1"></a><span class="n">output_indices</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span>
-</span><span id="__span-34-2"><a id="__codelineno-34-2" name="__codelineno-34-2" href="#__codelineno-34-2"></a>    <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span>  <span class="c1"># z[0]: x00 -&gt; y00</span>
-</span><span id="__span-34-3"><a id="__codelineno-34-3" name="__codelineno-34-3" href="#__codelineno-34-3"></a>    <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span>  <span class="c1"># z[1]: x01 -&gt; y00</span>
-</span><span id="__span-34-4"><a id="__codelineno-34-4" name="__codelineno-34-4" href="#__codelineno-34-4"></a>    <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span>  <span class="c1"># z[2]: x10 -&gt; y00</span>
-</span><span id="__span-34-5"><a id="__codelineno-34-5" name="__codelineno-34-5" href="#__codelineno-34-5"></a>    <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span>  <span class="c1"># z[3]: x11 -&gt; y00</span>
-</span><span id="__span-34-6"><a id="__codelineno-34-6" name="__codelineno-34-6" href="#__codelineno-34-6"></a>    <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span>  <span class="c1"># z[4]: x01 -&gt; y01</span>
-</span><span id="__span-34-7"><a id="__codelineno-34-7" name="__codelineno-34-7" href="#__codelineno-34-7"></a>    <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span>  <span class="c1"># z[5]: x02 -&gt; y01</span>
-</span><span id="__span-34-8"><a id="__codelineno-34-8" name="__codelineno-34-8" href="#__codelineno-34-8"></a>    <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span>  <span class="c1"># z[6]: x11 -&gt; y01</span>
-</span><span id="__span-34-9"><a id="__codelineno-34-9" name="__codelineno-34-9" href="#__codelineno-34-9"></a>    <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span>  <span class="c1"># z[7]: x12 -&gt; y01</span>
-</span><span id="__span-34-10"><a id="__codelineno-34-10" name="__codelineno-34-10" href="#__codelineno-34-10"></a><span class="p">])</span>
-</span><span id="__span-34-11"><a id="__codelineno-34-11" name="__codelineno-34-11" href="#__codelineno-34-11"></a>
-</span><span id="__span-34-12"><a id="__codelineno-34-12" name="__codelineno-34-12" href="#__codelineno-34-12"></a><span class="n">input_indices</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span>
-</span><span id="__span-34-13"><a id="__codelineno-34-13" name="__codelineno-34-13" href="#__codelineno-34-13"></a>    <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span>  <span class="c1"># x00</span>
-</span><span id="__span-34-14"><a id="__codelineno-34-14" name="__codelineno-34-14" href="#__codelineno-34-14"></a>    <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span>  <span class="c1"># x01</span>
-</span><span id="__span-34-15"><a id="__codelineno-34-15" name="__codelineno-34-15" href="#__codelineno-34-15"></a>    <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span>  <span class="c1"># x10</span>
-</span><span id="__span-34-16"><a id="__codelineno-34-16" name="__codelineno-34-16" href="#__codelineno-34-16"></a>    <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span>  <span class="c1"># x11</span>
-</span><span id="__span-34-17"><a id="__codelineno-34-17" name="__codelineno-34-17" href="#__codelineno-34-17"></a>    <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span>  <span class="c1"># x01</span>
-</span><span id="__span-34-18"><a id="__codelineno-34-18" name="__codelineno-34-18" href="#__codelineno-34-18"></a>    <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">2</span><span class="p">],</span>  <span class="c1"># x02</span>
-</span><span id="__span-34-19"><a id="__codelineno-34-19" name="__codelineno-34-19" href="#__codelineno-34-19"></a>    <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span>  <span class="c1"># x11</span>
-</span><span id="__span-34-20"><a id="__codelineno-34-20" name="__codelineno-34-20" href="#__codelineno-34-20"></a>    <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">],</span>  <span class="c1"># x12</span>
-</span><span id="__span-34-21"><a id="__codelineno-34-21" name="__codelineno-34-21" href="#__codelineno-34-21"></a><span class="p">])</span>
-</span><span id="__span-34-22"><a id="__codelineno-34-22" name="__codelineno-34-22" href="#__codelineno-34-22"></a>
-</span><span id="__span-34-23"><a id="__codelineno-34-23" name="__codelineno-34-23" href="#__codelineno-34-23"></a><span class="n">variable</span> <span class="o">=</span> <span class="n">cp</span><span class="o">.</span><span class="n">Variable</span><span class="p">(</span><span class="mi">8</span><span class="p">,</span> <span class="n">boolean</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-36-1"><a id="__codelineno-36-1" name="__codelineno-36-1" href="#__codelineno-36-1"></a><span class="n">output_indices</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span>
+</span><span id="__span-36-2"><a id="__codelineno-36-2" name="__codelineno-36-2" href="#__codelineno-36-2"></a>    <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span>  <span class="c1"># z[0]: x00 -&gt; y00</span>
+</span><span id="__span-36-3"><a id="__codelineno-36-3" name="__codelineno-36-3" href="#__codelineno-36-3"></a>    <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span>  <span class="c1"># z[1]: x01 -&gt; y00</span>
+</span><span id="__span-36-4"><a id="__codelineno-36-4" name="__codelineno-36-4" href="#__codelineno-36-4"></a>    <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span>  <span class="c1"># z[2]: x10 -&gt; y00</span>
+</span><span id="__span-36-5"><a id="__codelineno-36-5" name="__codelineno-36-5" href="#__codelineno-36-5"></a>    <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span>  <span class="c1"># z[3]: x11 -&gt; y00</span>
+</span><span id="__span-36-6"><a id="__codelineno-36-6" name="__codelineno-36-6" href="#__codelineno-36-6"></a>    <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span>  <span class="c1"># z[4]: x01 -&gt; y01</span>
+</span><span id="__span-36-7"><a id="__codelineno-36-7" name="__codelineno-36-7" href="#__codelineno-36-7"></a>    <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span>  <span class="c1"># z[5]: x02 -&gt; y01</span>
+</span><span id="__span-36-8"><a id="__codelineno-36-8" name="__codelineno-36-8" href="#__codelineno-36-8"></a>    <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span>  <span class="c1"># z[6]: x11 -&gt; y01</span>
+</span><span id="__span-36-9"><a id="__codelineno-36-9" name="__codelineno-36-9" href="#__codelineno-36-9"></a>    <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span>  <span class="c1"># z[7]: x12 -&gt; y01</span>
+</span><span id="__span-36-10"><a id="__codelineno-36-10" name="__codelineno-36-10" href="#__codelineno-36-10"></a><span class="p">])</span>
+</span><span id="__span-36-11"><a id="__codelineno-36-11" name="__codelineno-36-11" href="#__codelineno-36-11"></a>
+</span><span id="__span-36-12"><a id="__codelineno-36-12" name="__codelineno-36-12" href="#__codelineno-36-12"></a><span class="n">input_indices</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span>
+</span><span id="__span-36-13"><a id="__codelineno-36-13" name="__codelineno-36-13" href="#__codelineno-36-13"></a>    <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span>  <span class="c1"># x00</span>
+</span><span id="__span-36-14"><a id="__codelineno-36-14" name="__codelineno-36-14" href="#__codelineno-36-14"></a>    <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span>  <span class="c1"># x01</span>
+</span><span id="__span-36-15"><a id="__codelineno-36-15" name="__codelineno-36-15" href="#__codelineno-36-15"></a>    <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span>  <span class="c1"># x10</span>
+</span><span id="__span-36-16"><a id="__codelineno-36-16" name="__codelineno-36-16" href="#__codelineno-36-16"></a>    <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span>  <span class="c1"># x11</span>
+</span><span id="__span-36-17"><a id="__codelineno-36-17" name="__codelineno-36-17" href="#__codelineno-36-17"></a>    <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span>  <span class="c1"># x01</span>
+</span><span id="__span-36-18"><a id="__codelineno-36-18" name="__codelineno-36-18" href="#__codelineno-36-18"></a>    <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">2</span><span class="p">],</span>  <span class="c1"># x02</span>
+</span><span id="__span-36-19"><a id="__codelineno-36-19" name="__codelineno-36-19" href="#__codelineno-36-19"></a>    <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span>  <span class="c1"># x11</span>
+</span><span id="__span-36-20"><a id="__codelineno-36-20" name="__codelineno-36-20" href="#__codelineno-36-20"></a>    <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">],</span>  <span class="c1"># x12</span>
+</span><span id="__span-36-21"><a id="__codelineno-36-21" name="__codelineno-36-21" href="#__codelineno-36-21"></a><span class="p">])</span>
+</span><span id="__span-36-22"><a id="__codelineno-36-22" name="__codelineno-36-22" href="#__codelineno-36-22"></a>
+</span><span id="__span-36-23"><a id="__codelineno-36-23" name="__codelineno-36-23" href="#__codelineno-36-23"></a><span class="n">variable</span> <span class="o">=</span> <span class="n">cp</span><span class="o">.</span><span class="n">Variable</span><span class="p">(</span><span class="mi">8</span><span class="p">,</span> <span class="n">boolean</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 </span></code></pre></div>
 <p>The formulation adds one one-hot constraint per output window:</p>
 <div class="arithmatex">\[
@@ -2868,7 +3119,7 @@ z_4+z_5+z_6+z_7=1.
 window and therefore receive separate selectors. Consequently, the number of
 MaxPool binaries equals the number of valid candidate connections, not the
 number of unique input elements:</p>
-<div class="language-python highlight"><pre><span></span><code><span id="__span-35-1"><a id="__codelineno-35-1" name="__codelineno-35-1" href="#__codelineno-35-1"></a><span class="n">variable</span><span class="o">.</span><span class="n">size</span> <span class="o">==</span> <span class="nb">len</span><span class="p">(</span><span class="n">input_indices</span><span class="p">)</span> <span class="o">==</span> <span class="nb">len</span><span class="p">(</span><span class="n">output_indices</span><span class="p">)</span>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-37-1"><a id="__codelineno-37-1" name="__codelineno-37-1" href="#__codelineno-37-1"></a><span class="n">variable</span><span class="o">.</span><span class="n">size</span> <span class="o">==</span> <span class="nb">len</span><span class="p">(</span><span class="n">input_indices</span><span class="p">)</span> <span class="o">==</span> <span class="nb">len</span><span class="p">(</span><span class="n">output_indices</span><span class="p">)</span>
 </span></code></pre></div>
 <h3 id="56-encodingstats">5.6 <code>EncodingStats</code><a class="headerlink" href="#56-encodingstats" title="Permanent link">&para;</a></h3>
 <table>
@@ -2885,7 +3136,7 @@ number of unique input elements:</p>
 </tr>
 <tr>
 <td><code>binary_variables</code></td>
-<td>Total scalar ReLU and MaxPool binaries</td>
+<td>Total scalar ReLU-family and MaxPool binaries</td>
 </tr>
 <tr>
 <td><code>constraints</code></td>
@@ -2893,24 +3144,24 @@ number of unique input elements:</p>
 </tr>
 <tr>
 <td><code>always_active_relu</code></td>
-<td>ReLU elements with lower bound at least zero</td>
+<td>ReLU-family elements with lower bound at least zero</td>
 </tr>
 <tr>
 <td><code>always_inactive_relu</code></td>
-<td>ReLU elements with upper bound at most zero</td>
+<td>ReLU-family elements fixed to the non-positive-input branch; this is the zero branch only for ReLU</td>
 </tr>
 <tr>
 <td><code>unstable_relu</code></td>
-<td>ReLU elements whose interval crosses zero</td>
+<td>ReLU-family elements whose interval crosses zero</td>
 </tr>
 </tbody>
 </table>
 <h2 id="6-residual-example-across-all-stages">6. Residual example across all stages<a class="headerlink" href="#6-residual-example-across-all-stages" title="Permanent link">&para;</a></h2>
 <p>Consider:</p>
-<div class="language-python highlight"><pre><span></span><code><span id="__span-36-1"><a id="__codelineno-36-1" name="__codelineno-36-1" href="#__codelineno-36-1"></a><span class="k">def</span><span class="w"> </span><span class="nf">forward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>
-</span><span id="__span-36-2"><a id="__codelineno-36-2" name="__codelineno-36-2" href="#__codelineno-36-2"></a>    <span class="n">linear</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">linear</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
-</span><span id="__span-36-3"><a id="__codelineno-36-3" name="__codelineno-36-3" href="#__codelineno-36-3"></a>    <span class="n">relu</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">relu</span><span class="p">(</span><span class="n">linear</span><span class="p">)</span>
-</span><span id="__span-36-4"><a id="__codelineno-36-4" name="__codelineno-36-4" href="#__codelineno-36-4"></a>    <span class="k">return</span> <span class="n">relu</span> <span class="o">+</span> <span class="n">x</span>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-38-1"><a id="__codelineno-38-1" name="__codelineno-38-1" href="#__codelineno-38-1"></a><span class="k">def</span><span class="w"> </span><span class="nf">forward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>
+</span><span id="__span-38-2"><a id="__codelineno-38-2" name="__codelineno-38-2" href="#__codelineno-38-2"></a>    <span class="n">linear</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">linear</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+</span><span id="__span-38-3"><a id="__codelineno-38-3" name="__codelineno-38-3" href="#__codelineno-38-3"></a>    <span class="n">relu</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">relu</span><span class="p">(</span><span class="n">linear</span><span class="p">)</span>
+</span><span id="__span-38-4"><a id="__codelineno-38-4" name="__codelineno-38-4" href="#__codelineno-38-4"></a>    <span class="k">return</span> <span class="n">relu</span> <span class="o">+</span> <span class="n">x</span>
 </span></code></pre></div>
 <h3 id="61-fx-nodes">6.1 FX nodes<a class="headerlink" href="#61-fx-nodes" title="Permanent link">&para;</a></h3>
 <table>
@@ -2999,18 +3250,18 @@ number of unique input elements:</p>
 </tbody>
 </table>
 <h3 id="63-graph-dictionaries">6.3 Graph dictionaries<a class="headerlink" href="#63-graph-dictionaries" title="Permanent link">&para;</a></h3>
-<div class="language-python highlight"><pre><span></span><code><span id="__span-37-1"><a id="__codelineno-37-1" name="__codelineno-37-1" href="#__codelineno-37-1"></a><span class="n">graph</span><span class="o">.</span><span class="n">inputs</span> <span class="o">==</span> <span class="p">[</span><span class="s2">&quot;x&quot;</span><span class="p">]</span>
-</span><span id="__span-37-2"><a id="__codelineno-37-2" name="__codelineno-37-2" href="#__codelineno-37-2"></a><span class="n">graph</span><span class="o">.</span><span class="n">outputs</span> <span class="o">==</span> <span class="p">[</span><span class="s2">&quot;add&quot;</span><span class="p">]</span>
-</span><span id="__span-37-3"><a id="__codelineno-37-3" name="__codelineno-37-3" href="#__codelineno-37-3"></a>
-</span><span id="__span-37-4"><a id="__codelineno-37-4" name="__codelineno-37-4" href="#__codelineno-37-4"></a><span class="n">graph</span><span class="o">.</span><span class="n">tensors</span><span class="o">.</span><span class="n">keys</span><span class="p">()</span> <span class="o">==</span> <span class="p">{</span><span class="s2">&quot;x&quot;</span><span class="p">,</span> <span class="s2">&quot;linear&quot;</span><span class="p">,</span> <span class="s2">&quot;relu&quot;</span><span class="p">,</span> <span class="s2">&quot;add&quot;</span><span class="p">}</span>
-</span><span id="__span-37-5"><a id="__codelineno-37-5" name="__codelineno-37-5" href="#__codelineno-37-5"></a><span class="n">graph</span><span class="o">.</span><span class="n">constants</span><span class="o">.</span><span class="n">keys</span><span class="p">()</span> <span class="o">==</span> <span class="p">{</span><span class="s2">&quot;linear.weight&quot;</span><span class="p">,</span> <span class="s2">&quot;linear.bias&quot;</span><span class="p">}</span>
-</span><span id="__span-37-6"><a id="__codelineno-37-6" name="__codelineno-37-6" href="#__codelineno-37-6"></a>
-</span><span id="__span-37-7"><a id="__codelineno-37-7" name="__codelineno-37-7" href="#__codelineno-37-7"></a><span class="n">bounds</span><span class="o">.</span><span class="n">keys</span><span class="p">()</span> <span class="o">==</span> <span class="p">{</span><span class="s2">&quot;x&quot;</span><span class="p">,</span> <span class="s2">&quot;linear&quot;</span><span class="p">,</span> <span class="s2">&quot;relu&quot;</span><span class="p">,</span> <span class="s2">&quot;add&quot;</span><span class="p">}</span>
-</span><span id="__span-37-8"><a id="__codelineno-37-8" name="__codelineno-37-8" href="#__codelineno-37-8"></a><span class="n">encoding</span><span class="o">.</span><span class="n">values</span><span class="o">.</span><span class="n">keys</span><span class="p">()</span> <span class="o">==</span> <span class="p">{</span><span class="s2">&quot;x&quot;</span><span class="p">,</span> <span class="s2">&quot;linear&quot;</span><span class="p">,</span> <span class="s2">&quot;relu&quot;</span><span class="p">,</span> <span class="s2">&quot;add&quot;</span><span class="p">}</span>
-</span><span id="__span-37-9"><a id="__codelineno-37-9" name="__codelineno-37-9" href="#__codelineno-37-9"></a><span class="n">encoding</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">keys</span><span class="p">()</span> <span class="o">==</span> <span class="p">{</span><span class="s2">&quot;x&quot;</span><span class="p">}</span>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-39-1"><a id="__codelineno-39-1" name="__codelineno-39-1" href="#__codelineno-39-1"></a><span class="n">graph</span><span class="o">.</span><span class="n">inputs</span> <span class="o">==</span> <span class="p">[</span><span class="s2">&quot;x&quot;</span><span class="p">]</span>
+</span><span id="__span-39-2"><a id="__codelineno-39-2" name="__codelineno-39-2" href="#__codelineno-39-2"></a><span class="n">graph</span><span class="o">.</span><span class="n">outputs</span> <span class="o">==</span> <span class="p">[</span><span class="s2">&quot;add&quot;</span><span class="p">]</span>
+</span><span id="__span-39-3"><a id="__codelineno-39-3" name="__codelineno-39-3" href="#__codelineno-39-3"></a>
+</span><span id="__span-39-4"><a id="__codelineno-39-4" name="__codelineno-39-4" href="#__codelineno-39-4"></a><span class="n">graph</span><span class="o">.</span><span class="n">tensors</span><span class="o">.</span><span class="n">keys</span><span class="p">()</span> <span class="o">==</span> <span class="p">{</span><span class="s2">&quot;x&quot;</span><span class="p">,</span> <span class="s2">&quot;linear&quot;</span><span class="p">,</span> <span class="s2">&quot;relu&quot;</span><span class="p">,</span> <span class="s2">&quot;add&quot;</span><span class="p">}</span>
+</span><span id="__span-39-5"><a id="__codelineno-39-5" name="__codelineno-39-5" href="#__codelineno-39-5"></a><span class="n">graph</span><span class="o">.</span><span class="n">constants</span><span class="o">.</span><span class="n">keys</span><span class="p">()</span> <span class="o">==</span> <span class="p">{</span><span class="s2">&quot;linear.weight&quot;</span><span class="p">,</span> <span class="s2">&quot;linear.bias&quot;</span><span class="p">}</span>
+</span><span id="__span-39-6"><a id="__codelineno-39-6" name="__codelineno-39-6" href="#__codelineno-39-6"></a>
+</span><span id="__span-39-7"><a id="__codelineno-39-7" name="__codelineno-39-7" href="#__codelineno-39-7"></a><span class="n">bounds</span><span class="o">.</span><span class="n">keys</span><span class="p">()</span> <span class="o">==</span> <span class="p">{</span><span class="s2">&quot;x&quot;</span><span class="p">,</span> <span class="s2">&quot;linear&quot;</span><span class="p">,</span> <span class="s2">&quot;relu&quot;</span><span class="p">,</span> <span class="s2">&quot;add&quot;</span><span class="p">}</span>
+</span><span id="__span-39-8"><a id="__codelineno-39-8" name="__codelineno-39-8" href="#__codelineno-39-8"></a><span class="n">encoding</span><span class="o">.</span><span class="n">values</span><span class="o">.</span><span class="n">keys</span><span class="p">()</span> <span class="o">==</span> <span class="p">{</span><span class="s2">&quot;x&quot;</span><span class="p">,</span> <span class="s2">&quot;linear&quot;</span><span class="p">,</span> <span class="s2">&quot;relu&quot;</span><span class="p">,</span> <span class="s2">&quot;add&quot;</span><span class="p">}</span>
+</span><span id="__span-39-9"><a id="__codelineno-39-9" name="__codelineno-39-9" href="#__codelineno-39-9"></a><span class="n">encoding</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">keys</span><span class="p">()</span> <span class="o">==</span> <span class="p">{</span><span class="s2">&quot;x&quot;</span><span class="p">}</span>
 </span></code></pre></div>
 <p>If the ReLU is unstable, <code>encoding.binaries</code> also contains:</p>
-<div class="language-python highlight"><pre><span></span><code><span id="__span-38-1"><a id="__codelineno-38-1" name="__codelineno-38-1" href="#__codelineno-38-1"></a><span class="n">encoding</span><span class="o">.</span><span class="n">binaries</span><span class="p">[</span><span class="s2">&quot;relu&quot;</span><span class="p">]</span>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-40-1"><a id="__codelineno-40-1" name="__codelineno-40-1" href="#__codelineno-40-1"></a><span class="n">encoding</span><span class="o">.</span><span class="n">binaries</span><span class="p">[</span><span class="s2">&quot;relu&quot;</span><span class="p">]</span>
 </span></code></pre></div>
 <h2 id="7-where-to-look-up-a-piece-of-information">7. Where to look up a piece of information<a class="headerlink" href="#7-where-to-look-up-a-piece-of-information" title="Permanent link">&para;</a></h2>
 <table>
@@ -3089,28 +3340,28 @@ number of unique input elements:</p>
 </table>
 <h2 id="8-useful-inspection-snippets">8. Useful inspection snippets<a class="headerlink" href="#8-useful-inspection-snippets" title="Permanent link">&para;</a></h2>
 <p>FX:</p>
-<div class="language-python highlight"><pre><span></span><code><span id="__span-39-1"><a id="__codelineno-39-1" name="__codelineno-39-1" href="#__codelineno-39-1"></a><span class="k">for</span> <span class="n">node</span> <span class="ow">in</span> <span class="n">traced</span><span class="o">.</span><span class="n">graph</span><span class="o">.</span><span class="n">nodes</span><span class="p">:</span>
-</span><span id="__span-39-2"><a id="__codelineno-39-2" name="__codelineno-39-2" href="#__codelineno-39-2"></a>    <span class="nb">print</span><span class="p">(</span>
-</span><span id="__span-39-3"><a id="__codelineno-39-3" name="__codelineno-39-3" href="#__codelineno-39-3"></a>        <span class="n">node</span><span class="o">.</span><span class="n">name</span><span class="p">,</span>
-</span><span id="__span-39-4"><a id="__codelineno-39-4" name="__codelineno-39-4" href="#__codelineno-39-4"></a>        <span class="n">node</span><span class="o">.</span><span class="n">op</span><span class="p">,</span>
-</span><span id="__span-39-5"><a id="__codelineno-39-5" name="__codelineno-39-5" href="#__codelineno-39-5"></a>        <span class="n">node</span><span class="o">.</span><span class="n">target</span><span class="p">,</span>
-</span><span id="__span-39-6"><a id="__codelineno-39-6" name="__codelineno-39-6" href="#__codelineno-39-6"></a>        <span class="p">[</span><span class="n">producer</span><span class="o">.</span><span class="n">name</span> <span class="k">for</span> <span class="n">producer</span> <span class="ow">in</span> <span class="n">node</span><span class="o">.</span><span class="n">all_input_nodes</span><span class="p">],</span>
-</span><span id="__span-39-7"><a id="__codelineno-39-7" name="__codelineno-39-7" href="#__codelineno-39-7"></a>        <span class="p">[</span><span class="n">consumer</span><span class="o">.</span><span class="n">name</span> <span class="k">for</span> <span class="n">consumer</span> <span class="ow">in</span> <span class="n">node</span><span class="o">.</span><span class="n">users</span><span class="p">],</span>
-</span><span id="__span-39-8"><a id="__codelineno-39-8" name="__codelineno-39-8" href="#__codelineno-39-8"></a>    <span class="p">)</span>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-41-1"><a id="__codelineno-41-1" name="__codelineno-41-1" href="#__codelineno-41-1"></a><span class="k">for</span> <span class="n">node</span> <span class="ow">in</span> <span class="n">traced</span><span class="o">.</span><span class="n">graph</span><span class="o">.</span><span class="n">nodes</span><span class="p">:</span>
+</span><span id="__span-41-2"><a id="__codelineno-41-2" name="__codelineno-41-2" href="#__codelineno-41-2"></a>    <span class="nb">print</span><span class="p">(</span>
+</span><span id="__span-41-3"><a id="__codelineno-41-3" name="__codelineno-41-3" href="#__codelineno-41-3"></a>        <span class="n">node</span><span class="o">.</span><span class="n">name</span><span class="p">,</span>
+</span><span id="__span-41-4"><a id="__codelineno-41-4" name="__codelineno-41-4" href="#__codelineno-41-4"></a>        <span class="n">node</span><span class="o">.</span><span class="n">op</span><span class="p">,</span>
+</span><span id="__span-41-5"><a id="__codelineno-41-5" name="__codelineno-41-5" href="#__codelineno-41-5"></a>        <span class="n">node</span><span class="o">.</span><span class="n">target</span><span class="p">,</span>
+</span><span id="__span-41-6"><a id="__codelineno-41-6" name="__codelineno-41-6" href="#__codelineno-41-6"></a>        <span class="p">[</span><span class="n">producer</span><span class="o">.</span><span class="n">name</span> <span class="k">for</span> <span class="n">producer</span> <span class="ow">in</span> <span class="n">node</span><span class="o">.</span><span class="n">all_input_nodes</span><span class="p">],</span>
+</span><span id="__span-41-7"><a id="__codelineno-41-7" name="__codelineno-41-7" href="#__codelineno-41-7"></a>        <span class="p">[</span><span class="n">consumer</span><span class="o">.</span><span class="n">name</span> <span class="k">for</span> <span class="n">consumer</span> <span class="ow">in</span> <span class="n">node</span><span class="o">.</span><span class="n">users</span><span class="p">],</span>
+</span><span id="__span-41-8"><a id="__codelineno-41-8" name="__codelineno-41-8" href="#__codelineno-41-8"></a>    <span class="p">)</span>
 </span></code></pre></div>
 <p>IR:</p>
-<div class="language-python highlight"><pre><span></span><code><span id="__span-40-1"><a id="__codelineno-40-1" name="__codelineno-40-1" href="#__codelineno-40-1"></a><span class="k">for</span> <span class="n">node</span> <span class="ow">in</span> <span class="n">graph</span><span class="o">.</span><span class="n">nodes</span><span class="p">:</span>
-</span><span id="__span-40-2"><a id="__codelineno-40-2" name="__codelineno-40-2" href="#__codelineno-40-2"></a>    <span class="nb">print</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="n">node</span><span class="o">.</span><span class="n">op_type</span><span class="p">,</span> <span class="n">node</span><span class="o">.</span><span class="n">inputs</span><span class="p">,</span> <span class="n">node</span><span class="o">.</span><span class="n">outputs</span><span class="p">,</span> <span class="n">node</span><span class="o">.</span><span class="n">attrs</span><span class="p">)</span>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-42-1"><a id="__codelineno-42-1" name="__codelineno-42-1" href="#__codelineno-42-1"></a><span class="k">for</span> <span class="n">node</span> <span class="ow">in</span> <span class="n">graph</span><span class="o">.</span><span class="n">nodes</span><span class="p">:</span>
+</span><span id="__span-42-2"><a id="__codelineno-42-2" name="__codelineno-42-2" href="#__codelineno-42-2"></a>    <span class="nb">print</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="n">node</span><span class="o">.</span><span class="n">op_type</span><span class="p">,</span> <span class="n">node</span><span class="o">.</span><span class="n">inputs</span><span class="p">,</span> <span class="n">node</span><span class="o">.</span><span class="n">outputs</span><span class="p">,</span> <span class="n">node</span><span class="o">.</span><span class="n">attrs</span><span class="p">)</span>
 </span></code></pre></div>
 <p>Tensors and bounds:</p>
-<div class="language-python highlight"><pre><span></span><code><span id="__span-41-1"><a id="__codelineno-41-1" name="__codelineno-41-1" href="#__codelineno-41-1"></a><span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">spec</span> <span class="ow">in</span> <span class="n">graph</span><span class="o">.</span><span class="n">tensors</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
-</span><span id="__span-41-2"><a id="__codelineno-41-2" name="__codelineno-41-2" href="#__codelineno-41-2"></a>    <span class="nb">print</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">spec</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span> <span class="n">spec</span><span class="o">.</span><span class="n">dtype</span><span class="p">,</span> <span class="n">spec</span><span class="o">.</span><span class="n">producer</span><span class="p">,</span> <span class="n">bounds</span><span class="p">[</span><span class="n">name</span><span class="p">])</span>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-43-1"><a id="__codelineno-43-1" name="__codelineno-43-1" href="#__codelineno-43-1"></a><span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">spec</span> <span class="ow">in</span> <span class="n">graph</span><span class="o">.</span><span class="n">tensors</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+</span><span id="__span-43-2"><a id="__codelineno-43-2" name="__codelineno-43-2" href="#__codelineno-43-2"></a>    <span class="nb">print</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">spec</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span> <span class="n">spec</span><span class="o">.</span><span class="n">dtype</span><span class="p">,</span> <span class="n">spec</span><span class="o">.</span><span class="n">producer</span><span class="p">,</span> <span class="n">bounds</span><span class="p">[</span><span class="n">name</span><span class="p">])</span>
 </span></code></pre></div>
 <p>Encoding:</p>
-<div class="language-python highlight"><pre><span></span><code><span id="__span-42-1"><a id="__codelineno-42-1" name="__codelineno-42-1" href="#__codelineno-42-1"></a><span class="nb">print</span><span class="p">(</span><span class="n">encoding</span><span class="o">.</span><span class="n">inputs</span><span class="p">)</span>
-</span><span id="__span-42-2"><a id="__codelineno-42-2" name="__codelineno-42-2" href="#__codelineno-42-2"></a><span class="nb">print</span><span class="p">(</span><span class="n">encoding</span><span class="o">.</span><span class="n">outputs</span><span class="p">)</span>
-</span><span id="__span-42-3"><a id="__codelineno-42-3" name="__codelineno-42-3" href="#__codelineno-42-3"></a><span class="nb">print</span><span class="p">(</span><span class="n">encoding</span><span class="o">.</span><span class="n">binaries</span><span class="p">)</span>
-</span><span id="__span-42-4"><a id="__codelineno-42-4" name="__codelineno-42-4" href="#__codelineno-42-4"></a><span class="nb">print</span><span class="p">(</span><span class="n">encoding</span><span class="o">.</span><span class="n">stats</span><span class="p">)</span>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-44-1"><a id="__codelineno-44-1" name="__codelineno-44-1" href="#__codelineno-44-1"></a><span class="nb">print</span><span class="p">(</span><span class="n">encoding</span><span class="o">.</span><span class="n">inputs</span><span class="p">)</span>
+</span><span id="__span-44-2"><a id="__codelineno-44-2" name="__codelineno-44-2" href="#__codelineno-44-2"></a><span class="nb">print</span><span class="p">(</span><span class="n">encoding</span><span class="o">.</span><span class="n">outputs</span><span class="p">)</span>
+</span><span id="__span-44-3"><a id="__codelineno-44-3" name="__codelineno-44-3" href="#__codelineno-44-3"></a><span class="nb">print</span><span class="p">(</span><span class="n">encoding</span><span class="o">.</span><span class="n">binaries</span><span class="p">)</span>
+</span><span id="__span-44-4"><a id="__codelineno-44-4" name="__codelineno-44-4" href="#__codelineno-44-4"></a><span class="nb">print</span><span class="p">(</span><span class="n">encoding</span><span class="o">.</span><span class="n">stats</span><span class="p">)</span>
 </span></code></pre></div>
 <h2 id="9-where-capability-is-defined">9. Where capability is defined<a class="headerlink" href="#9-where-capability-is-defined" title="Permanent link">&para;</a></h2>
 <p>This developer reference does not maintain a second operator list. The
@@ -3119,10 +3370,10 @@ authoritative canonical operator and parameter boundary is
 spellings are maintained in
 <a href="../pytorch_to_ir_operator_mapping/"><code>pytorch_to_ir_operator_mapping.md</code></a>.</p>
 <p>Internally, support crosses several stages:</p>
-<div class="language-text highlight"><pre><span></span><code><span id="__span-43-1"><a id="__codelineno-43-1" name="__codelineno-43-1" href="#__codelineno-43-1"></a>recognized FX spelling
-</span><span id="__span-43-2"><a id="__codelineno-43-2" name="__codelineno-43-2" href="#__codelineno-43-2"></a>        -&gt; canonical GraphIR operation
-</span><span id="__span-43-3"><a id="__codelineno-43-3" name="__codelineno-43-3" href="#__codelineno-43-3"></a>        -&gt; sound bound propagation
-</span><span id="__span-43-4"><a id="__codelineno-43-4" name="__codelineno-43-4" href="#__codelineno-43-4"></a>        -&gt; exact CVXPY formulation
+<div class="language-text highlight"><pre><span></span><code><span id="__span-45-1"><a id="__codelineno-45-1" name="__codelineno-45-1" href="#__codelineno-45-1"></a>recognized FX spelling
+</span><span id="__span-45-2"><a id="__codelineno-45-2" name="__codelineno-45-2" href="#__codelineno-45-2"></a>        -&gt; canonical GraphIR operation
+</span><span id="__span-45-3"><a id="__codelineno-45-3" name="__codelineno-45-3" href="#__codelineno-45-3"></a>        -&gt; sound bound propagation
+</span><span id="__span-45-4"><a id="__codelineno-45-4" name="__codelineno-45-4" href="#__codelineno-45-4"></a>        -&gt; exact CVXPY formulation
 </span></code></pre></div>
 <p>Successful FX capture alone therefore does not imply NCET support. The
 frontend, bounds pass, and backend each reject operations outside their own
@@ -3180,6 +3431,8 @@ consumer capability before a complete <code>MILPEncoding</code> is returned.</p>
 <li><a href="../supported_operators/"><code>supported_operators.md</code></a>: authoritative current operator and parameter boundary;</li>
 <li><a href="../knowledge/"><code>knowledge/index.md</code></a>: mathematical knowledge notes and recommended reading order;</li>
 <li><a href="../knowledge/conv2d_exact_encoding/"><code>knowledge/conv2d_exact_encoding.md</code></a>: sparse Conv2d affine formulation;</li>
+<li><a href="../knowledge/batchnorm_exact_encoding/"><code>knowledge/batchnorm_exact_encoding.md</code></a>: inference-mode BatchNorm normalization and encoding;</li>
+<li><a href="../knowledge/adaptive_avgpool2d_exact_encoding/"><code>knowledge/adaptive_avgpool2d_exact_encoding.md</code></a>: adaptive pooling windows and sparse formulation;</li>
 <li><a href="../knowledge/avgpool2d_exact_encoding/"><code>knowledge/avgpool2d_exact_encoding.md</code></a>: AvgPool2d matrix formulation;</li>
 <li><a href="../knowledge/maxpool2d_exact_encoding/"><code>knowledge/maxpool2d_exact_encoding.md</code></a>: exact MaxPool2d selection formulation;</li>
 <li><a href="https://github.com/xuwkk/ncet/blob/main/examples/artificial_test_on_operators.ipynb">Representative operator notebook</a>: executable graph and exact-encoding walkthrough.</li>

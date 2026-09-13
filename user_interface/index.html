@@ -481,6 +481,23 @@
     </span>
   </a>
   
+    <nav class="md-nav" aria-label="Using the encoding">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#connecting-to-an-existing-optimization-problem" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Connecting to an existing optimization problem
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
 </li>
       
         <li class="md-nav__item">
@@ -852,6 +869,90 @@
   
   
     <li class="md-nav__item">
+      <a href="../knowledge/batchnorm_exact_encoding/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    BatchNorm
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../knowledge/adaptive_avgpool2d_exact_encoding/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    AdaptiveAvgPool2d
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../knowledge/reduce_mean_exact_encoding/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    ReduceMean
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../knowledge/avgpool2d_exact_encoding/" class="md-nav__link">
         
   
@@ -1042,6 +1143,23 @@
     </span>
   </a>
   
+    <nav class="md-nav" aria-label="Using the encoding">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#connecting-to-an-existing-optimization-problem" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Connecting to an existing optimization problem
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
 </li>
       
         <li class="md-nav__item">
@@ -1122,7 +1240,7 @@ supported boundary.</p>
 <blockquote>
 <p><strong>Important — no batch dimension:</strong> <code>lower</code> and <code>upper</code> describe exactly one
 sample. Use <code>(features,)</code> for an MLP or <code>(channels, height, width)</code> for an
-image, not <code>(batch, features)</code> or <code>(batch, channels, height, width)</code>.</p>
+image, not <code>(batch, features)</code> or <code>(batch, channels, height, width)</code>. This is more natively suited for the optimization problem formulation.</p>
 </blockquote>
 <p>Finite elementwise lower and upper bounds for every model input. Bounds use
 the shape of one sample and must not contain the batch dimension. For example,
@@ -1181,7 +1299,7 @@ bounds are reordered automatically according to the model's FX placeholder
 order. A positional list cannot be reordered, so the caller must supply it in
 the same order as the arguments of <code>forward()</code>. Tuples are reserved for the
 single-input <code>(lower, upper)</code> form; use a list for multiple positional inputs.</p>
-<p>For a model defined as</p>
+<p>For example, for a model defined as</p>
 <div class="language-python highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="k">def</span><span class="w"> </span><span class="nf">forward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">):</span>
 </span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a>    <span class="o">...</span>
 </span></code></pre></div>
@@ -1193,7 +1311,8 @@ single-input <code>(lower, upper)</code> form; use a list for multiple positiona
 <code>[x0 - epsilon, x0 + epsilon]</code> is an <span class="arithmatex">\(L_\infty\)</span> neighborhood, but NCET does
 not directly accept coupled <span class="arithmatex">\(L_1\)</span>, <span class="arithmatex">\(L_2\)</span>, or other norm domains.</p>
 <h3 id="relu_binary_mode"><code>relu_binary_mode</code><a class="headerlink" href="#relu_binary_mode" title="Permanent link">&para;</a></h3>
-<p>Controls the number of ReLU binary variables without changing exactness.</p>
+<p>Controls the number of ReLU and LeakyReLU binary variables without changing
+exactness.</p>
 <table>
 <thead>
 <tr>
@@ -1204,16 +1323,16 @@ not directly accept coupled <span class="arithmatex">\(L_1\)</span>, <span class
 <tbody>
 <tr>
 <td><code>"reduced"</code></td>
-<td>Default. Introduces binaries only for unstable elements whose bounds satisfy <span class="arithmatex">\(L &lt; 0 &lt; U\)</span>.</td>
+<td>Default. Introduces binaries only for unstable ReLU/LeakyReLU elements whose bounds satisfy <span class="arithmatex">\(L &lt; 0 &lt; U\)</span>.</td>
 </tr>
 <tr>
 <td><code>"full"</code></td>
-<td>Introduces one binary for every ReLU element, including elements already known to be active or inactive.</td>
+<td>Introduces one binary for every ReLU/LeakyReLU element, including elements already known to be active or inactive.</td>
 </tr>
 </tbody>
 </table>
-<p>Both modes describe the same exact ReLU graph. <code>"reduced"</code> generally produces
-a smaller formulation.</p>
+<p>Both modes describe the same exact activation graph. <code>"reduced"</code> generally
+produces a smaller formulation and is set as the default.</p>
 <h2 id="return-value">Return value<a class="headerlink" href="#return-value" title="Permanent link">&para;</a></h2>
 <p><code>form_milp()</code> returns a <code>MILPEncoding</code> with these public fields:</p>
 <table>
@@ -1233,7 +1352,7 @@ a smaller formulation.</p>
 <tr>
 <td><code>inputs</code></td>
 <td><code>dict[str, cp.Expression]</code></td>
-<td>Per-sample input variables keyed by <code>forward()</code> argument name</td>
+<td>Per-sample input <strong>variables</strong> keyed by <code>forward()</code> argument name</td>
 </tr>
 <tr>
 <td><code>outputs</code></td>
@@ -1247,7 +1366,7 @@ a smaller formulation.</p>
 </tr>
 <tr>
 <td><code>binaries</code></td>
-<td><code>dict[str, ReLUBinaries | MaxPoolBinaries]</code></td>
+<td><code>dict[str, ReLUBinaries / MaxPoolBinaries]</code></td>
 <td>Binary-variable metadata keyed by the corresponding IR node name</td>
 </tr>
 <tr>
@@ -1258,13 +1377,16 @@ a smaller formulation.</p>
 <tr>
 <td><code>stats</code></td>
 <td><code>EncodingStats</code></td>
-<td>Counts of variables, constraints, and ReLU states</td>
+<td>Counts of variables, constraints, and ReLU-family states</td>
 </tr>
 </tbody>
 </table>
 <p>Even a single model output is stored in a list, so access it with
 <code>encoding.outputs[0]</code>. A single model input is still stored in a dictionary,
 for example <code>encoding.inputs["x"]</code>.</p>
+<blockquote>
+<p>Note: Even though the inputs to the neural network can be optimization parameters, extra variables are created.</p>
+</blockquote>
 <h2 id="using-the-encoding">Using the encoding<a class="headerlink" href="#using-the-encoding" title="Permanent link">&para;</a></h2>
 <div class="language-python highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="kn">import</span><span class="w"> </span><span class="nn">cvxpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">cp</span>
 </span><span id="__span-4-2"><a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a>
@@ -1274,8 +1396,8 @@ for example <code>encoding.inputs["x"]</code>.</p>
 </span><span id="__span-4-6"><a id="__codelineno-4-6" name="__codelineno-4-6" href="#__codelineno-4-6"></a>    <span class="n">relu_binary_mode</span><span class="o">=</span><span class="s2">&quot;reduced&quot;</span><span class="p">,</span>
 </span><span id="__span-4-7"><a id="__codelineno-4-7" name="__codelineno-4-7" href="#__codelineno-4-7"></a><span class="p">)</span>
 </span><span id="__span-4-8"><a id="__codelineno-4-8" name="__codelineno-4-8" href="#__codelineno-4-8"></a>
-</span><span id="__span-4-9"><a id="__codelineno-4-9" name="__codelineno-4-9" href="#__codelineno-4-9"></a><span class="n">x</span> <span class="o">=</span> <span class="n">encoding</span><span class="o">.</span><span class="n">inputs</span><span class="p">[</span><span class="s2">&quot;x&quot;</span><span class="p">]</span>
-</span><span id="__span-4-10"><a id="__codelineno-4-10" name="__codelineno-4-10" href="#__codelineno-4-10"></a><span class="n">y</span> <span class="o">=</span> <span class="n">encoding</span><span class="o">.</span><span class="n">outputs</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+</span><span id="__span-4-9"><a id="__codelineno-4-9" name="__codelineno-4-9" href="#__codelineno-4-9"></a><span class="n">x</span> <span class="o">=</span> <span class="n">encoding</span><span class="o">.</span><span class="n">inputs</span><span class="p">[</span><span class="s2">&quot;x&quot;</span><span class="p">]</span>  <span class="c1"># Extract the input variable</span>
+</span><span id="__span-4-10"><a id="__codelineno-4-10" name="__codelineno-4-10" href="#__codelineno-4-10"></a><span class="n">y</span> <span class="o">=</span> <span class="n">encoding</span><span class="o">.</span><span class="n">outputs</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>   <span class="c1"># Extract the output variable</span>
 </span><span id="__span-4-11"><a id="__codelineno-4-11" name="__codelineno-4-11" href="#__codelineno-4-11"></a>
 </span><span id="__span-4-12"><a id="__codelineno-4-12" name="__codelineno-4-12" href="#__codelineno-4-12"></a><span class="n">problem</span> <span class="o">=</span> <span class="n">cp</span><span class="o">.</span><span class="n">Problem</span><span class="p">(</span>
 </span><span id="__span-4-13"><a id="__codelineno-4-13" name="__codelineno-4-13" href="#__codelineno-4-13"></a>    <span class="n">cp</span><span class="o">.</span><span class="n">Maximize</span><span class="p">(</span><span class="n">y</span><span class="p">[</span><span class="mi">0</span><span class="p">]),</span>
@@ -1286,6 +1408,33 @@ for example <code>encoding.inputs["x"]</code>.</p>
 <p>External decision variables can be connected to <code>x</code>, and additional
 constraints can be added alongside <code>encoding.constraints</code>. The selected solver
 must support mixed-integer problems whenever the encoding contains binaries.</p>
+<h3 id="connecting-to-an-existing-optimization-problem">Connecting to an existing optimization problem<a class="headerlink" href="#connecting-to-an-existing-optimization-problem" title="Permanent link">&para;</a></h3>
+<p>Assume an existing optimization model already has a decision variable and
+constraints. Connect that variable to the encoded network input with an
+equality, then use the network output in the objective or constraints:</p>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a><span class="c1"># Existing optimization model; A, b, c, and output_limit are problem data.</span>
+</span><span id="__span-5-2"><a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a><span class="n">decision</span> <span class="o">=</span> <span class="n">cp</span><span class="o">.</span><span class="n">Variable</span><span class="p">(</span><span class="n">lower</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s2">&quot;decision&quot;</span><span class="p">)</span>
+</span><span id="__span-5-3"><a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a><span class="n">existing_constraints</span> <span class="o">=</span> <span class="p">[</span><span class="n">A</span> <span class="o">@</span> <span class="n">decision</span> <span class="o">&lt;=</span> <span class="n">b</span><span class="p">]</span>
+</span><span id="__span-5-4"><a id="__codelineno-5-4" name="__codelineno-5-4" href="#__codelineno-5-4"></a>
+</span><span id="__span-5-5"><a id="__codelineno-5-5" name="__codelineno-5-5" href="#__codelineno-5-5"></a><span class="c1"># Connect the existing decision to the encoded network.</span>
+</span><span id="__span-5-6"><a id="__codelineno-5-6" name="__codelineno-5-6" href="#__codelineno-5-6"></a><span class="n">nn_input_link</span> <span class="o">=</span> <span class="n">encoding</span><span class="o">.</span><span class="n">inputs</span><span class="p">[</span><span class="s2">&quot;x&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="n">decision</span>
+</span><span id="__span-5-7"><a id="__codelineno-5-7" name="__codelineno-5-7" href="#__codelineno-5-7"></a><span class="n">nn_output</span> <span class="o">=</span> <span class="n">encoding</span><span class="o">.</span><span class="n">outputs</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+</span><span id="__span-5-8"><a id="__codelineno-5-8" name="__codelineno-5-8" href="#__codelineno-5-8"></a>
+</span><span id="__span-5-9"><a id="__codelineno-5-9" name="__codelineno-5-9" href="#__codelineno-5-9"></a><span class="n">problem</span> <span class="o">=</span> <span class="n">cp</span><span class="o">.</span><span class="n">Problem</span><span class="p">(</span>
+</span><span id="__span-5-10"><a id="__codelineno-5-10" name="__codelineno-5-10" href="#__codelineno-5-10"></a>    <span class="n">cp</span><span class="o">.</span><span class="n">Minimize</span><span class="p">(</span><span class="n">c</span> <span class="o">@</span> <span class="n">decision</span><span class="p">),</span>
+</span><span id="__span-5-11"><a id="__codelineno-5-11" name="__codelineno-5-11" href="#__codelineno-5-11"></a>    <span class="p">[</span>
+</span><span id="__span-5-12"><a id="__codelineno-5-12" name="__codelineno-5-12" href="#__codelineno-5-12"></a>        <span class="o">*</span><span class="n">existing_constraints</span><span class="p">,</span>
+</span><span id="__span-5-13"><a id="__codelineno-5-13" name="__codelineno-5-13" href="#__codelineno-5-13"></a>        <span class="o">*</span><span class="n">encoding</span><span class="o">.</span><span class="n">constraints</span><span class="p">,</span>
+</span><span id="__span-5-14"><a id="__codelineno-5-14" name="__codelineno-5-14" href="#__codelineno-5-14"></a>        <span class="n">nn_input_link</span><span class="p">,</span>
+</span><span id="__span-5-15"><a id="__codelineno-5-15" name="__codelineno-5-15" href="#__codelineno-5-15"></a>        <span class="n">nn_output</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">&lt;=</span> <span class="n">output_limit</span><span class="p">,</span>
+</span><span id="__span-5-16"><a id="__codelineno-5-16" name="__codelineno-5-16" href="#__codelineno-5-16"></a>    <span class="p">],</span>
+</span><span id="__span-5-17"><a id="__codelineno-5-17" name="__codelineno-5-17" href="#__codelineno-5-17"></a><span class="p">)</span>
+</span><span id="__span-5-18"><a id="__codelineno-5-18" name="__codelineno-5-18" href="#__codelineno-5-18"></a><span class="n">problem</span><span class="o">.</span><span class="n">solve</span><span class="p">(</span><span class="n">solver</span><span class="o">=</span><span class="n">cp</span><span class="o">.</span><span class="n">SCIPY</span><span class="p">)</span>
+</span></code></pre></div>
+<p><code>nn_input_link</code> makes the network evaluate the same value selected by the
+original optimization model. The bounds supplied to <code>form_milp()</code> must cover
+every feasible value of <code>decision</code>, and <code>encoding.constraints</code> must be included
+exactly once in the final problem.</p>
 <h2 id="errors">Errors<a class="headerlink" href="#errors" title="Permanent link">&para;</a></h2>
 <table>
 <thead>

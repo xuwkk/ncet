@@ -720,6 +720,28 @@
   
 </li>
         
+          <li class="md-nav__item">
+  <a href="#batchnorm-layer" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        BatchNorm layer
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#elementwiseaffine" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        ElementwiseAffine
+      
+    </span>
+  </a>
+  
+</li>
+        
       </ul>
     </nav>
   
@@ -749,10 +771,43 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#leakyrelu" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        LeakyReLU
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#reducemean" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        ReduceMean
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#averagepool2d-layer" class="md-nav__link">
     <span class="md-ellipsis">
       
         AveragePool2d layer
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#adaptiveavgpool2d-layer" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        AdaptiveAvgPool2d layer
       
     </span>
   </a>
@@ -860,6 +915,90 @@
     
   
     Conv2d
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../batchnorm_exact_encoding/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    BatchNorm
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../adaptive_avgpool2d_exact_encoding/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    AdaptiveAvgPool2d
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../reduce_mean_exact_encoding/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    ReduceMean
   
 
     
@@ -1023,6 +1162,28 @@
   
 </li>
         
+          <li class="md-nav__item">
+  <a href="#batchnorm-layer" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        BatchNorm layer
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#elementwiseaffine" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        ElementwiseAffine
+      
+    </span>
+  </a>
+  
+</li>
+        
       </ul>
     </nav>
   
@@ -1052,10 +1213,43 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#leakyrelu" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        LeakyReLU
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#reducemean" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        ReduceMean
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#averagepool2d-layer" class="md-nav__link">
     <span class="md-ellipsis">
       
         AveragePool2d layer
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#adaptiveavgpool2d-layer" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        AdaptiveAvgPool2d layer
       
     </span>
   </a>
@@ -1140,8 +1334,9 @@ elementwise output ranges. Across a deeper network, IBP can become
 conservative because it does not preserve correlations between tensor
 elements or graph branches.</p>
 <h2 id="1-signed-affine-propagation">1. Signed affine propagation<a class="headerlink" href="#1-signed-affine-propagation" title="Permanent link">&para;</a></h2>
-<p>Linear and Conv2d may contain both positive and negative fixed coefficients,
-so their bounds require a positive/negative coefficient split.</p>
+<p>Linear, Conv2d, BatchNorm, and ElementwiseAffine may contain both positive and
+negative fixed coefficients, so their bounds require a positive/negative
+coefficient split.</p>
 <h3 id="linear-layer">Linear layer<a class="headerlink" href="#linear-layer" title="Permanent link">&para;</a></h3>
 <p>Consider a linear layer</p>
 <div class="arithmatex">\[
@@ -1197,9 +1392,53 @@ from the returned bounds. Padded positions are fixed at zero rather than
 treated as uncertain inputs.</p>
 <p>See <a href="../conv2d_exact_encoding/">Exact Conv2d encoding in NCET</a> for the
 corresponding optimization constraint and sparse-matrix construction.</p>
+<h3 id="batchnorm-layer">BatchNorm layer<a class="headerlink" href="#batchnorm-layer" title="Permanent link">&para;</a></h3>
+<p>In evaluation mode, BatchNorm is a fixed per-channel affine map:</p>
+<div class="arithmatex">\[
+Y_{c,\ldots}=a_cX_{c,\ldots}+d_c,
+\]</div>
+<p>where</p>
+<div class="arithmatex">\[
+a_c=\frac{\gamma_c}{\sqrt{\sigma_c^2+\epsilon}},
+\qquad
+d_c=\beta_c-a_c\mu_c.
+\]</div>
+<p>Here, <span class="arithmatex">\(\mu_c\)</span> and <span class="arithmatex">\(\sigma_c^2\)</span> are the stored running statistics. For a
+non-affine module, <span class="arithmatex">\(\gamma_c=1\)</span> and <span class="arithmatex">\(\beta_c=0\)</span>. Define
+<span class="arithmatex">\(a_c^+=\max(a_c,0)\)</span> and <span class="arithmatex">\(a_c^-=\min(a_c,0)\)</span>. The propagated bounds are</p>
+<div class="arithmatex">\[
+L_Y=a^+\odot L_X+a^-\odot U_X+d,
+\]</div>
+<div class="arithmatex">\[
+U_Y=a^+\odot U_X+a^-\odot L_X+d,
+\]</div>
+<p>with the channel vectors broadcast over spatial or sequence dimensions. See
+<a href="../batchnorm_exact_encoding/">Exact BatchNorm encoding in NCET</a> for the
+normalization and exact equality.</p>
+<h3 id="elementwiseaffine">ElementwiseAffine<a class="headerlink" href="#elementwiseaffine" title="Permanent link">&para;</a></h3>
+<p>Tensor arithmetic with one fixed constant is normalized to</p>
+<div class="arithmatex">\[
+Y=A\odot X+D,
+\]</div>
+<p>where the fixed arrays <span class="arithmatex">\(A\)</span> and <span class="arithmatex">\(D\)</span> may be broadcast without changing the
+shape of <span class="arithmatex">\(X\)</span>. Define</p>
+<div class="arithmatex">\[
+A^+=\max(A,0), \qquad A^-=\min(A,0).
+\]</div>
+<p>The propagated bounds are</p>
+<div class="arithmatex">\[
+L_Y=A^+\odot L_X+A^-\odot U_X+D,
+\]</div>
+<div class="arithmatex">\[
+U_Y=A^+\odot U_X+A^-\odot L_X+D.
+\]</div>
+<p>This covers fixed-constant Add/Sub/Mul and division by a nonzero fixed
+constant. It gives the exact elementwise range of this operation over its
+input box.</p>
 <h2 id="2-order-preserving-unary-operations">2. Order-preserving unary operations<a class="headerlink" href="#2-order-preserving-unary-operations" title="Permanent link">&para;</a></h2>
-<p>ReLU, AveragePool2d, and MaxPool2d are order-preserving unary operations. Let
-<span class="arithmatex">\(f\)</span> denote any one of them. Given</p>
+<p>ReLU, LeakyReLU with a nonnegative slope, ReduceMean, AvgPool2d,
+AdaptiveAvgPool2d, and MaxPool2d are
+order-preserving unary operations. Let <span class="arithmatex">\(f\)</span> denote any one of them. Given</p>
 <div class="arithmatex">\[
 L_X \leq X \leq U_X,
 \]</div>
@@ -1207,7 +1446,7 @@ L_X \leq X \leq U_X,
 <div class="arithmatex">\[
 f(L_X) \leq f(X) \leq f(U_X).
 \]</div>
-<p>Therefore, all three operators use the same IBP rule:</p>
+<p>Therefore, these operators use the same IBP rule:</p>
 <div class="arithmatex">\[
 L_Y=f(L_X), \qquad U_Y=f(U_X).
 \]</div>
@@ -1220,6 +1459,29 @@ y=\max(0,x).
 <div class="arithmatex">\[
 L_y=\max(0,L_x), \qquad U_y=\max(0,U_x).
 \]</div>
+<h3 id="leakyrelu">LeakyReLU<a class="headerlink" href="#leakyrelu" title="Permanent link">&para;</a></h3>
+<p>For <span class="arithmatex">\(0&lt;\alpha&lt;1\)</span>, LeakyReLU is also elementwise and nondecreasing:</p>
+<div class="arithmatex">\[
+f(x)=\begin{cases}
+x, &amp; x\geq0,\\
+\alpha x, &amp; x&lt;0.
+\end{cases}
+\]</div>
+<p>Therefore,</p>
+<div class="arithmatex">\[
+L_y=f(L_x), \qquad U_y=f(U_x).
+\]</div>
+<h3 id="reducemean">ReduceMean<a class="headerlink" href="#reducemean" title="Permanent link">&para;</a></h3>
+<p>For a fixed set of sample axes <span class="arithmatex">\(\mathcal D\)</span>, ReduceMean assigns every reduced
+element the nonnegative coefficient <span class="arithmatex">\(1/K\)</span>, where <span class="arithmatex">\(K\)</span> is the number of reduced
+elements. Its bounds are therefore</p>
+<div class="arithmatex">\[
+L_Y=\operatorname{mean}(L_X,\mathcal D),
+\qquad
+U_Y=\operatorname{mean}(U_X,\mathcal D).
+\]</div>
+<p>See <a href="../reduce_mean_exact_encoding/">Exact ReduceMean encoding in NCET</a> for the
+dimension convention and linear equality.</p>
 <h3 id="averagepool2d-layer">AveragePool2d layer<a class="headerlink" href="#averagepool2d-layer" title="Permanent link">&para;</a></h3>
 <p>AveragePool2d is a linear operation whose averaging coefficients are all
 nonnegative. Consequently, there is no need to split its coefficients into
@@ -1229,6 +1491,17 @@ positive and negative parts.</p>
 <code>count_include_pad</code> determines whether they contribute to the divisor.</p>
 <p>See <a href="../avgpool2d_exact_encoding/">Exact AveragePool2d encoding in NCET</a> for
 the corresponding averaging-matrix construction.</p>
+<h3 id="adaptiveavgpool2d-layer">AdaptiveAvgPool2d layer<a class="headerlink" href="#adaptiveavgpool2d-layer" title="Permanent link">&para;</a></h3>
+<p>AdaptiveAvgPool2d also averages with nonnegative coefficients, but computes
+each pooling window from the input shape and requested output shape. Its bounds
+are therefore</p>
+<div class="arithmatex">\[
+L_Y=\operatorname{adaptive\_avgpool2d}(L_X),
+\qquad
+U_Y=\operatorname{adaptive\_avgpool2d}(U_X).
+\]</div>
+<p>See <a href="../adaptive_avgpool2d_exact_encoding/">Exact AdaptiveAvgPool2d encoding in NCET</a>
+for the window boundaries and sparse averaging matrix.</p>
 <h3 id="maxpool2d-layer">MaxPool2d layer<a class="headerlink" href="#maxpool2d-layer" title="Permanent link">&para;</a></h3>
 <p>MaxPool2d is nonlinear but monotone: increasing any candidate in a pooling
 window cannot decrease the window maximum. Its bounds are therefore</p>
@@ -1249,17 +1522,23 @@ the corresponding one-hot exact formulation.</p>
 <div class="arithmatex">\[
 L_X\leq X\leq U_X, \qquad L_Z\leq Z\leq U_Z,
 \]</div>
-<p>Add is increasing in both inputs:</p>
+<p>Write both scaled Add and Sub as</p>
 <div class="arithmatex">\[
-L_Y=L_X+L_Z, \qquad U_Y=U_X+U_Z.
+Y=X+\beta Z,
 \]</div>
-<p>Sub is increasing in its first input and decreasing in its second input:</p>
+<p>where <span class="arithmatex">\(\beta=\alpha\)</span> for <code>Add</code> and <span class="arithmatex">\(\beta=-\alpha\)</span> for <code>Sub</code>. Define
+<span class="arithmatex">\(\beta^+=\max(\beta,0)\)</span> and <span class="arithmatex">\(\beta^-=\min(\beta,0)\)</span>. Then</p>
 <div class="arithmatex">\[
-L_Y=L_X-U_Z, \qquad U_Y=U_X-L_Z.
+L_Y=L_X+\beta^+L_Z+\beta^-U_Z,
 \]</div>
-<p>These ranges are exact when <span class="arithmatex">\(X\)</span> and <span class="arithmatex">\(Z\)</span> independently span their input boxes.
-If they are correlated graph branches, as in a residual connection, the
-formulas remain sound but can be conservative.</p>
+<div class="arithmatex">\[
+U_Y=U_X+\beta^+U_Z+\beta^-L_Z.
+\]</div>
+<p>For the default <span class="arithmatex">\(\alpha=1\)</span>, these reduce to the usual
+<span class="arithmatex">\(L_X+L_Z, U_X+U_Z\)</span> rule for Add and <span class="arithmatex">\(L_X-U_Z, U_X-L_Z\)</span> rule for Sub. The
+ranges are exact when <span class="arithmatex">\(X\)</span> and <span class="arithmatex">\(Z\)</span> independently span their input boxes. If
+they are correlated graph branches, as in a residual connection, the formulas
+remain sound but can be conservative.</p>
 <h2 id="4-structural-operations">4. Structural operations<a class="headerlink" href="#4-structural-operations" title="Permanent link">&para;</a></h2>
 <p>Structural operators only assemble, select, or reorder tensor elements, so
 NCET applies the same structural transformation to the lower and upper
@@ -1269,18 +1548,30 @@ bounds.</p>
 L_Y=\operatorname{concat}(L_{X_1},\ldots,L_{X_k}), \qquad
 U_Y=\operatorname{concat}(U_{X_1},\ldots,U_{X_k}).
 \]</div>
-<p>For Flatten, Reshape, Permute, Transpose, GetItem, and Slice,</p>
+<p>For Identity, Flatten, Reshape/View/Squeeze/Unsqueeze, Permute, Transpose,
+GetItem, and Slice,</p>
 <div class="arithmatex">\[
 L_Y=g(L_X), \qquad U_Y=g(U_X),
 \]</div>
 <p>where <span class="arithmatex">\(g\)</span> is the same shape transformation, axis reordering, or static index
 operation recorded in the GraphIR node. These operations do not introduce
 additional interval relaxation.</p>
+<p>For Identity specifically,</p>
+<div class="arithmatex">\[
+L_Y=L_X,
+\qquad
+U_Y=U_X.
+\]</div>
+<p>Evaluation-mode Dropout is normalized to Identity because PyTorch disables
+its random mask during inference.</p>
 <h2 id="related-knowledge">Related knowledge<a class="headerlink" href="#related-knowledge" title="Permanent link">&para;</a></h2>
 <ul>
 <li><a href="../">Knowledge notes index</a></li>
 <li><a href="../exact_encoding/">Exact Encoding</a></li>
 <li><a href="../conv2d_exact_encoding/">Exact Conv2d encoding</a></li>
+<li><a href="../batchnorm_exact_encoding/">Exact BatchNorm encoding</a></li>
+<li><a href="../adaptive_avgpool2d_exact_encoding/">Exact AdaptiveAvgPool2d encoding</a></li>
+<li><a href="../reduce_mean_exact_encoding/">Exact ReduceMean encoding</a></li>
 <li><a href="../avgpool2d_exact_encoding/">Exact AvgPool2d encoding</a></li>
 <li><a href="../maxpool2d_exact_encoding/">Exact MaxPool2d encoding</a></li>
 </ul>

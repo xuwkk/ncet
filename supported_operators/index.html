@@ -791,6 +791,90 @@
   
   
     <li class="md-nav__item">
+      <a href="../knowledge/batchnorm_exact_encoding/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    BatchNorm
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../knowledge/adaptive_avgpool2d_exact_encoding/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    AdaptiveAvgPool2d
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../knowledge/reduce_mean_exact_encoding/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    ReduceMean
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../knowledge/avgpool2d_exact_encoding/" class="md-nav__link">
         
   
@@ -1002,13 +1086,31 @@ below is outside the current exact boundary.</p>
 <td>Affine</td>
 <td><code>Linear</code></td>
 <td>Linear equality</td>
-<td>Fixed <code>nn.Linear</code> parameters; acts on the last tensor dimension; bias may be present or absent</td>
+<td><code>nn.Linear</code> or <code>F.linear</code>; fixed weight and optional fixed bias; acts on the last tensor dimension</td>
 </tr>
 <tr>
 <td>Affine</td>
 <td><code>Conv2d</code></td>
 <td>Sparse affine equality</td>
-<td>Per-sample shape <code>(C,H,W)</code>; fixed <code>nn.Conv2d</code>; <code>groups=1</code>; <code>dilation=(1,1)</code>; numeric padding with <code>padding_mode="zeros"</code>; bias optional</td>
+<td><code>nn.Conv2d</code> or <code>F.conv2d</code>; per-sample shape <code>(C,H,W)</code>; fixed weight and optional fixed bias; <code>groups=1</code>; <code>dilation=(1,1)</code>; numeric zero padding</td>
+</tr>
+<tr>
+<td>Affine</td>
+<td><code>BatchNorm</code></td>
+<td>Per-channel affine equality</td>
+<td><code>nn.BatchNorm1d</code> on <code>(C,)</code> or <code>(C,L)</code> and <code>nn.BatchNorm2d</code> on <code>(C,H,W)</code>; evaluation mode; fixed running statistics; affine or non-affine modules</td>
+</tr>
+<tr>
+<td>Affine</td>
+<td><code>ElementwiseAffine</code></td>
+<td>Elementwise affine equality</td>
+<td>Exactly one graph tensor and one finite real scalar/tensor constant in Add/Sub/Mul/Div; constant broadcasting must preserve the graph tensor shape; division requires the graph tensor as numerator and a nonzero constant denominator</td>
+</tr>
+<tr>
+<td>Pooling</td>
+<td><code>AdaptiveAvgPool2d</code></td>
+<td>Sparse linear equality</td>
+<td>Per-sample shape <code>(C,H,W)</code>; module or functional form; static scalar or length-2 output size; each entry is a positive integer or <code>None</code>, where <code>None</code> preserves that input dimension</td>
 </tr>
 <tr>
 <td>Pooling</td>
@@ -1023,22 +1125,40 @@ below is outside the current exact boundary.</p>
 <td>Per-sample shape <code>(C,H,W)</code>; scalar or 2-D kernel, stride, and padding; <code>stride=None</code> uses the kernel size; <code>dilation=(1,1)</code>; <code>ceil_mode=False</code>; <code>return_indices=False</code></td>
 </tr>
 <tr>
+<td>Structural</td>
+<td><code>Identity</code></td>
+<td>Elementwise equality</td>
+<td><code>nn.Identity</code>; <code>nn.Dropout</code>, <code>nn.Dropout1d/2d/3d</code>, or corresponding functional calls only with <code>training=False</code>; in-place forms unsupported</td>
+</tr>
+<tr>
 <td>Activation</td>
 <td><code>ReLU</code></td>
 <td>Exact big-M or stable equality</td>
 <td>Elementwise ReLU; <code>relu_binary_mode</code> may be <code>"full"</code> or <code>"reduced"</code>; in-place forms are unsupported</td>
 </tr>
 <tr>
+<td>Activation</td>
+<td><code>LeakyReLU</code></td>
+<td>Exact big-M or stable equality</td>
+<td><code>nn.LeakyReLU</code> or <code>F.leaky_relu</code>; finite <code>negative_slope</code> in <code>[0,1]</code>; slopes 0 and 1 normalize to <code>ReLU</code> and <code>Identity</code>; in-place forms unsupported</td>
+</tr>
+<tr>
 <td>Arithmetic</td>
 <td><code>Add</code>, <code>Sub</code></td>
 <td>Linear equality</td>
-<td>Exactly two tensor operands; <code>alpha=1</code>; scalar or constant operands are not canonicalized</td>
+<td>Exactly two graph tensor operands; finite real scalar <code>alpha</code></td>
 </tr>
 <tr>
 <td>Composition</td>
 <td><code>Concat</code></td>
 <td>Exact output-slice equalities</td>
 <td>Static tensor inputs and dimension; tracing batch axis cannot be concatenated; <code>out</code> must be absent or <code>None</code></td>
+</tr>
+<tr>
+<td>Reduction</td>
+<td><code>ReduceMean</code></td>
+<td>Linear equality</td>
+<td><code>torch.mean</code> or <code>Tensor.mean</code>; one or more explicit static dimensions; <code>keepdim</code> is static; tracing batch axis cannot be reduced; <code>dtype</code> and <code>out</code> must be absent or <code>None</code></td>
 </tr>
 <tr>
 <td>Shape</td>
@@ -1050,7 +1170,7 @@ below is outside the current exact boundary.</p>
 <td>Shape</td>
 <td><code>Reshape</code></td>
 <td>C-order element-preserving equality</td>
-<td>Statically resolved output shape; leading singleton tracing batch axis must remain present</td>
+<td>Reshape, View, and batch-preserving Squeeze/Unsqueeze spellings; statically resolved output shape; Squeeze requires explicit dimensions; tracing batch axis must remain first</td>
 </tr>
 <tr>
 <td>Shape</td>
@@ -1076,10 +1196,10 @@ below is outside the current exact boundary.</p>
 modules, and multiple graph inputs or outputs. Each non-boundary canonical
 operation currently produces one tensor.</p>
 <h2 id="outside-the-current-boundary">Outside the current boundary<a class="headerlink" href="#outside-the-current-boundary" title="Permanent link">&para;</a></h2>
-<p>Standalone <code>Constant</code> and <code>Identity</code> operators, BatchNorm, constant arithmetic,
-and other canonical operators not shown above are not currently supported.
-Linear and Conv2d parameters are lifted into <code>GraphIR.constants</code>, but this does
-not create standalone Constant operators.</p>
+<p>Standalone <code>Constant</code> operators and other canonical operators not shown above
+are not currently supported. Fixed state used by Linear, Conv2d, BatchNorm,
+and ElementwiseAffine is lifted into <code>GraphIR.constants</code>; this does not create
+standalone Constant operators or CVXPY decision variables.</p>
 <p>Planned operators and formulations remain outside this published capability
 boundary; appearing in a development roadmap does not imply current support.</p>
 

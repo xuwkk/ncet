@@ -835,6 +835,90 @@
   
   
     <li class="md-nav__item">
+      <a href="../knowledge/batchnorm_exact_encoding/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    BatchNorm
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../knowledge/adaptive_avgpool2d_exact_encoding/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    AdaptiveAvgPool2d
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../knowledge/reduce_mean_exact_encoding/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    ReduceMean
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../knowledge/avgpool2d_exact_encoding/" class="md-nav__link">
         
   
@@ -1103,6 +1187,24 @@ uses its concrete type to choose the canonical operator.</p>
 <td><code>Conv2d</code></td>
 </tr>
 <tr>
+<td><code>nn.BatchNorm1d</code></td>
+<td><code>call_module</code></td>
+<td><code>"features.batch_norm"</code></td>
+<td><code>BatchNorm</code></td>
+</tr>
+<tr>
+<td><code>nn.BatchNorm2d</code></td>
+<td><code>call_module</code></td>
+<td><code>"features.batch_norm"</code></td>
+<td><code>BatchNorm</code></td>
+</tr>
+<tr>
+<td><code>nn.AdaptiveAvgPool2d</code></td>
+<td><code>call_module</code></td>
+<td><code>"adaptive_pool"</code></td>
+<td><code>AdaptiveAvgPool2d</code></td>
+</tr>
+<tr>
 <td><code>nn.AvgPool2d</code></td>
 <td><code>call_module</code></td>
 <td><code>"avg_pool"</code></td>
@@ -1115,10 +1217,28 @@ uses its concrete type to choose the canonical operator.</p>
 <td><code>MaxPool2d</code></td>
 </tr>
 <tr>
+<td><code>nn.Identity</code></td>
+<td><code>call_module</code></td>
+<td><code>"identity"</code></td>
+<td><code>Identity</code></td>
+</tr>
+<tr>
+<td><code>nn.Dropout</code>, <code>nn.Dropout1d/2d/3d</code> in evaluation mode</td>
+<td><code>call_module</code></td>
+<td><code>"dropout"</code></td>
+<td><code>Identity</code></td>
+</tr>
+<tr>
 <td><code>nn.ReLU</code></td>
 <td><code>call_module</code></td>
 <td><code>"relu"</code></td>
 <td><code>ReLU</code></td>
+</tr>
+<tr>
+<td><code>nn.LeakyReLU</code></td>
+<td><code>call_module</code></td>
+<td><code>"leaky_relu"</code></td>
+<td><code>LeakyReLU</code></td>
 </tr>
 <tr>
 <td><code>nn.Flatten</code></td>
@@ -1149,13 +1269,25 @@ recorded by FX.</p>
 </thead>
 <tbody>
 <tr>
+<td><code>F.linear(x, weight, bias)</code></td>
+<td><code>call_function</code></td>
+<td><code>torch._C._nn.linear</code> (<code>F.linear</code>)</td>
+<td><code>Linear</code></td>
+</tr>
+<tr>
+<td><code>F.conv2d(x, weight, bias, ...)</code></td>
+<td><code>call_function</code></td>
+<td><code>torch.conv2d</code> (<code>F.conv2d</code>)</td>
+<td><code>Conv2d</code></td>
+</tr>
+<tr>
 <td><code>x + y</code></td>
 <td><code>call_function</code></td>
 <td><code>operator.add</code></td>
 <td><code>Add</code></td>
 </tr>
 <tr>
-<td><code>torch.add(x, y)</code></td>
+<td><code>torch.add(x, y, alpha=...)</code></td>
 <td><code>call_function</code></td>
 <td><code>torch.add</code></td>
 <td><code>Add</code></td>
@@ -1167,16 +1299,52 @@ recorded by FX.</p>
 <td><code>Sub</code></td>
 </tr>
 <tr>
-<td><code>torch.sub(x, y)</code></td>
+<td><code>torch.sub(x, y, alpha=...)</code></td>
 <td><code>call_function</code></td>
 <td><code>torch.sub</code></td>
 <td><code>Sub</code></td>
 </tr>
 <tr>
-<td><code>torch.subtract(x, y)</code></td>
+<td><code>torch.subtract(x, y, alpha=...)</code></td>
 <td><code>call_function</code></td>
 <td><code>torch.subtract</code></td>
 <td><code>Sub</code></td>
+</tr>
+<tr>
+<td><code>x + c</code>, <code>c + x</code>, <code>x - c</code>, <code>c - x</code></td>
+<td><code>call_function</code></td>
+<td><code>operator.add</code> or <code>operator.sub</code></td>
+<td><code>ElementwiseAffine</code></td>
+</tr>
+<tr>
+<td><code>x * c</code>, <code>c * x</code></td>
+<td><code>call_function</code></td>
+<td><code>operator.mul</code></td>
+<td><code>ElementwiseAffine</code></td>
+</tr>
+<tr>
+<td><code>x / c</code></td>
+<td><code>call_function</code></td>
+<td><code>operator.truediv</code></td>
+<td><code>ElementwiseAffine</code></td>
+</tr>
+<tr>
+<td><code>torch.add/sub/subtract(x, c, ...)</code></td>
+<td><code>call_function</code></td>
+<td>Corresponding PyTorch callable</td>
+<td><code>ElementwiseAffine</code></td>
+</tr>
+<tr>
+<td><code>torch.mul/multiply(x, c)</code></td>
+<td><code>call_function</code></td>
+<td>Corresponding PyTorch callable</td>
+<td><code>ElementwiseAffine</code></td>
+</tr>
+<tr>
+<td><code>torch.div/divide/true_divide(x, c)</code></td>
+<td><code>call_function</code></td>
+<td>Corresponding PyTorch callable</td>
+<td><code>ElementwiseAffine</code></td>
 </tr>
 <tr>
 <td><code>F.relu(x)</code></td>
@@ -1185,10 +1353,22 @@ recorded by FX.</p>
 <td><code>ReLU</code></td>
 </tr>
 <tr>
+<td><code>F.leaky_relu(x, ...)</code></td>
+<td><code>call_function</code></td>
+<td><code>torch.nn.functional.leaky_relu</code></td>
+<td><code>LeakyReLU</code></td>
+</tr>
+<tr>
 <td><code>torch.relu(x)</code></td>
 <td><code>call_function</code></td>
 <td><code>torch.relu</code></td>
 <td><code>ReLU</code></td>
+</tr>
+<tr>
+<td><code>F.adaptive_avg_pool2d(x, ...)</code></td>
+<td><code>call_function</code></td>
+<td><code>torch.nn.functional.adaptive_avg_pool2d</code></td>
+<td><code>AdaptiveAvgPool2d</code></td>
 </tr>
 <tr>
 <td><code>F.avg_pool2d(x, ...)</code></td>
@@ -1201,6 +1381,12 @@ recorded by FX.</p>
 <td><code>call_function</code></td>
 <td><code>torch.nn.functional.max_pool2d</code></td>
 <td><code>MaxPool2d</code></td>
+</tr>
+<tr>
+<td><code>F.dropout</code>, <code>F.dropout1d/2d/3d</code> with <code>training=False</code></td>
+<td><code>call_function</code></td>
+<td>Corresponding <code>torch.nn.functional</code> callable</td>
+<td><code>Identity</code></td>
 </tr>
 <tr>
 <td><code>torch.cat((x, y), dim)</code></td>
@@ -1227,9 +1413,27 @@ recorded by FX.</p>
 <td><code>Flatten</code></td>
 </tr>
 <tr>
+<td><code>torch.mean(x, dim=..., keepdim=...)</code></td>
+<td><code>call_function</code></td>
+<td><code>torch.mean</code></td>
+<td><code>ReduceMean</code></td>
+</tr>
+<tr>
 <td><code>torch.reshape(x, shape)</code></td>
 <td><code>call_function</code></td>
 <td><code>torch.reshape</code></td>
+<td><code>Reshape</code></td>
+</tr>
+<tr>
+<td><code>torch.squeeze(x, dim)</code></td>
+<td><code>call_function</code></td>
+<td><code>torch.squeeze</code></td>
+<td><code>Reshape</code></td>
+</tr>
+<tr>
+<td><code>torch.unsqueeze(x, dim)</code></td>
+<td><code>call_function</code></td>
+<td><code>torch.unsqueeze</code></td>
 <td><code>Reshape</code></td>
 </tr>
 <tr>
@@ -1266,22 +1470,40 @@ first tensor argument.</p>
 </thead>
 <tbody>
 <tr>
-<td><code>x.add(y)</code></td>
+<td><code>x.add(y, alpha=...)</code></td>
 <td><code>call_method</code></td>
 <td><code>"add"</code></td>
 <td><code>Add</code></td>
 </tr>
 <tr>
-<td><code>x.sub(y)</code></td>
+<td><code>x.sub(y, alpha=...)</code></td>
 <td><code>call_method</code></td>
 <td><code>"sub"</code></td>
 <td><code>Sub</code></td>
 </tr>
 <tr>
-<td><code>x.subtract(y)</code></td>
+<td><code>x.subtract(y, alpha=...)</code></td>
 <td><code>call_method</code></td>
 <td><code>"subtract"</code></td>
 <td><code>Sub</code></td>
+</tr>
+<tr>
+<td><code>x.add(c)</code>, <code>x.sub(c)</code></td>
+<td><code>call_method</code></td>
+<td><code>"add"</code> or <code>"sub"</code></td>
+<td><code>ElementwiseAffine</code></td>
+</tr>
+<tr>
+<td><code>x.mul(c)</code>, <code>x.multiply(c)</code></td>
+<td><code>call_method</code></td>
+<td><code>"mul"</code> or <code>"multiply"</code></td>
+<td><code>ElementwiseAffine</code></td>
+</tr>
+<tr>
+<td><code>x.div(c)</code>, <code>x.divide(c)</code>, <code>x.true_divide(c)</code></td>
+<td><code>call_method</code></td>
+<td>Corresponding method name</td>
+<td><code>ElementwiseAffine</code></td>
 </tr>
 <tr>
 <td><code>x.relu()</code></td>
@@ -1296,6 +1518,12 @@ first tensor argument.</p>
 <td><code>Flatten</code></td>
 </tr>
 <tr>
+<td><code>x.mean(dim=..., keepdim=...)</code></td>
+<td><code>call_method</code></td>
+<td><code>"mean"</code></td>
+<td><code>ReduceMean</code></td>
+</tr>
+<tr>
 <td><code>x.reshape(...)</code></td>
 <td><code>call_method</code></td>
 <td><code>"reshape"</code></td>
@@ -1305,6 +1533,18 @@ first tensor argument.</p>
 <td><code>x.view(...)</code></td>
 <td><code>call_method</code></td>
 <td><code>"view"</code></td>
+<td><code>Reshape</code></td>
+</tr>
+<tr>
+<td><code>x.squeeze(dim)</code></td>
+<td><code>call_method</code></td>
+<td><code>"squeeze"</code></td>
+<td><code>Reshape</code></td>
+</tr>
+<tr>
+<td><code>x.unsqueeze(dim)</code></td>
+<td><code>call_method</code></td>
+<td><code>"unsqueeze"</code></td>
 <td><code>Reshape</code></td>
 </tr>
 <tr>
@@ -1350,7 +1590,10 @@ rejected because it selects from the batch axis.</p>
 </span></code></pre></div>
 <div class="language-text highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a>x + y, torch.add(x, y), x.add(y) -&gt; Add
 </span></code></pre></div>
-<div class="language-text highlight"><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a>torch.reshape(x, shape), x.reshape(shape), x.view(shape) -&gt; Reshape
+<div class="language-text highlight"><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a>x + c, c - x, x * c, x / c -&gt; ElementwiseAffine
+</span></code></pre></div>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-6-1"><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a>torch.reshape(x, shape), x.reshape(shape), x.view(shape),
+</span><span id="__span-6-2"><a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a>torch.squeeze(x, dim), x.unsqueeze(dim) -&gt; Reshape
 </span></code></pre></div>
 <p>Container modules such as <code>nn.Sequential</code> and user-defined residual blocks do
 not become canonical operators. FX traces their internal tensor operations,
@@ -1363,11 +1606,31 @@ every parameterization of that operation is supported.</p>
 <ul>
 <li>In-place forms such as <code>relu_()</code>, <code>add_()</code>, or <code>F.relu(..., inplace=True)</code>
   are rejected before GraphIR normalization.</li>
-<li><code>F.linear()</code> and <code>F.conv2d()</code> are not currently mapped; use <code>nn.Linear</code> and
-  <code>nn.Conv2d</code>.</li>
+<li>Dropout is accepted only when its static <code>training</code> argument is <code>False</code>;
+  stochastic training-mode Dropout is rejected.</li>
+<li>Squeeze requires explicit static dimensions that exclude tracing batch axis</li>
+<li>Unsqueeze cannot insert a new dimension before tracing batch axis 0.</li>
+<li>Mean requires one or more explicit static dimensions that exclude tracing
+  batch axis 0. Dtype conversion and caller-provided <code>out</code> storage are not
+  supported.</li>
+<li>ElementwiseAffine requires exactly one graph tensor and one finite, fixed
+  real constant. The constant may be a Python scalar or fixed tensor reached
+  through FX <code>get_attr</code>; broadcasting may not change the graph tensor shape.
+  Tensor-tensor Mul/Div, constant-over-tensor division, zero denominators,
+  division rounding modes, and <code>out</code> arguments are unsupported. Add/Sub with
+  either two graph tensors or one graph tensor and one constant accepts a
+  finite static <code>alpha</code>.</li>
+<li><code>F.linear()</code> and <code>F.conv2d()</code> require fixed weight and bias operands. FX
+  normally represents registered parameters or buffers as <code>get_attr</code> nodes;
+  runtime weight or bias tensors are unsupported.</li>
+<li><code>F.batch_norm()</code> is not currently mapped; use <code>nn.BatchNorm1d</code> or
+  <code>nn.BatchNorm2d</code> in evaluation mode with fixed running statistics.</li>
+<li>LeakyReLU requires a finite <code>negative_slope</code> in <code>[0,1]</code> and <code>inplace=False</code>.
+  Slopes 0 and 1 normalize to <code>ReLU</code> and <code>Identity</code>, respectively.</li>
 <li>Direct FX <code>get_attr</code> nodes are not canonicalized as standalone operators.
-  State belonging to supported Linear and Conv2d modules is instead lifted
-  into <code>GraphIR.constants</code> during normalization.</li>
+  Fixed state used by supported Linear, Conv2d, BatchNorm, and
+  ElementwiseAffine operations is instead lifted into <code>GraphIR.constants</code>
+  during normalization.</li>
 <li>Any FX operation spelling not listed above raises
   <code>UnsupportedOperatorError</code>.</li>
 </ul>

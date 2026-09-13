@@ -780,6 +780,90 @@
   
   
     <li class="md-nav__item">
+      <a href="batchnorm_exact_encoding/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    BatchNorm
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="adaptive_avgpool2d_exact_encoding/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    AdaptiveAvgPool2d
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="reduce_mean_exact_encoding/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    ReduceMean
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="avgpool2d_exact_encoding/" class="md-nav__link">
         
   
@@ -945,6 +1029,9 @@ frontend and GraphIR design details are documented elsewhere under <code>docs/</
 <li>The operator notes derive the sparse matrices or exact formulations used by
    the backend:</li>
 <li><a href="conv2d_exact_encoding/">Conv2d</a></li>
+<li><a href="batchnorm_exact_encoding/">BatchNorm</a></li>
+<li><a href="adaptive_avgpool2d_exact_encoding/">AdaptiveAvgPool2d</a></li>
+<li><a href="reduce_mean_exact_encoding/">ReduceMean</a></li>
 <li><a href="avgpool2d_exact_encoding/">AvgPool2d</a></li>
 <li><a href="maxpool2d_exact_encoding/">MaxPool2d</a></li>
 </ol>
@@ -968,6 +1055,18 @@ frontend and GraphIR design details are documented elsewhere under <code>docs/</
 <tr>
 <td><a href="conv2d_exact_encoding/">Conv2d</a></td>
 <td>Sparse affine matrix for convolution</td>
+</tr>
+<tr>
+<td><a href="batchnorm_exact_encoding/">BatchNorm</a></td>
+<td>Inference-mode per-channel affine map</td>
+</tr>
+<tr>
+<td><a href="adaptive_avgpool2d_exact_encoding/">AdaptiveAvgPool2d</a></td>
+<td>Adaptive windows and sparse averaging matrix</td>
+</tr>
+<tr>
+<td><a href="reduce_mean_exact_encoding/">ReduceMean</a></td>
+<td>Mean reduction, dimension handling, and linear equality</td>
 </tr>
 <tr>
 <td><a href="avgpool2d_exact_encoding/">AvgPool2d</a></td>

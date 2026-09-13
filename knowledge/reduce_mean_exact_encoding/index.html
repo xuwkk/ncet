@@ -10,31 +10,31 @@
       
       
       
-        <link rel="canonical" href="https://xuwkk.github.io/ncet/exactness_contract/">
+        <link rel="canonical" href="https://xuwkk.github.io/ncet/knowledge/reduce_mean_exact_encoding/">
       
       
-        <link rel="prev" href="../pytorch_to_ir_operator_mapping/">
+        <link rel="prev" href="../adaptive_avgpool2d_exact_encoding/">
       
       
-        <link rel="next" href="../knowledge/">
+        <link rel="next" href="../avgpool2d_exact_encoding/">
       
       
         
       
       
-      <link rel="icon" href="../assets/images/favicon.png">
+      <link rel="icon" href="../../assets/images/favicon.png">
       <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.7">
     
     
       
-        <title>Exactness contract - NCET</title>
+        <title>ReduceMean - NCET</title>
       
     
     
-      <link rel="stylesheet" href="../assets/stylesheets/main.ec1eaa64.min.css">
+      <link rel="stylesheet" href="../../assets/stylesheets/main.ec1eaa64.min.css">
       
         
-        <link rel="stylesheet" href="../assets/stylesheets/palette.ab4e12ef.min.css">
+        <link rel="stylesheet" href="../../assets/stylesheets/palette.ab4e12ef.min.css">
       
       
 
@@ -53,7 +53,7 @@
       
     
     
-    <script>__md_scope=new URL("..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    <script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
     
       
 
@@ -78,7 +78,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#exactness-contract" class="md-skip">
+        <a href="#exact-reducemean-encoding-in-ncet" class="md-skip">
           Skip to content
         </a>
       
@@ -94,7 +94,7 @@
 
 <header class="md-header md-header--shadow" data-md-component="header">
   <nav class="md-header__inner md-grid" aria-label="Header">
-    <a href=".." title="NCET" class="md-header__button md-logo" aria-label="NCET" data-md-component="logo">
+    <a href="../.." title="NCET" class="md-header__button md-logo" aria-label="NCET" data-md-component="logo">
       
   
   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
@@ -114,7 +114,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              Exactness contract
+              ReduceMean
             
           </span>
         </div>
@@ -230,7 +230,7 @@
 
 <nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
   <label class="md-nav__title" for="__drawer">
-    <a href=".." title="NCET" class="md-nav__button md-logo" aria-label="NCET" data-md-component="logo">
+    <a href="../.." title="NCET" class="md-nav__button md-logo" aria-label="NCET" data-md-component="logo">
       
   
   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
@@ -260,7 +260,7 @@
   
   
     <li class="md-nav__item">
-      <a href=".." class="md-nav__link">
+      <a href="../.." class="md-nav__link">
         
   
   
@@ -339,7 +339,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../user_interface/" class="md-nav__link">
+      <a href="../../user_interface/" class="md-nav__link">
         
   
   
@@ -367,7 +367,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../examples/" class="md-nav__link">
+      <a href="../../examples/" class="md-nav__link">
         
   
   
@@ -375,6 +375,149 @@
     
   
     Examples
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" >
+        
+          
+          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Capability boundary
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Capability boundary
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../supported_operators/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Supported operators
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../pytorch_to_ir_operator_mapping/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    PyTorch-to-GraphIR mapping
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../exactness_contract/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Exactness contract
   
 
     
@@ -417,17 +560,17 @@
       
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" checked>
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4" checked>
         
           
-          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="">
+          <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="">
             
   
   
   <span class="md-ellipsis">
     
   
-    Capability boundary
+    Mathematical background
   
 
     
@@ -438,12 +581,12 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="true">
-          <label class="md-nav__title" for="__nav_3">
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_4">
             <span class="md-nav__icon md-icon"></span>
             
   
-    Capability boundary
+    Mathematical background
   
 
           </label>
@@ -456,14 +599,14 @@
   
   
     <li class="md-nav__item">
-      <a href="../supported_operators/" class="md-nav__link">
+      <a href="../" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
     
   
-    Supported operators
+    Overview
   
 
     
@@ -484,14 +627,126 @@
   
   
     <li class="md-nav__item">
-      <a href="../pytorch_to_ir_operator_mapping/" class="md-nav__link">
+      <a href="../bound_propagation/" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
     
   
-    PyTorch-to-GraphIR mapping
+    Interval bound propagation
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../exact_encoding/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Exact encoding
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../conv2d_exact_encoding/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Conv2d
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../batchnorm_exact_encoding/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    BatchNorm
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../adaptive_avgpool2d_exact_encoding/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    AdaptiveAvgPool2d
   
 
     
@@ -528,7 +783,7 @@
   <span class="md-ellipsis">
     
   
-    Exactness contract
+    ReduceMean
   
 
     
@@ -546,7 +801,7 @@
   <span class="md-ellipsis">
     
   
-    Exactness contract
+    ReduceMean
   
 
     
@@ -572,10 +827,10 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#1-input-domain" class="md-nav__link">
+  <a href="#mathematical-operation" class="md-nav__link">
     <span class="md-ellipsis">
       
-        1. Input domain
+        Mathematical operation
       
     </span>
   </a>
@@ -583,10 +838,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#2-required-model-conditions" class="md-nav__link">
+  <a href="#batch-and-graphir-dimensions" class="md-nav__link">
     <span class="md-ellipsis">
       
-        2. Required model conditions
+        Batch and GraphIR dimensions
       
     </span>
   </a>
@@ -594,10 +849,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#3-formulation-guarantee" class="md-nav__link">
+  <a href="#interval-bounds" class="md-nav__link">
     <span class="md-ellipsis">
       
-        3. Formulation guarantee
+        Interval bounds
       
     </span>
   </a>
@@ -605,10 +860,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#4-solver-boundary" class="md-nav__link">
+  <a href="#exact-cvxpy-equality" class="md-nav__link">
     <span class="md-ellipsis">
       
-        4. Solver boundary
+        Exact CVXPY equality
       
     </span>
   </a>
@@ -616,10 +871,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#5-failure-boundary" class="md-nav__link">
+  <a href="#supported-boundary" class="md-nav__link">
     <span class="md-ellipsis">
       
-        5. Failure boundary
+        Supported boundary
       
     </span>
   </a>
@@ -635,65 +890,6 @@
 
               
             
-          </ul>
-        </nav>
-      
-    </li>
-  
-
-    
-      
-      
-  
-  
-  
-  
-    
-    
-    
-    
-      
-        
-        
-      
-    
-    
-    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
-      
-        
-        
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4" >
-        
-          
-          <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="">
-            
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Mathematical background
-  
-
-    
-  </span>
-  
-  
-
-            <span class="md-nav__icon md-icon"></span>
-          </label>
-        
-        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_4">
-            <span class="md-nav__icon md-icon"></span>
-            
-  
-    Mathematical background
-  
-
-          </label>
-          <ul class="md-nav__list" data-md-scrollfix>
-            
               
                 
   
@@ -701,203 +897,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../knowledge/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Overview
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../knowledge/bound_propagation/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Interval bound propagation
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../knowledge/exact_encoding/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Exact encoding
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../knowledge/conv2d_exact_encoding/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Conv2d
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../knowledge/batchnorm_exact_encoding/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    BatchNorm
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../knowledge/adaptive_avgpool2d_exact_encoding/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    AdaptiveAvgPool2d
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../knowledge/reduce_mean_exact_encoding/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    ReduceMean
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../knowledge/avgpool2d_exact_encoding/" class="md-nav__link">
+      <a href="../avgpool2d_exact_encoding/" class="md-nav__link">
         
   
   
@@ -925,7 +925,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../knowledge/maxpool2d_exact_encoding/" class="md-nav__link">
+      <a href="../maxpool2d_exact_encoding/" class="md-nav__link">
         
   
   
@@ -960,7 +960,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../developer_note/" class="md-nav__link">
+      <a href="../../developer_note/" class="md-nav__link">
         
   
   
@@ -1007,10 +1007,10 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#1-input-domain" class="md-nav__link">
+  <a href="#mathematical-operation" class="md-nav__link">
     <span class="md-ellipsis">
       
-        1. Input domain
+        Mathematical operation
       
     </span>
   </a>
@@ -1018,10 +1018,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#2-required-model-conditions" class="md-nav__link">
+  <a href="#batch-and-graphir-dimensions" class="md-nav__link">
     <span class="md-ellipsis">
       
-        2. Required model conditions
+        Batch and GraphIR dimensions
       
     </span>
   </a>
@@ -1029,10 +1029,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#3-formulation-guarantee" class="md-nav__link">
+  <a href="#interval-bounds" class="md-nav__link">
     <span class="md-ellipsis">
       
-        3. Formulation guarantee
+        Interval bounds
       
     </span>
   </a>
@@ -1040,10 +1040,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#4-solver-boundary" class="md-nav__link">
+  <a href="#exact-cvxpy-equality" class="md-nav__link">
     <span class="md-ellipsis">
       
-        4. Solver boundary
+        Exact CVXPY equality
       
     </span>
   </a>
@@ -1051,10 +1051,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#5-failure-boundary" class="md-nav__link">
+  <a href="#supported-boundary" class="md-nav__link">
     <span class="md-ellipsis">
       
-        5. Failure boundary
+        Supported boundary
       
     </span>
   </a>
@@ -1081,83 +1081,76 @@
   
 
 
-<h1 id="exactness-contract">Exactness contract<a class="headerlink" href="#exactness-contract" title="Permanent link">&para;</a></h1>
-<p>This document defines NCET's semantic guarantee. It does not define which
-PyTorch spellings or canonical operators are supported; those boundaries are
-maintained in
-<a href="../pytorch_to_ir_operator_mapping/">PyTorch-to-GraphIR operator mapping</a> and
-<a href="../supported_operators/">current operator support</a>.</p>
-<h2 id="1-input-domain">1. Input domain<a class="headerlink" href="#1-input-domain" title="Permanent link">&para;</a></h2>
-<p>NCET encodes one evaluation of a supported inference graph over finite
-elementwise input bounds. For one input tensor, the encoded domain is the box</p>
+<h1 id="exact-reducemean-encoding-in-ncet">Exact ReduceMean encoding in NCET<a class="headerlink" href="#exact-reducemean-encoding-in-ncet" title="Permanent link">&para;</a></h1>
+<p><code>ReduceMean</code> averages a tensor over one or more fixed sample dimensions. NCET
+normalizes both <code>torch.mean(x, dim=...)</code> and <code>x.mean(dim=...)</code> to this canonical
+operator.</p>
+<h2 id="mathematical-operation">Mathematical operation<a class="headerlink" href="#mathematical-operation" title="Permanent link">&para;</a></h2>
+<p>Let <span class="arithmatex">\(\mathcal D\)</span> be the reduced axes and let</p>
 <div class="arithmatex">\[
-\mathcal X=\{x\mid L\leq x\leq U\}.
+K=\prod_{d\in\mathcal D}n_d
 \]</div>
-<p>For multiple inputs, <span class="arithmatex">\(x\)</span>, <span class="arithmatex">\(L\)</span>, and <span class="arithmatex">\(U\)</span> denote the corresponding collection of
-input tensors. The bounds must have the exact per-sample input shapes, contain
-only finite values, and satisfy <span class="arithmatex">\(L\leq U\)</span> elementwise.</p>
-<p>This is a box-bound contract. A symmetric box may represent an
-<span class="arithmatex">\(L_\infty\)</span> neighborhood, but NCET does not directly represent coupled
-<span class="arithmatex">\(L_1\)</span>- or <span class="arithmatex">\(L_2\)</span>-norm input domains.</p>
-<h2 id="2-required-model-conditions">2. Required model conditions<a class="headerlink" href="#2-required-model-conditions" title="Permanent link">&para;</a></h2>
-<p>The current exactness guarantee requires:</p>
-<ul>
-<li><code>model.eval()</code> and fixed parameters and buffers;</li>
-<li>deterministic execution and static tensor ranks and dimensions;</li>
-<li>successful capture by <code>torch.fx.symbolic_trace()</code> without data-dependent
-  Python control flow;</li>
-<li>no in-place mutation or unsupported tensor aliasing;</li>
-<li>only PyTorch spellings, canonical operators, and parameter cases inside the
-  documented current support boundary;</li>
-<li>a model that accepts a leading batch dimension, preserves batch axis 0, and
-  computes samples independently.</li>
-</ul>
-<p>The public bounds, GraphIR tensors, propagated bounds, and CVXPY variables are
-per-sample and contain no batch dimension. NCET adds a leading singleton batch
-dimension only for PyTorch shape propagation. The detailed internal shape
-lifecycle is documented in <a href="../developer_note/">developer_note.md</a>.</p>
-<h2 id="3-formulation-guarantee">3. Formulation guarantee<a class="headerlink" href="#3-formulation-guarantee" title="Permanent link">&para;</a></h2>
-<p>Let <span class="arithmatex">\(f\)</span> be the supported PyTorch inference graph and let <span class="arithmatex">\(C\)</span> denote the
-constraints returned by NCET. Up to floating-point parameter conversion and
-solver feasibility tolerances, NCET guarantees</p>
+<p>be the number of elements contributing to each output. For every fixed tuple
+of coordinates <span class="arithmatex">\(\mathbf j\)</span> on the remaining axes,</p>
 <div class="arithmatex">\[
-\left\{(x,y)\;\middle|\;
-\begin{aligned}
-&amp;x\in\mathcal X,\\
-&amp;\text{there exist intermediate and binary variables satisfying }C
-\end{aligned}
-\right\}
+Y_{\mathbf j}
 =
-\left\{(x,f(x))\mid x\in\mathcal X\right\}.
+\frac{1}{K}
+\sum_{\mathbf i_{\mathcal D}}
+X_{\mathbf j,\mathbf i_{\mathcal D}}.
 \]</div>
-<p>The same statement applies componentwise to multiple graph inputs and outputs.
-All encoded intermediate tensor variables are constrained to the values
-produced by the corresponding supported graph operations.</p>
-<p>In particular:</p>
+<p>For example, global spatial averaging of a per-sample CNN tensor
+<span class="arithmatex">\(X\in\mathbb R^{C\times H\times W}\)</span> is</p>
+<div class="arithmatex">\[
+Y_c
+=
+\frac{1}{HW}
+\sum_{h=0}^{H-1}\sum_{w=0}^{W-1}X_{c,h,w}.
+\]</div>
+<p><code>keepdim=False</code> removes the reduced axes, while <code>keepdim=True</code> retains them
+with size one. It does not change the coefficients or values.</p>
+<h2 id="batch-and-graphir-dimensions">Batch and GraphIR dimensions<a class="headerlink" href="#batch-and-graphir-dimensions" title="Permanent link">&para;</a></h2>
+<p>Shape propagation temporarily represents a sample tensor <code>(C, H, W)</code> as
+<code>(1, C, H, W)</code>. A PyTorch reduction over dimensions <code>(-2, -1)</code> therefore
+becomes GraphIR sample dimensions <code>(1, 2)</code> after NCET removes the temporary
+batch axis. Reducing dimension 0, or omitting <code>dim</code>, is rejected because it
+would remove that axis during shape propagation.</p>
+<p>The canonical attributes are:</p>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="p">{</span><span class="s2">&quot;dims&quot;</span><span class="p">:</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">),</span> <span class="s2">&quot;keepdim&quot;</span><span class="p">:</span> <span class="kc">False</span><span class="p">}</span>
+</span></code></pre></div>
+<h2 id="interval-bounds">Interval bounds<a class="headerlink" href="#interval-bounds" title="Permanent link">&para;</a></h2>
+<p>Every averaging coefficient is nonnegative, so ReduceMean is monotone. Given</p>
+<div class="arithmatex">\[
+L_X\le X\le U_X,
+\]</div>
+<p>NCET propagates</p>
+<div class="arithmatex">\[
+L_Y=\operatorname{mean}(L_X,\mathcal D),
+\qquad
+U_Y=\operatorname{mean}(U_X,\mathcal D).
+\]</div>
+<h2 id="exact-cvxpy-equality">Exact CVXPY equality<a class="headerlink" href="#exact-cvxpy-equality" title="Permanent link">&para;</a></h2>
+<p>NCET creates a continuous output variable with the shape recorded by its
+<code>TensorSpec</code> and enforces</p>
+<div class="arithmatex">\[
+Y=\frac{1}{K}\sum_{\mathcal D}X.
+\]</div>
+<p>The backend sums axes in descending order. When <code>keepdim=False</code>, removing a
+higher axis then leaves every lower axis number unchanged. This implementation
+also avoids relying on solver canonicalization of a tuple-valued reduction
+axis.</p>
+<p>ReduceMean introduces no binary variable and no relaxation. Subject to the
+documented static-dimension restrictions, the equality represents the
+PyTorch operation exactly.</p>
+<h2 id="supported-boundary">Supported boundary<a class="headerlink" href="#supported-boundary" title="Permanent link">&para;</a></h2>
 <ul>
-<li>affine and structural operators use exact linear equalities;</li>
-<li>ReLU and MaxPool2d use exact integer formulations rather than convex
-  approximations;</li>
-<li>interval bound propagation may be conservative, but its bounds must be
-  sound; looser sound bounds can weaken performance without changing the
-  integer feasible set;</li>
-<li>formulation-size changes such as reduced ReLU binaries must preserve the
-  same feasible set.</li>
+<li><code>torch.mean</code> and <code>Tensor.mean</code>;</li>
+<li>one or more explicit static integer dimensions;</li>
+<li>static <code>keepdim=True</code> or <code>False</code>;</li>
+<li>floating-point tensors without a <code>dtype</code> conversion;</li>
+<li>no reduction of tracing batch dimension 0;</li>
+<li>no caller-provided <code>out</code> tensor.</li>
 </ul>
-<h2 id="4-solver-boundary">4. Solver boundary<a class="headerlink" href="#4-solver-boundary" title="Permanent link">&para;</a></h2>
-<p>Exactness is a property of the generated mixed-integer formulation. Binary
-variables must retain their integer domains; solving only its LP relaxation
-does not preserve the neural-network graph. Numerical feasibility and
-optimality are additionally subject to the selected solver and its tolerances.</p>
-<p>NCET creates variables and constraints but does not choose the surrounding
-optimization objective. Adding external constraints or an objective changes
-the user's larger optimization problem, not the meaning of the encoded neural
-network.</p>
-<h2 id="5-failure-boundary">5. Failure boundary<a class="headerlink" href="#5-failure-boundary" title="Permanent link">&para;</a></h2>
-<p>NCET does not silently approximate an unsupported operation. Capture,
-normalization, bound propagation, or encoding fails instead of returning a
-partial <code>MILPEncoding</code>. Operators and dynamic behaviors outside the current
-boundary remain non-goals unless an exact formulation is added explicitly.</p>
 
 
 
@@ -1213,12 +1206,12 @@ boundary remain non-goals unless an exact formulation is added explicitly.</p>
     
       
       
-      <script id="__config" type="application/json">{"annotate": null, "base": "..", "features": ["navigation.sections", "navigation.top", "search.highlight", "content.code.copy"], "search": "../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+      <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["navigation.sections", "navigation.top", "search.highlight", "content.code.copy"], "search": "../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
     
     
-      <script src="../assets/javascripts/bundle.d7400e89.min.js"></script>
+      <script src="../../assets/javascripts/bundle.d7400e89.min.js"></script>
       
-        <script src="../javascripts/mathjax.js"></script>
+        <script src="../../javascripts/mathjax.js"></script>
       
         <script src="https://unpkg.com/mathjax@3/es5/tex-mml-chtml.js"></script>
       
