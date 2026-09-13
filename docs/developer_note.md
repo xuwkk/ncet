@@ -415,8 +415,9 @@ GraphIR.constants["linear.weight"]
 read-only NumPy array
 ```
 
-Normalization copies direct parameters and buffers from the targeted PyTorch
-module into read-only NumPy arrays. BatchNorm running statistics and affine
+Normalization copies direct parameters and buffers from a targeted PyTorch
+module, or fixed weight/bias operands from a supported functional call, into
+read-only NumPy arrays. BatchNorm running statistics and affine
 parameters are first combined into per-channel `scale` and `shift` arrays.
 ElementwiseAffine similarly converts a supported tensor-constant expression
 into fixed `scale` and `shift` arrays for $Y=\mathrm{scale}\odot X+\mathrm{shift}$.

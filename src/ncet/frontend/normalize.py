@@ -76,7 +76,10 @@ def normalize_graph(graph_module: fx.GraphModule) -> GraphIR:
             continue
 
         op_type, attrs = _canonical_operation(graph_module, node, constants)
-        if fixed_inputs and op_type != "ElementwiseAffine":
+        accepts_fixed_inputs = op_type == "ElementwiseAffine" or (
+            node.op == "call_function" and op_type in {"Linear", "Conv2d"}
+        )
+        if fixed_inputs and not accepts_fixed_inputs:
             raise UnsupportedOperatorError(
                 f"unsupported fixed constant input at node '{node.name}' "
                 f"({op_type})"
@@ -182,6 +185,18 @@ def _canonical_operation(
 
     if node.op == "call_function":
         # A call_function target is the callable object recorded by FX.
+        if node.target is F.linear:
+            return "Linear", _linear_call_attrs(
+                graph_module,
+                node,
+                constants,
+            )
+        if node.target is F.conv2d:
+            return "Conv2d", _conv2d_call_attrs(
+                graph_module,
+                node,
+                constants,
+            )
         if node.target in {operator.add, torch.add}:
             return _add_sub_operation(
                 graph_module,
@@ -1203,6 +1218,119 @@ def _sample_shape(node: fx.Node) -> tuple[int, ...]:
     return shape[1:]
 
 
+def _linear_call_attrs(
+    graph_module: fx.GraphModule,
+    node: fx.Node,
+    constants: dict[str, np.ndarray],
+) -> dict[str, str]:
+    """Lift fixed weight and bias operands from a functional Linear call."""
+    # weight and bias can be nn.Parameter, registered buffer, or other fixed tensor attribute
+    weight = node.args[1] if len(node.args) > 1 else node.kwargs["weight"]
+    bias = node.args[2] if len(node.args) > 2 else node.kwargs.get("bias")
+    return _functional_weight_bias_attrs(
+        graph_module,
+        node,
+        weight,
+        bias,
+        expected_weight_rank=2,
+        constants=constants,
+    )
+
+
+def _conv2d_call_attrs(
+    graph_module: fx.GraphModule,
+    node: fx.Node,
+    constants: dict[str, np.ndarray],
+) -> dict[str, Any]:
+    """Normalize one functional Conv2d call with fixed weight and bias."""
+    weight = node.args[1] if len(node.args) > 1 else node.kwargs["weight"]
+    bias = node.args[2] if len(node.args) > 2 else node.kwargs.get("bias")
+    stride = node.args[3] if len(node.args) > 3 else node.kwargs.get("stride", 1)
+    padding = node.args[4] if len(node.args) > 4 else node.kwargs.get("padding", 0)
+    dilation = (
+        node.args[5] if len(node.args) > 5 else node.kwargs.get("dilation", 1)
+    )
+    groups = node.args[6] if len(node.args) > 6 else node.kwargs.get("groups", 1)
+
+    attrs = _functional_weight_bias_attrs(
+        graph_module,
+        node,
+        weight,
+        bias,
+        expected_weight_rank=4,
+        constants=constants,
+    )
+    attrs.update(
+        _conv2d_options_attrs(
+            node.name,
+            stride,
+            padding,
+            dilation,
+            groups,
+        )
+    )
+    return attrs
+
+
+def _functional_weight_bias_attrs(
+    graph_module: fx.GraphModule,
+    node: fx.Node,
+    weight: Any,
+    bias: Any,
+    expected_weight_rank: int,
+    constants: dict[str, np.ndarray],
+) -> dict[str, str]:
+    """Store fixed functional weight/bias operands as IR constants."""
+    operation = "Linear" if expected_weight_rank == 2 else "Conv2d"
+    if len(_input_names(node)) != 1:
+        raise UnsupportedOperatorError(
+            f"unsupported {operation} at node '{node.name}': expected one "
+            "runtime input and fixed weight/bias operands"
+        )
+    # weight and bias can be nn.Parameter, registered buffer, or other fixed tensor attribute
+    # so we need to convert them to a fixed numpy array
+    weight_array = _constant_array(graph_module, weight, node, operation)
+    if weight_array.ndim != expected_weight_rank:
+        raise UnsupportedOperatorError(
+            f"unsupported {operation} weight at node '{node.name}': "
+            f"expected rank {expected_weight_rank}, got {weight_array.shape}"
+        )
+
+    output_size = weight_array.shape[0]
+    # for FX get_attr node, return weight.target, this can benefit when get_attr is used for other operators.
+    # otherwise, return node.name.weight
+    weight_name = _functional_constant_name(node, weight, "weight")
+    if weight_name not in constants:
+        constants[weight_name] = _readonly_array(weight_array)
+
+    if bias is None:
+        bias_array = np.zeros(output_size, dtype=weight_array.dtype)
+        bias_name = f"{node.name}.bias"
+    else:
+        bias_array = _constant_array(graph_module, bias, node, operation)
+        if bias_array.shape != (output_size,):
+            raise UnsupportedOperatorError(
+                f"unsupported {operation} bias at node '{node.name}': "
+                f"expected shape {(output_size,)}, got {bias_array.shape}"
+            )
+        bias_name = _functional_constant_name(node, bias, "bias")
+
+    if bias_name not in constants:
+        constants[bias_name] = _readonly_array(bias_array)
+    return {"weight": weight_name, "bias": bias_name}
+
+
+def _functional_constant_name(
+    node: fx.Node,
+    value: Any,
+    attribute: str,
+) -> str:
+    """Reuse a get_attr path, or create a node-local constant name."""
+    if isinstance(value, fx.Node) and value.op == "get_attr":
+        return str(value.target)
+    return f"{node.name}.{attribute}"
+
+
 def _linear_attrs(
     module_path: str,
     module: nn.Linear,
@@ -1224,18 +1352,6 @@ def _conv2d_attrs(
     constants: dict[str, np.ndarray],
 ) -> dict[str, Any]:
     """Validate version 0.1 Conv2d semantics and lift its fixed parameters."""
-    # The first exact Conv2d formulation intentionally covers only a standard
-    # dense kernel with unit dilation and zero padding.
-    if module.groups != 1:
-        raise UnsupportedOperatorError(
-            f"unsupported Conv2d groups at node '{node_name}': "
-            f"expected 1, got {module.groups}"
-        )
-    if module.dilation != (1, 1):
-        raise UnsupportedOperatorError(
-            f"unsupported Conv2d dilation at node '{node_name}': "
-            f"expected (1, 1), got {module.dilation}"
-        )
     if module.padding_mode != "zeros" or isinstance(module.padding, str):
         raise UnsupportedOperatorError(
             f"unsupported Conv2d padding at node '{node_name}': "
@@ -1249,12 +1365,49 @@ def _conv2d_attrs(
         constants,
     )
     attrs.update(
-        stride=tuple(module.stride),
-        padding=tuple(module.padding),
-        dilation=tuple(module.dilation),
-        groups=module.groups,
+        _conv2d_options_attrs(
+            node_name,
+            module.stride,
+            module.padding,
+            module.dilation,
+            module.groups,
+        )
     )
     return attrs
+
+
+def _conv2d_options_attrs(
+    node_name: str,
+    stride: Any,
+    padding: Any,
+    dilation: Any,
+    groups: Any,
+) -> dict[str, Any]:
+    """Validate the Conv2d options shared by module and functional forms."""
+    # The exact formulation currently covers a dense kernel with unit dilation
+    # and numeric zero padding.
+    if groups != 1:
+        raise UnsupportedOperatorError(
+            f"unsupported Conv2d groups at node '{node_name}': "
+            f"expected 1, got {groups}"
+        )
+    dilation = _spatial_pair(dilation)
+    if dilation != (1, 1):
+        raise UnsupportedOperatorError(
+            f"unsupported Conv2d dilation at node '{node_name}': "
+            f"expected (1, 1), got {dilation}"
+        )
+    if isinstance(padding, str):
+        raise UnsupportedOperatorError(
+            f"unsupported Conv2d padding at node '{node_name}': "
+            f"expected numeric padding, got {padding!r}"
+        )
+    return {
+        "stride": _spatial_pair(stride),
+        "padding": _spatial_pair(padding),
+        "dilation": dilation,
+        "groups": groups,
+    }
 
 
 def _batchnorm_attrs(

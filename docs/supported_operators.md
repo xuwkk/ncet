@@ -31,8 +31,8 @@ below is outside the current exact boundary.
 |---|---|---|---|
 | Graph | `Input` | Continuous tensor variable with elementwise box bounds | One tensor per FX placeholder; multiple model inputs are supported |
 | Graph | `Output` | Reference to existing graph tensor variables | One or more tensor outputs; creates no new tensor or variable |
-| Affine | `Linear` | Linear equality | Fixed `nn.Linear` parameters; acts on the last tensor dimension; bias may be present or absent |
-| Affine | `Conv2d` | Sparse affine equality | Per-sample shape `(C,H,W)`; fixed `nn.Conv2d`; `groups=1`; `dilation=(1,1)`; numeric padding with `padding_mode="zeros"`; bias optional |
+| Affine | `Linear` | Linear equality | `nn.Linear` or `F.linear`; fixed weight and optional fixed bias; acts on the last tensor dimension |
+| Affine | `Conv2d` | Sparse affine equality | `nn.Conv2d` or `F.conv2d`; per-sample shape `(C,H,W)`; fixed weight and optional fixed bias; `groups=1`; `dilation=(1,1)`; numeric zero padding |
 | Affine | `BatchNorm` | Per-channel affine equality | `nn.BatchNorm1d` on `(C,)` or `(C,L)` and `nn.BatchNorm2d` on `(C,H,W)`; evaluation mode; fixed running statistics; affine or non-affine modules |
 | Affine | `ElementwiseAffine` | Elementwise affine equality | Exactly one graph tensor and one finite real scalar/tensor constant in Add/Sub/Mul/Div; constant broadcasting must preserve the graph tensor shape; division requires the graph tensor as numerator and a nonzero constant denominator |
 | Pooling | `AdaptiveAvgPool2d` | Sparse linear equality | Per-sample shape `(C,H,W)`; module or functional form; static scalar or length-2 output size; each entry is a positive integer or `None`, where `None` preserves that input dimension |

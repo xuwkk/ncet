@@ -187,6 +187,32 @@ class ScaledTensorAddSub(nn.Module):
         return torch.add(x, y, alpha=-2), torch.sub(x, y, alpha=-3)
 
 
+class FunctionalAffineCNN(nn.Module):
+    def __init__(self) -> None:
+        super().__init__()
+        self.conv_weight = nn.Parameter(
+            torch.tensor(
+                [
+                    [[[1.0, 0.5], [-0.25, 0.75]]],
+                    [[[-0.5, 0.25], [1.0, 0.5]]],
+                ]
+            )
+        )
+        self.conv_bias = nn.Parameter(torch.tensor([0.1, -0.2]))
+        self.linear_weight = nn.Parameter(
+            torch.linspace(-0.4, 0.5, 24).reshape(3, 8)
+        )
+
+    def forward(self, x: torch.Tensor) -> torch.Tensor:
+        features = F.conv2d(x, self.conv_weight, self.conv_bias)
+        features = torch.relu(features)
+        return F.linear(
+            features.flatten(start_dim=1),
+            self.linear_weight,
+            bias=None,
+        )
+
+
 @pytest.mark.parametrize(
     ("mode", "expected_binary_count"),
     [("reduced", 1), ("full", 3)],
@@ -355,6 +381,43 @@ def test_scaled_tensor_add_sub_encoding_matches_pytorch() -> None:
         x_bounds.upper + 3 * y_bounds.upper,
     )
     assert encoding.stats.binary_variables == 0
+
+
+def test_functional_affine_encoding_matches_pytorch() -> None:
+    model = FunctionalAffineCNN().eval()
+    shape = (1, 3, 3)
+    encoding = form_milp(
+        model,
+        Bounds(
+            lower=np.full(shape, -1.0, dtype=np.float32),
+            upper=np.full(shape, 1.0, dtype=np.float32),
+        ),
+    )
+    sample = np.linspace(-0.8, 0.8, 9, dtype=np.float32).reshape(shape)
+    problem = cp.Problem(
+        cp.Minimize(0),
+        [*encoding.constraints, encoding.inputs["x"] == sample],
+    )
+    problem.solve(solver=cp.SCIPY)
+
+    with torch.no_grad():
+        expected = model(torch.from_numpy(sample).unsqueeze(0)).squeeze(0)
+
+    operators = [node.op_type for node in encoding.graph.nodes]
+    assert problem.status == cp.OPTIMAL
+    assert operators == [
+        "Input",
+        "Conv2d",
+        "ReLU",
+        "Flatten",
+        "Linear",
+        "Output",
+    ]
+    np.testing.assert_allclose(
+        encoding.outputs[0].value,
+        expected.numpy(),
+        atol=1e-6,
+    )
 
 
 def test_conv2d_encoding_matches_pytorch() -> None:

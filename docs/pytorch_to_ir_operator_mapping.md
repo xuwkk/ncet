@@ -60,6 +60,8 @@ recorded by FX.
 
 | PyTorch spelling | `node.op` | `node.target` | `IRNode.op_type` |
 |---|---|---|---|
+| `F.linear(x, weight, bias)` | `call_function` | `torch._C._nn.linear` (`F.linear`) | `Linear` |
+| `F.conv2d(x, weight, bias, ...)` | `call_function` | `torch.conv2d` (`F.conv2d`) | `Conv2d` |
 | `x + y` | `call_function` | `operator.add` | `Add` |
 | `torch.add(x, y, alpha=...)` | `call_function` | `torch.add` | `Add` |
 | `x - y` | `call_function` | `operator.sub` | `Sub` |
@@ -172,8 +174,9 @@ every parameterization of that operation is supported.
   division rounding modes, and `out` arguments are unsupported. Add/Sub with
   either two graph tensors or one graph tensor and one constant accepts a
   finite static `alpha`.
-- `F.linear()` and `F.conv2d()` are not currently mapped; use `nn.Linear` and
-  `nn.Conv2d`.
+- `F.linear()` and `F.conv2d()` require fixed weight and bias operands. FX
+  normally represents registered parameters or buffers as `get_attr` nodes;
+  runtime weight or bias tensors are unsupported.
 - `F.batch_norm()` is not currently mapped; use `nn.BatchNorm1d` or
   `nn.BatchNorm2d` in evaluation mode with fixed running statistics.
 - Direct FX `get_attr` nodes are not canonicalized as standalone operators.
