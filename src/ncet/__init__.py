@@ -11,7 +11,7 @@ from .backend import MILPEncoding
 from .builder import form_milp
 from .passes import Bounds
 
-__version__ = "0.1.0"
+__version__ = "0.2.0"
 
 __all__ = [
     "ExactnessContractError",

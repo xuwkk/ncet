@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "ncet"
-version = "0.1.0"
+version = "0.2.0"
 description = "Neural-network Constraint Embedding Toolkit"
 readme = "README.md"
 authors = [{ name = "Wangkun Xu" }]
