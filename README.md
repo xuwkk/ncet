@@ -104,6 +104,8 @@ for the accepted semantics and restrictions of each operator.
 - MaxPool2d uses the
   [full exact formulation](https://xuwkk.github.io/ncet/knowledge/maxpool2d_exact_encoding/),
   with one binary selector for every valid candidate in each pooling window.
+  The opt-in `maxpool_binary_mode="reduced"` removes bound-dominated
+  candidates and uses direct equalities for windows with one possible winner.
 
 ## Comparison with OMLT
 

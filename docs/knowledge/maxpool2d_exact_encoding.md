@@ -267,6 +267,21 @@ The exact formulation supports:
 The frontend explicitly rejects non-unit dilation, ceiling-mode output shapes,
 and returned pooling indices.
 
+## 11. Optional bound-based reduction
+
+With `maxpool_binary_mode="reduced"`, let `Lstar = max_i L_i` in one window.
+Every feasible maximum is at least `Lstar`. A candidate with `U_i < Lstar`
+therefore cannot attain the maximum, so its selector can be removed.
+The inequality is strict: ties remain candidates.
+
+If exactly one candidate remains, the maximum equals that input throughout
+the bounded domain. Replace its selector by an equality. Otherwise keep the
+original exact one-hot formulation on the surviving candidates. Output bounds
+and dominance inequalities against all original candidates remain enforced.
+This preserves the feasible input/output graph; it does not relax integer
+domains. The conclusion depends on sound input bounds. Loose bounds may
+leave every selector in place and give no benefit.
+
 ## Related knowledge
 
 - [Knowledge notes index](index.md)

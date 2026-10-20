@@ -46,6 +46,7 @@ class EncodingOptions:
     Default is "reduced" mode which is more efficient and smaller formulation."""
 
     relu_binary_mode: Literal["full", "reduced"] = "reduced"
+    maxpool_binary_mode: Literal["full", "reduced"] = "full"
 
 
 @dataclass(frozen=True)
@@ -72,7 +73,10 @@ class ReLUBinaries:
 
 @dataclass(frozen=True)
 class MaxPoolBinaries:
-    """Full one-hot selectors and their output/input tensor coordinates."""
+    """One-hot selectors and their output/input tensor coordinates.
+
+    Reduced mode omits dominated candidates and windows with a fixed winner.
+    """
 
     # One binary variable represents one valid input-output candidate connection.
     variable: cp.Variable        # vectorized MaxPool activation variables
@@ -123,6 +127,8 @@ def encode_cvxpy(
         raise ValueError(
             "relu_binary_mode must be either 'full' or 'reduced'"
         )
+    if options.maxpool_binary_mode not in {"full", "reduced"}:
+        raise ValueError("maxpool_binary_mode must be either 'full' or 'reduced'")
 
     variables = {
         name: cp.Variable(spec.shape, name=f"ncet_{name}")
@@ -164,9 +170,11 @@ def encode_cvxpy(
                 variables,
                 bounds[node.inputs[0]],
                 bounds[node.outputs[0]],
+                options.maxpool_binary_mode,
             )
             constraints.extend(pool_constraints)
-            binaries[node.name] = binary
+            if binary is not None:
+                binaries[node.name] = binary
         elif node.op_type == "Identity":
             constraints.append(_identity_constraint(node, variables))
         elif node.op_type == "ElementwiseAffine":
@@ -585,13 +593,15 @@ def _maxpool2d_constraints(
     variables: dict[str, cp.Variable],
     input_bounds: Bounds,
     output_bounds: Bounds,
-) -> tuple[list[cp.Constraint], MaxPoolBinaries]:
-    """Encode every valid MaxPool2d candidate with a full one-hot selector.
+    mode: Literal["full", "reduced"] = "full",
+) -> tuple[list[cp.Constraint], MaxPoolBinaries | None]:
+    """Encode MaxPool2d exactly, optionally pruning bound-dominated candidates.
 
     Logic:
     1. Read the input and output tensors of the canonical MaxPool2d node.
     2. Enumerate the valid input candidates in every output pooling window.
-    3. Create one binary selector for every candidate.
+    3. In reduced mode, prune impossible winners and encode fixed winners directly.
+       Otherwise, create one binary selector for every remaining candidate.
     4. Add exact constraints enforcing each output to equal its selected maximum.
     """
     input_value = variables[node.inputs[0]]     # 3D
@@ -618,6 +628,28 @@ def _maxpool2d_constraints(
     lower_x = input_bounds.lower.reshape(-1)
     lower_y = output_bounds.lower.reshape(-1)
     upper_y = output_bounds.upper.reshape(-1)
+    constraints = [
+        y >= lower_y,
+        y <= upper_y,
+        y[output_flat] >= x[input_flat],
+    ]
+    if mode == "reduced":
+        # If U_i < max_j L_j, candidate i cannot be a maximum.
+        # Keep equality: a tied candidate is still a legitimate winner.
+        upper_x = input_bounds.upper.reshape(-1)
+        keep = upper_x[input_flat] >= lower_y[output_flat]
+        output_indices, input_indices = output_indices[keep], input_indices[keep]
+        output_flat, input_flat = output_flat[keep], input_flat[keep]
+        counts = np.bincount(output_flat, minlength=output_value.size)
+        if np.any(counts == 0):
+            raise ValueError("MaxPool bounds leave a window with no possible winner")
+        fixed = counts[output_flat] == 1
+        if np.any(fixed):
+            constraints.append(y[output_flat[fixed]] == x[input_flat[fixed]])
+        output_indices, input_indices = output_indices[~fixed], input_indices[~fixed]
+        output_flat, input_flat = output_flat[~fixed], input_flat[~fixed]
+        if not len(input_flat):
+            return constraints, None
     big_m = upper_y[output_flat] - lower_x[input_flat]
 
     z = cp.Variable(
@@ -627,21 +659,19 @@ def _maxpool2d_constraints(
     )
     # One row per output and one column per candidate. Multiplication by z
     # sums exactly the selectors belonging to each pooling window.
+    selected_outputs, selector_rows = np.unique(output_flat, return_inverse=True)
     one_hot = sparse.coo_matrix(
         (
             np.ones(len(output_flat)),
-            (output_flat, np.arange(len(output_flat))),
+            (selector_rows, np.arange(len(output_flat))),
         ),
-        shape=(output_value.size, len(output_flat)),
+        shape=(len(selected_outputs), len(output_flat)),
     ).tocsc()
-    constraints = [
-        y >= lower_y,
-        y <= upper_y,
-        y[output_flat] >= x[input_flat],
+    constraints.extend([
         y[output_flat]
         <= x[input_flat] + cp.multiply(big_m, 1 - z),
-        one_hot @ z == np.ones(output_value.size),
-    ]
+        one_hot @ z == np.ones(len(selected_outputs)),
+    ])
     # This metadata creates no new variables; it only maps each z[k] back to
     # its candidate connection: input_indices[k] -> output_indices[k].
     binary = MaxPoolBinaries(

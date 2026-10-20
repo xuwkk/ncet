@@ -24,6 +24,7 @@ def form_milp(
     input_bounds: InputBounds,
     *,
     relu_binary_mode: Literal["full", "reduced"] = "reduced",
+    maxpool_binary_mode: Literal["full", "reduced"] = "full",
 ) -> MILPEncoding:
     """Capture a PyTorch model and return its exact NCET formulation."""
     traced = capture_graph(model)
@@ -38,7 +39,10 @@ def form_milp(
     graph = normalize_graph(traced)
     bound_mapping = dict(zip(graph.inputs, ordered_bounds))
     bounds = propagate_bounds(graph, bound_mapping)  # Dictionary of tensor names to Bounds
-    options = EncodingOptions(relu_binary_mode=relu_binary_mode)
+    options = EncodingOptions(
+        relu_binary_mode=relu_binary_mode,
+        maxpool_binary_mode=maxpool_binary_mode,
+    )
     return encode_cvxpy(graph, bounds, options)
 
 

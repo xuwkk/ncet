@@ -26,11 +26,12 @@ def form_milp(
     input_bounds: InputBounds,
     *,
     relu_binary_mode: Literal["full", "reduced"] = "reduced",
+    maxpool_binary_mode: Literal["full", "reduced"] = "full",
 ) -> MILPEncoding:
     ...
 ```
 
-The `*` makes `relu_binary_mode` keyword-only.
+The `*` makes the binary-mode options keyword-only.
 
 ## Arguments
 
@@ -125,6 +126,16 @@ exactness.
 
 Both modes describe the same exact activation graph. `"reduced"` generally
 produces a smaller formulation and is set as the default.
+
+### `maxpool_binary_mode`
+
+`"full"` (default) preserves one selector per valid pooling candidate.
+`"reduced"` removes a candidate only when its upper bound is strictly below
+the window's largest lower bound. A single surviving candidate is encoded by
+an equality, with no selectors. Other windows retain exact one-hot selection.
+Ties are retained. Both modes represent the same graph under sound bounds.
+Reduced-mode binary metadata lists only the remaining ambiguous candidates;
+fully determined pooling nodes have no entry in `binaries`.
 
 ## Return value
 
